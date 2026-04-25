@@ -38,8 +38,9 @@ then expose `task.run(...)` through the framework's tool wrapper.
 stays practical on CPU-only machines. If you swap it to `GEMMA4_E2B`, expect a
 much larger first download and slower load time.
 
-`embed_text_transformers.py` uses `MINILM_L6`, a compact local embeddings
-profile that stays practical on CPU-only machines.
+`embed_text_transformers.py` and `workflows/embedding_similarity.py` use
+`MINILM_L6`, a compact local embeddings profile that stays practical on
+CPU-only machines.
 
 ## Runnable core examples
 
@@ -59,6 +60,7 @@ python3 examples/tasks/sales_call_report.py
 python3 examples/tasks/video_ad_report.py
 python3 examples/workflows/batch_processing.py
 python3 examples/workflows/custom_pipeline.py
+python3 examples/workflows/embedding_similarity.py
 python3 examples/workflows/resume_redact_summarize.py
 python3 examples/workflows/resume_role_match.py
 ```

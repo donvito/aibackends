@@ -1,4 +1,5 @@
 from aibackends.workflows._base import Pipeline
+from aibackends.workflows.embedding_similarity import EmbeddingSimilarityWorkflow
 from aibackends.workflows.invoice import InvoiceProcessor
 from aibackends.workflows.pii_redactor import PIIRedactor, PIIRedactorWorkflow
 from aibackends.workflows.registry import (
@@ -13,6 +14,7 @@ from aibackends.workflows.video_ad import VideoAdIntelligence
 
 __all__ = [
     "available_workflows",
+    "EmbeddingSimilarityWorkflow",
     "InvoiceProcessor",
     "PIIRedactor",
     "PIIRedactorWorkflow",
