@@ -1,12 +1,16 @@
 # AIBackends
 
-Framework-agnostic AI tasks and pipelines, powered by pluggable runtimes.
+Framework-agnostic AI tasks and pipelines with first-class local model runtimes for Llama.cpp and Transformers.
 
 AIBackends is a Python library of ready-made AI tasks and workflows that are not
-tied to any one agent framework. Use the same configured tasks and pipelines in
-LangGraph, pydantic-ai, OpenAI Agents SDK, CrewAI, Agno, LlamaIndex, or your own
-application code. Extract invoices, redact PII, classify documents, analyse
-sales calls, and analyse video ads with typed results.
+tied to any one agent framework. A core value proposition is first-class local
+model support: the same typed tasks and workflows run on Llama.cpp via
+`llama-cpp-python` and on Hugging Face Transformers via `transformers`, so you
+can build local-first systems without maintaining a separate stack. Use the same
+configured tasks and pipelines in LangGraph, pydantic-ai, OpenAI Agents SDK,
+CrewAI, Agno, LlamaIndex, or your own application code. Extract invoices,
+redact PII, classify documents, analyse sales calls, and analyse video ads with
+typed results.
 
 ```python
 from aibackends.models import GEMMA4_E2B
@@ -25,11 +29,15 @@ print(result.total)
 
 ## Why AIBackends
 
+- First-class local models: run the same task and workflow APIs on Llama.cpp and Transformers
 - Framework agnostic: keep workflows and pipelines independent of whichever agent framework you use today
 - Easy to switch or mix frameworks: wrap the same task or workflow object for LangGraph, pydantic-ai, OpenAI Agents SDK, CrewAI, Agno, LlamaIndex, or your own code
-- Local-first: first-class support for `llama-cpp-python` and `transformers`
 - Typed outputs: every structured task returns a Pydantic model
 - Optional orchestration: workflows add retries, steps, and batch execution without forcing a framework
+
+Local runtimes are built in, not adapters. Llama.cpp (`llamacpp`) and
+Transformers (`transformers`) use the same runtime catalog, model refs, task
+factories, workflow factories, and CLI flow as the hosted providers.
 
 ```mermaid
 flowchart LR
@@ -222,8 +230,18 @@ names remain supported at text boundaries such as the CLI and YAML config.
 
 Supported runtimes:
 
-- `llamacpp`
-- `transformers`
+Llama.cpp (`llamacpp`) and Transformers (`transformers`) are first-class
+built-in runtimes for local models. They use the same `create_task(...)`,
+`create_workflow(...)`, `available_runtimes()`, and `available_models()` APIs
+as the hosted providers.
+
+Local runtimes:
+
+- `llamacpp` for GGUF models via Llama.cpp / `llama-cpp-python`
+- `transformers` for local Hugging Face Transformers models and chat templates
+
+Other supported runtimes:
+
 - `ollama`
 - `lmstudio`
 - `anthropic`

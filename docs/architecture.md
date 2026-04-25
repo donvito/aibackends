@@ -1,4 +1,4 @@
-#  Architecture
+# Architecture
 
 This page maps the main code paths in `aibackends` so it is easier to navigate
 the package, reason about request flow, and choose the right extension point.
