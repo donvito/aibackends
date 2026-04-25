@@ -12,7 +12,7 @@ class BaseTask(ABC):
     def __init__(self, **defaults: Any) -> None:
         self.defaults = {key: value for key, value in defaults.items() if value is not None}
 
-    def with_config(self, **defaults: Any) -> "BaseTask":
+    def with_config(self, **defaults: Any) -> BaseTask:
         task = copy.copy(self)
         task.defaults = self._resolve_options(**defaults)
         return task

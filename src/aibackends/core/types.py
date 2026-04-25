@@ -99,7 +99,7 @@ class RuntimeConfig(AIBackendsModel):
         return str(Path(value).expanduser())
 
     @model_validator(mode="after")
-    def validate_chat_template_sources(self) -> "RuntimeConfig":
+    def validate_chat_template_sources(self) -> RuntimeConfig:
         if self.chat_template is not None and self.chat_template_path is not None:
             raise ValueError("Only one of `chat_template` or `chat_template_path` can be set.")
         return self

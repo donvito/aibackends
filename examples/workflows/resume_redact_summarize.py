@@ -20,7 +20,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aibackends.steps.enrich import LLMTextGenerator, PIIRedactor as PIIRedactorStep
+from aibackends.steps.enrich import LLMTextGenerator
+from aibackends.steps.enrich import PIIRedactor as PIIRedactorStep
 from aibackends.steps.ingest import FileIngestor
 from aibackends.workflows import Pipeline
 

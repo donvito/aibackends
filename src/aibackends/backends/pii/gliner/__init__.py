@@ -73,8 +73,8 @@ def _predict_raw_entities(
         return []
     try:
         parsed = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        raise TaskExecutionError("GLiNER PII returned invalid JSON.")
+    except json.JSONDecodeError as exc:
+        raise TaskExecutionError("GLiNER PII returned invalid JSON.") from exc
     return parsed if isinstance(parsed, list) else []
 
 

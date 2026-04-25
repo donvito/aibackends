@@ -43,7 +43,7 @@ class TransformersRuntime(BaseRuntime):
         model_kwargs: dict[str, Any] = {"trust_remote_code": True}
         if self.config.load_in_4bit:
             model_kwargs["load_in_4bit"] = True
-        model = AutoModelForCausalLM.from_pretrained(
+        model: Any = AutoModelForCausalLM.from_pretrained(
             self._model_id(),
             device_map=self.config.device or "auto",
             **model_kwargs,
@@ -94,6 +94,12 @@ class TransformersRuntime(BaseRuntime):
         prompt_result = self.prompt_renderer.render(messages, tokenizer=tokenizer, schema=schema)
         prompt = prompt_result.prompt
         inputs = tokenizer(prompt, return_tensors="pt")
+        temperature = kwargs.get(
+            "temperature",
+            self.config.extra_options.get("temperature", self.config.temperature),
+        )
+        if temperature is None:
+            temperature = self.config.temperature
         device = getattr(model, "device", None)
         if device is not None:
             inputs = {key: value.to(device) for key, value in inputs.items()}
@@ -103,15 +109,8 @@ class TransformersRuntime(BaseRuntime):
             "max_new_tokens": kwargs.get(
                 "max_tokens", self.config.extra_options.get("max_tokens", self.config.max_tokens)
             ),
-            "temperature": kwargs.get(
-                "temperature",
-                self.config.extra_options.get("temperature", self.config.temperature),
-            ),
-            "do_sample": kwargs.get(
-                "temperature",
-                self.config.extra_options.get("temperature", self.config.temperature),
-            )
-            > 0,
+            "temperature": temperature,
+            "do_sample": float(temperature) > 0,
         }
         if tokenizer.pad_token_id is not None:
             generate_kwargs["pad_token_id"] = tokenizer.pad_token_id

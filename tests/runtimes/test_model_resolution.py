@@ -225,7 +225,11 @@ def test_pull_model_uses_snapshot_download_cache_dir(monkeypatch, tmp_path):
 
     def fake_snapshot_download(repo_id: str, *, cache_dir: str | None = None) -> str:
         calls.append({"repo_id": repo_id, "cache_dir": cache_dir})
-        target = Path(cache_dir or tmp_path / "hf-default") / "snapshots" / repo_id.replace("/", "--")
+        target = (
+            Path(cache_dir or tmp_path / "hf-default")
+            / "snapshots"
+            / repo_id.replace("/", "--")
+        )
         target.mkdir(parents=True, exist_ok=True)
         return str(target)
 
@@ -236,7 +240,9 @@ def test_pull_model_uses_snapshot_download_cache_dir(monkeypatch, tmp_path):
     )
 
     manager = ModelManager(cache_dir=str(tmp_path / "models"))
-    location = manager.pull_model(RuntimeConfig(runtime="transformers", model="google/gemma-4-E2B-it"))
+    location = manager.pull_model(
+        RuntimeConfig(runtime="transformers", model="google/gemma-4-E2B-it")
+    )
 
     assert location.local_path == str(tmp_path / "models" / "snapshots" / "google--gemma-4-E2B-it")
     assert calls == [

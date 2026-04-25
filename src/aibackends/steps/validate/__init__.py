@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from aibackends.steps._base import BaseStep
+from aibackends.steps._base import BaseStep, StepContext
 from aibackends.tasks._utils import parse_json_content
 
 
@@ -14,7 +14,7 @@ class PydanticValidator(BaseStep):
     def __init__(self, schema: type[BaseModel]) -> None:
         self.schema = schema
 
-    def run(self, payload: Any, context: dict[str, Any]) -> BaseModel:
+    def run(self, payload: Any, context: StepContext) -> BaseModel:
         del context
         if isinstance(payload, self.schema):
             return payload

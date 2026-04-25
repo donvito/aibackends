@@ -71,7 +71,8 @@ def schema_prompt(schema: type[BaseModel]) -> str:
         "Do not include markdown fences, commentary, or prose. "
         "Replace the example values in the template with values from the input. "
         "Use null for missing optional values. "
-        "Do not return JSON Schema keywords such as title, type, properties, items, anyOf, required, or $defs. "
+        "Do not return JSON Schema keywords such as title, type, properties, "
+        "items, anyOf, required, or $defs. "
         f"JSON template:\n{json.dumps(template, indent=2)}"
     )
 
@@ -127,7 +128,8 @@ class PromptRenderer:
         if self.config.prompt_format == "chat_template":
             raise ConfigurationError(
                 "No chat template is available for this tokenizer. "
-                "Provide `chat_template` or `chat_template_path`, or switch to `prompt_format=\"auto\"` or `prompt_format=\"text\"`."
+                "Provide `chat_template` or `chat_template_path`, or switch to "
+                '`prompt_format="auto"` or `prompt_format="text"`.'
             )
 
         return PromptRenderResult(

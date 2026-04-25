@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from aibackends.steps._base import BaseStep
+from aibackends.steps._base import BaseStep, StepContext
 from aibackends.tasks._utils import TEXT_SUFFIXES, load_text_input
 
 
@@ -21,7 +21,7 @@ def _resolve_source(data: dict[str, Any]) -> Path:
 class FileIngestor(BaseStep):
     name = "file_ingest"
 
-    def run(self, payload: Any, context: dict[str, Any]) -> dict[str, Any]:
+    def run(self, payload: Any, context: StepContext) -> dict[str, Any]:
         del context
         data = _coerce_payload(payload)
         source = _resolve_source(data)
@@ -38,7 +38,7 @@ class PDFIngestor(FileIngestor):
 class AudioIngestor(BaseStep):
     name = "audio_ingest"
 
-    def run(self, payload: Any, context: dict[str, Any]) -> dict[str, Any]:
+    def run(self, payload: Any, context: StepContext) -> dict[str, Any]:
         del context
         data = _coerce_payload(payload)
         source = _resolve_source(data)
@@ -51,7 +51,7 @@ class AudioIngestor(BaseStep):
 class VideoIngestor(BaseStep):
     name = "video_ingest"
 
-    def run(self, payload: Any, context: dict[str, Any]) -> dict[str, Any]:
+    def run(self, payload: Any, context: StepContext) -> dict[str, Any]:
         del context
         data = _coerce_payload(payload)
         source = _resolve_source(data)

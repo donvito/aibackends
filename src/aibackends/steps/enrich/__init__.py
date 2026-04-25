@@ -12,8 +12,8 @@ from aibackends.tasks._utils import (
     run_structured_task,
     run_text_task,
 )
-from aibackends.tasks.registry import create_task, get_task
 from aibackends.tasks.redact_pii import redact_pii
+from aibackends.tasks.registry import create_task, get_task
 
 
 def _coerce_payload(payload: Any) -> dict[str, Any]:
@@ -40,7 +40,7 @@ class PIIRedactor(BaseStep):
         self.backend = backend
         self.labels = labels
 
-    def run(self, payload: Any, context: dict[str, Any]) -> dict[str, Any]:
+    def run(self, payload: Any, context: StepContext) -> dict[str, Any]:
         del context
         data = _coerce_payload(payload)
         source_text = data.get("transcript") or data.get("text") or data.get("brief")

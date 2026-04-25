@@ -1,6 +1,5 @@
 from aibackends.core.registry import TransformerModelProfile
 
-
 MODEL_PROFILES = [
     TransformerModelProfile(
         name="qwen3-vl-4b",

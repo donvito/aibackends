@@ -5,9 +5,9 @@ import pkgutil
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from types import ModuleType
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
-if False:  # pragma: no cover
+if TYPE_CHECKING:
     from aibackends.core.model_manager import ModelLocation, ModelManager
     from aibackends.core.runtimes.base import BaseRuntime
     from aibackends.core.types import RuntimeConfig
@@ -17,7 +17,7 @@ if False:  # pragma: no cover
 
 RuntimeFactory = Callable[["RuntimeConfig"], "BaseRuntime"]
 TaskFactory = Callable[..., "BaseTask"]
-WorkflowFactory = Callable[..., "Pipeline"]
+WorkflowFactory = type["Pipeline"]
 PIIDetector = Callable[["PIIBackendSpec", str, list[str] | None], list["PIIEntity"]]
 ModelSupportHandler = Callable[
     ["ModelManager", "RuntimeConfig", str],
@@ -93,11 +93,11 @@ class TaskSpec:
     def names(self) -> tuple[str, ...]:
         return (self.name, *self.aliases)
 
-    def create(self, **config: Any) -> "BaseTask":
+    def create(self, **config: Any) -> BaseTask:
         return self.task_factory(**config)
 
     @property
-    def task(self) -> "BaseTask":
+    def task(self) -> BaseTask:
         return self.create()
 
     @property
@@ -119,11 +119,11 @@ class WorkflowSpec:
     def names(self) -> tuple[str, ...]:
         return (self.name, *self.aliases)
 
-    def create(self, **config: Any) -> "Pipeline":
+    def create(self, **config: Any) -> Pipeline:
         return self.workflow_factory(**config)
 
     @property
-    def pipeline_cls(self) -> type["Pipeline"]:
+    def pipeline_cls(self) -> type[Pipeline]:
         return self.workflow_factory
 
 

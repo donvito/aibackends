@@ -83,7 +83,7 @@ class ModelManager:
                 "Install 'huggingface_hub' to pre-pull models with `aibackends pull`."
             ) from exc
 
-        local_dir = snapshot_download(repo_id=resolved, **self._hf_cache_kwargs())
+        local_dir = snapshot_download(repo_id=resolved, cache_dir=self._hf_cache_dir())
         return ModelLocation(source=resolved, local_path=local_dir)
 
     def _download_gguf_repo(self, repo_id: str) -> Path:
@@ -107,14 +107,14 @@ class ModelManager:
             repo_id=repo_id,
             filename=selected.name,
             subfolder=subfolder,
-            **self._hf_cache_kwargs(),
+            cache_dir=self._hf_cache_dir(),
         )
         return Path(local_path)
 
-    def _hf_cache_kwargs(self) -> dict[str, str]:
+    def _hf_cache_dir(self) -> str | None:
         if self.cache_dir is None:
-            return {}
-        return {"cache_dir": str(self.cache_dir)}
+            return None
+        return str(self.cache_dir)
 
     def _list_gguf_files(
         self,

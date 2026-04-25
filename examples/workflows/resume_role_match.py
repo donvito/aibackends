@@ -12,11 +12,14 @@ from pydantic import BaseModel
 from aibackends.schemas.pii import Classification
 from aibackends.steps.enrich import (
     LLMTextGenerator,
-    PIIRedactor as PIIRedactorStep,
     TaskRunner,
+)
+from aibackends.steps.enrich import (
+    PIIRedactor as PIIRedactorStep,
 )
 from aibackends.steps.ingest import FileIngestor
 from aibackends.workflows import Pipeline
+
 
 class PIISummary(BaseModel):
     backend: str

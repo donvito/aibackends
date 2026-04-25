@@ -9,7 +9,6 @@ from aibackends.schemas.pii import Classification
 from aibackends.tasks._base import BaseTask
 from aibackends.tasks._utils import build_messages, load_text_input, run_structured_task
 
-
 DEFAULT_SYSTEM_PROMPT = "You are a precise text classification engine."
 
 

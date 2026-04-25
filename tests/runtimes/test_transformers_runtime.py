@@ -18,7 +18,7 @@ class FakeTensor:
     def shape(self) -> tuple[int, int]:
         return (1, len(self.values))
 
-    def to(self, device: object) -> "FakeTensor":
+    def to(self, device: object) -> FakeTensor:
         del device
         return self
 
@@ -88,7 +88,7 @@ class FakeModel:
         self.eval_called = False
         self.generate_kwargs: dict[str, object] | None = None
 
-    def eval(self) -> "FakeModel":
+    def eval(self) -> FakeModel:
         self.eval_called = True
         return self
 

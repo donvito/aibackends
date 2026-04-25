@@ -1,6 +1,5 @@
 from aibackends.core.registry import TransformerModelProfile
 
-
 MODEL_PROFILES = [
     TransformerModelProfile(
         name="gemma4-e2b",

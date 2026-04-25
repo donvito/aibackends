@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from aibackends.core.exceptions import TaskExecutionError
-from aibackends.steps._base import BaseStep
+from aibackends.steps._base import BaseStep, StepContext
 
 
 class ImageRenderer(BaseStep):
@@ -13,7 +13,7 @@ class ImageRenderer(BaseStep):
     def __init__(self, dpi: int = 150) -> None:
         self.dpi = dpi
 
-    def run(self, payload: Any, context: dict[str, Any]) -> dict[str, Any]:
+    def run(self, payload: Any, context: StepContext) -> dict[str, Any]:
         del context
         data = payload.copy() if isinstance(payload, dict) else {"input": payload}
         path = Path(data["path"]).expanduser()
@@ -35,7 +35,7 @@ class WhisperTranscriber(BaseStep):
     def __init__(self, model_name: str = "base") -> None:
         self.model_name = model_name
 
-    def run(self, payload: Any, context: dict[str, Any]) -> dict[str, Any]:
+    def run(self, payload: Any, context: StepContext) -> dict[str, Any]:
         del context
         data = payload.copy() if isinstance(payload, dict) else {"input": payload}
         if data.get("transcript"):
@@ -61,7 +61,7 @@ class FrameExtractor(BaseStep):
     def __init__(self, sample_every_seconds: int = 5) -> None:
         self.sample_every_seconds = sample_every_seconds
 
-    def run(self, payload: Any, context: dict[str, Any]) -> dict[str, Any]:
+    def run(self, payload: Any, context: StepContext) -> dict[str, Any]:
         del context
         data = payload.copy() if isinstance(payload, dict) else {"input": payload}
         data["frame_sampling_seconds"] = self.sample_every_seconds
@@ -71,7 +71,7 @@ class FrameExtractor(BaseStep):
 class AudioStripper(BaseStep):
     name = "audio_strip"
 
-    def run(self, payload: Any, context: dict[str, Any]) -> dict[str, Any]:
+    def run(self, payload: Any, context: StepContext) -> dict[str, Any]:
         del context
         data = payload.copy() if isinstance(payload, dict) else {"input": payload}
         data["audio_source"] = data.get("path")

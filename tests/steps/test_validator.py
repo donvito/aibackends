@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from aibackends.core.types import RuntimeConfig
 from aibackends.schemas.invoice import InvoiceOutput
+from aibackends.steps._base import StepContext
 from aibackends.steps.validate import PydanticValidator
 
 
@@ -18,7 +20,7 @@ def test_pydantic_validator_accepts_dict_payload():
             "due_date": None,
             "payment_terms": "Net 30",
         },
-        {},
+        StepContext(task_name="test", runtime_config=RuntimeConfig()),
     )
     assert isinstance(result, InvoiceOutput)
     assert result.vendor == "Acme Corp"

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+from typing import Any, cast
 
 import pytest
 from pydantic import BaseModel
@@ -30,7 +31,15 @@ def test_classify_returns_typed_output():
 def test_classify_supports_label_descriptions_and_custom_prompts(monkeypatch):
     captured: dict[str, object] = {}
 
-    def fake_run_structured_task(*, task_name, schema, messages, runtime=None, model=None, **overrides):
+    def fake_run_structured_task(
+        *,
+        task_name,
+        schema,
+        messages,
+        runtime=None,
+        model=None,
+        **overrides,
+    ):
         captured["task_name"] = task_name
         captured["schema"] = schema
         captured["messages"] = messages
@@ -64,12 +73,21 @@ def test_classify_supports_label_descriptions_and_custom_prompts(monkeypatch):
     assert captured["runtime"] == "stub"
     assert captured["model"] == "stub-model"
     assert captured["overrides"] == {"max_retries": 2}
-    messages = captured["messages"]
+    messages = cast(list[dict[str, Any]], captured["messages"])
     assert messages[0]["content"] == "You are a recruiter matching resumes to roles."
-    assert "Choose the single best-fitting role based only on resume evidence." in messages[1]["content"]
+    assert (
+        "Choose the single best-fitting role based only on resume evidence."
+        in messages[1]["content"]
+    )
     assert "Label descriptions:" in messages[1]["content"]
-    assert "- ml-engineer: Owns model training, evaluation, and production inference." in messages[1]["content"]
-    assert "- data-engineer: Owns ETL pipelines, warehousing, and analytics plumbing." in messages[1]["content"]
+    assert (
+        "- ml-engineer: Owns model training, evaluation, and production inference."
+        in messages[1]["content"]
+    )
+    assert (
+        "- data-engineer: Owns ETL pipelines, warehousing, and analytics plumbing."
+        in messages[1]["content"]
+    )
     assert "Text:\nBuilt production ML systems and data pipelines." in messages[1]["content"]
 
 

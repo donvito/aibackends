@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from types import MethodType
+
+from aibackends.backends.pii import get_pii_backend
 from aibackends.core.config import get_runtime
 from aibackends.core.model_registry import register_model_profile
 from aibackends.core.registry import TransformerModelProfile
 from aibackends.core.runtimes.transformers import TransformersRuntime
 from aibackends.core.types import RuntimeConfig
-from aibackends.backends.pii import get_pii_backend
 from aibackends.tasks import BaseTask, create_task
 from aibackends.tasks.registry import get_task
 from aibackends.workflows import Pipeline, create_workflow
@@ -77,7 +79,9 @@ def test_task_spec_exposes_base_task_interface():
 
     assert isinstance(task, BaseTask)
     assert callable(task.run)
-    assert spec.run.__self__ is not task
+    spec_run = spec.run
+    assert isinstance(spec_run, MethodType)
+    assert spec_run.__self__ is not task
 
 
 def test_create_task_returns_configured_task_instance():
