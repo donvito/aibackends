@@ -38,6 +38,9 @@ then expose `task.run(...)` through the framework's tool wrapper.
 stays practical on CPU-only machines. If you swap it to `GEMMA4_E2B`, expect a
 much larger first download and slower load time.
 
+`embed_text_transformers.py` uses `MINILM_L6`, a compact local embeddings
+profile that stays practical on CPU-only machines.
+
 ## Runnable core examples
 
 These examples use the sample files in `examples/data/` and do not require any agent framework package.
@@ -46,6 +49,7 @@ These examples use the sample files in `examples/data/` and do not require any a
 python3 examples/list_available.py
 python3 examples/tasks/basic_task.py
 python3 examples/tasks/basic_task_transformers.py
+python3 examples/tasks/embed_text_transformers.py
 python3 examples/tasks/summarize_text.py
 python3 examples/tasks/classify_text.py
 python3 examples/tasks/redact_text.py
