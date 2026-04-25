@@ -11,7 +11,7 @@ from aibackends.core.logging import emit_step_log
 from aibackends.core.types import BatchError, BatchRunResult, RuntimeConfig, StepLog
 
 if TYPE_CHECKING:
-    from aibackends.steps._base import BaseStep
+    from aibackends.steps._base import BaseStep, StepContext
 
 
 class Assembler:
@@ -23,14 +23,14 @@ class Assembler:
         self.config = config or RuntimeConfig()
 
     def run(self, payload: Any) -> Any:
-        context = {"task_name": self.task_name, "runtime_config": self.config}
+        context = self._step_context()
         current = payload
         for step in self.steps:
             current = self._run_step(step, current, context)
         return current
 
     async def run_async(self, payload: Any) -> Any:
-        context = {"task_name": self.task_name, "runtime_config": self.config}
+        context = self._step_context()
         current = payload
         for step in self.steps:
             current = await self._run_step_async(step, current, context)
@@ -98,7 +98,12 @@ class Assembler:
         await asyncio.gather(*(runner(item) for item in inputs))
         return BatchRunResult(results=results, errors=errors)
 
-    def _run_step(self, step: BaseStep, payload: Any, context: dict[str, Any]) -> Any:
+    def _step_context(self) -> StepContext:
+        from aibackends.steps._base import StepContext
+
+        return StepContext(task_name=self.task_name, runtime_config=self.config)
+
+    def _run_step(self, step: BaseStep, payload: Any, context: StepContext) -> Any:
         started = time.perf_counter()
         emit_step_log(
             StepLog(task_name=self.task_name, step_name=step.name, status="started"), self.config
@@ -130,7 +135,7 @@ class Assembler:
         )
         return result
 
-    async def _run_step_async(self, step: BaseStep, payload: Any, context: dict[str, Any]) -> Any:
+    async def _run_step_async(self, step: BaseStep, payload: Any, context: StepContext) -> Any:
         started = time.perf_counter()
         emit_step_log(
             StepLog(task_name=self.task_name, step_name=step.name, status="started"), self.config

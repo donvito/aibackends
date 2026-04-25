@@ -1,22 +1,22 @@
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 
-from aibackends import configure
-from aibackends.tasks import extract_invoice, redact_pii
+from aibackends.tasks import create_task
 
-configure(runtime="llamacpp", model="gemma4-e2b")
+invoice_task = create_task("extract-invoice", runtime="llamacpp", model="gemma4-e2b")
+redaction_task = create_task("redact-pii", backend="gliner")
 
 
 @tool
 def process_invoice(file_path: str) -> dict:
     """Extract structured data from an invoice PDF."""
-    return extract_invoice(file_path).model_dump()
+    return invoice_task.run(file_path).model_dump()
 
 
 @tool
 def redact_text(text: str) -> str:
     """Remove PII from text."""
-    return redact_pii(text, backend="gliner").redacted_text
+    return redaction_task.run(text).redacted_text
 
 
 agent = create_react_agent(model="openai:gpt-4o-mini", tools=[process_invoice, redact_text])

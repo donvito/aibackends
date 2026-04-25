@@ -5,12 +5,7 @@ theme:
 
 nav:
   - Home: index.md
-  - Quickstart: quickstart.md
-  - Tasks: tasks.md
-  - Runtimes: runtimes.md
-  - Agent Integration: agent-integration.md
-  - Workflows: workflows.md
-  - Custom Pipelines: custom-pipelines.md
-  - Batch Processing: batch-processing.md
-  - Configuration: configuration.md
+  - Concepts: concepts.md
+  - Usage: usage.md
+  - Extending: extending.md
   - API Reference: api-reference/index.md

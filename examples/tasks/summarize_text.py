@@ -1,11 +1,14 @@
 from pathlib import Path
 
-from aibackends import configure
-from aibackends.tasks import summarize
+from aibackends.tasks import create_task
 
-configure(runtime="llamacpp", model="gemma4-e2b")
+task = create_task(
+    "summarize",
+    runtime="llamacpp",
+    model="gemma4-e2b",
+)
 
 notes_path = Path(__file__).parent.parent / "data" / "meeting_notes.txt"
-summary = summarize(notes_path)
+summary = task.run(notes_path)
 
 print(summary)

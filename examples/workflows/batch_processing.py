@@ -1,12 +1,15 @@
 from pathlib import Path
 
-from aibackends import configure
-from aibackends.workflows import SalesCallAnalyser
+from aibackends.workflows import create_workflow
 
-configure(runtime="llamacpp", model="gemma4-e2b")
+workflow = create_workflow(
+    "sales-call",
+    runtime="llamacpp",
+    model="gemma4-e2b",
+)
 
 transcript_paths = sorted((Path(__file__).parent.parent / "data" / "batch").glob("sales_call_*.txt"))
-results = SalesCallAnalyser().run_batch(
+results = workflow.run_batch(
     inputs=transcript_paths,
     max_concurrency=4,
     on_error="collect",

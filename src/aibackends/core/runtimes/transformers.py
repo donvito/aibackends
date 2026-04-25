@@ -6,16 +6,19 @@ from pydantic import BaseModel
 
 from aibackends.core.exceptions import RuntimeImportError
 from aibackends.core.model_manager import ModelManager
+from aibackends.core.model_registry import apply_transformer_model_profile
 from aibackends.core.prompting import PromptRenderer
+from aibackends.core.registry import RuntimeSpec
 from aibackends.core.runtimes.base import BaseRuntime
 from aibackends.core.types import Message, RuntimeConfig, RuntimeResponse
 
 
 class TransformersRuntime(BaseRuntime):
     def __init__(self, config: RuntimeConfig) -> None:
-        super().__init__(config)
-        self.model_manager = ModelManager(cache_dir=config.cache_dir)
-        self.prompt_renderer = PromptRenderer(config)
+        effective_config = apply_transformer_model_profile(config)
+        super().__init__(effective_config)
+        self.model_manager = ModelManager(cache_dir=effective_config.cache_dir)
+        self.prompt_renderer = PromptRenderer(effective_config)
         self._tokenizer: Any | None = None
         self._generator: Any | None = None
         self._embed_model: Any | None = None
@@ -97,9 +100,18 @@ class TransformersRuntime(BaseRuntime):
 
         generate_kwargs: dict[str, Any] = {
             **inputs,
-            "max_new_tokens": kwargs.get("max_tokens", self.config.max_tokens),
-            "temperature": kwargs.get("temperature", self.config.temperature),
-            "do_sample": kwargs.get("temperature", self.config.temperature) > 0,
+            "max_new_tokens": kwargs.get(
+                "max_tokens", self.config.extra_options.get("max_tokens", self.config.max_tokens)
+            ),
+            "temperature": kwargs.get(
+                "temperature",
+                self.config.extra_options.get("temperature", self.config.temperature),
+            ),
+            "do_sample": kwargs.get(
+                "temperature",
+                self.config.extra_options.get("temperature", self.config.temperature),
+            )
+            > 0,
         }
         if tokenizer.pad_token_id is not None:
             generate_kwargs["pad_token_id"] = tokenizer.pad_token_id
@@ -136,3 +148,6 @@ class TransformersRuntime(BaseRuntime):
         mask = inputs["attention_mask"].unsqueeze(-1)
         pooled = (hidden * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
         return [float(value) for value in pooled[0].cpu().tolist()]
+
+
+RUNTIME_SPEC = RuntimeSpec(name="transformers", factory=TransformersRuntime)

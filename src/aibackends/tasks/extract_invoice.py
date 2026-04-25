@@ -4,7 +4,9 @@ import asyncio
 from pathlib import Path
 from typing import Any
 
+from aibackends.core.registry import TaskSpec
 from aibackends.schemas.invoice import InvoiceOutput
+from aibackends.tasks._base import BaseTask
 from aibackends.tasks._utils import build_messages, load_text_input, run_structured_task
 
 
@@ -49,3 +51,25 @@ async def extract_invoice_async(
         model=model,
         **overrides,
     )
+
+
+class ExtractInvoiceTask(BaseTask):
+    name = "extract-invoice"
+
+    def run(
+        self,
+        input: str | Path,
+        *,
+        runtime: str | None = None,
+        model: str | None = None,
+        **overrides: Any,
+    ) -> InvoiceOutput:
+        options = self._resolve_options(runtime=runtime, model=model, **overrides)
+        return extract_invoice(input, **options)
+
+
+TASK_SPEC = TaskSpec(
+    name=ExtractInvoiceTask.name,
+    task_factory=ExtractInvoiceTask,
+    aliases=("extract_invoice",),
+)

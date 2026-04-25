@@ -5,12 +5,15 @@ Pluggable AI tasks for any agent framework, powered by local models.
 AIBackends is a Python library of ready-made AI tasks that plug into agent frameworks as tools. Extract invoices, redact PII, classify documents, analyse sales calls, and analyse video ads with one function call and a typed result.
 
 ```python
-from aibackends import configure
-from aibackends.tasks import extract_invoice
+from aibackends.tasks import create_task
 
-configure(runtime="llamacpp", model="gemma4-e2b")
+task = create_task(
+    "extract-invoice",
+    runtime="llamacpp",
+    model="gemma4-e2b",
+)
 
-result = extract_invoice("invoice.pdf")
+result = task.run("invoice.pdf")
 print(result.total)
 ```
 
@@ -20,6 +23,13 @@ print(result.total)
 - Local-first: first-class support for `llama-cpp-python` and `transformers`
 - Typed outputs: every structured task returns a Pydantic model
 - Optional orchestration: workflows add retries, steps, and batch execution without forcing a framework
+
+## Core Concepts
+
+- A `task` is the user-facing function, such as `extract_invoice(...)` or `redact_pii(...)`.
+- A `runtime` is a general LLM or embedding executor with `complete(...)` and `embed(...)`, such as `llamacpp`, `transformers`, `ollama`, or `anthropic`.
+- A `backend` is a swappable implementation for one capability. PII detection uses backends such as `gliner` and `openai-privacy`.
+- A `model` is the artifact or profile used by a runtime or backend, such as `google/gemma-4-E2B-it`, `nvidia/gliner-pii`, or `openai/privacy-filter`.
 
 ## Install
 
@@ -32,7 +42,7 @@ pip install aibackends[llamacpp-cuda]
 pip install aibackends[llamacpp-metal]
 pip install aibackends[transformers]
 
-# Task extras
+# Capability extras
 pip install aibackends[pdf]
 pip install aibackends[audio]
 pip install aibackends[video]
@@ -50,26 +60,34 @@ cd ~/.cache/huggingface/hub
 ## Quickstart
 
 ```python
-from aibackends import configure
-from aibackends.tasks import classify, redact_pii, summarize
+from aibackends.tasks import create_task
 
-configure(runtime="llamacpp", model="gemma4-e2b")
-
-summary = summarize("notes.txt")
-classification = classify("invoice text", labels=["invoice", "contract", "receipt"])
-redacted = redact_pii(
-    "john@example.com called from +1 555 0100",
+summarizer = create_task("summarize", runtime="llamacpp", model="gemma4-e2b")
+classifier = create_task(
+    "classify",
+    runtime="llamacpp",
+    model="gemma4-e2b",
+    labels=["invoice", "contract", "receipt"],
+)
+redactor = create_task(
+    "redact-pii",
     backend="gliner",
     labels=["email", "phone_number"],
 )
+
+summary = summarizer.run("notes.txt")
+classification = classifier.run("invoice text")
+redacted = redactor.run("john@example.com called from +1 555 0100")
 ```
 
-`redact_pii` uses its own PII detection backend such as `gliner` or `openai-privacy`; it does not use the `configure()` runtime/model settings. When using `gliner`, you can pass custom entity labels with `labels=[...]`.
+`redact_pii` uses its own PII detection backend such as `gliner` or `openai-privacy`; it does not use the `configure()` runtime/model settings. GLiNER and `openai/privacy-filter` are models, but in AIBackends they are used through PII backends rather than through the general LLM runtime interface. When using `gliner`, you can pass custom entity labels with `labels=[...]`.
 
 ## Tasks
 
 ```python
 from aibackends.tasks import (
+    BaseTask,
+    create_task,
     analyse_sales_call,
     analyse_video_ad,
     classify,
@@ -79,6 +97,20 @@ from aibackends.tasks import (
     redact_pii,
     summarize,
 )
+```
+
+Direct function calls are the simplest API. The same tasks are also available as
+configured `BaseTask` objects through the factory:
+
+```python
+from aibackends.tasks import create_task
+
+task = create_task(
+    "summarize",
+    runtime="llamacpp",
+    model="gemma4-e2b",
+)
+summary = task.run("notes.txt")
 ```
 
 Included structured outputs:
@@ -91,21 +123,23 @@ Included structured outputs:
 
 ## Runtimes
 
-Global default:
+Preferred per-object configuration:
 
 ```python
-from aibackends import configure
+from aibackends.tasks import create_task
 
-configure(runtime="llamacpp", model="gemma4-e2b")
+task = create_task("extract-invoice", runtime="llamacpp", model="gemma4-e2b")
 ```
 
-Per-task override:
+Direct function calls can still override runtime settings per call:
 
 ```python
 from aibackends.tasks import extract_invoice
 
 result = extract_invoice("invoice.pdf", runtime="anthropic", model="claude-sonnet-4-5")
 ```
+
+You can also use `configure(...)` for global defaults when that fits your app.
 
 Supported runtimes:
 
@@ -136,12 +170,15 @@ configure(
 ```python
 from pathlib import Path
 
-from aibackends import configure
-from aibackends.workflows import SalesCallAnalyser
+from aibackends.workflows import create_workflow
 
-configure(runtime="llamacpp", model="gemma4-e2b")
+workflow = create_workflow(
+    "sales-call",
+    runtime="llamacpp",
+    model="gemma4-e2b",
+)
 
-results = SalesCallAnalyser().run_batch(
+results = workflow.run_batch(
     inputs=Path("./calls").glob("*.m4a"),
     max_concurrency=4,
     on_error="collect",
@@ -161,25 +198,26 @@ See `examples/README.md` for setup and usage.
 
 Runnable core examples with bundled sample data:
 
-- `basic_task.py`
-- `basic_task_transformers.py`
-- `summarize_text.py`
-- `classify_text.py`
-- `redact_text.py`
-- `extract_custom_schema.py`
-- `sales_call_report.py`
-- `video_ad_report.py`
-- `batch_processing.py`
-- `custom_pipeline.py`
+- `examples/tasks/basic_task.py`
+- `examples/tasks/basic_task_transformers.py`
+- `examples/tasks/summarize_text.py`
+- `examples/tasks/classify_text.py`
+- `examples/tasks/redact_text.py`
+- `examples/tasks/extract_custom_schema.py`
+- `examples/tasks/task_interface.py`
+- `examples/tasks/sales_call_report.py`
+- `examples/tasks/video_ad_report.py`
+- `examples/workflows/batch_processing.py`
+- `examples/workflows/custom_pipeline.py`
 
 Framework integration examples:
 
-- `langgraph_agent.py`
-- `pydantic_ai_agent.py`
-- `openai_agents_sdk.py`
-- `crewai_agent.py`
-- `agno_agent.py`
-- `llamaindex_agent.py`
+- `examples/agents/langgraph_agent.py`
+- `examples/agents/pydantic_ai_agent.py`
+- `examples/agents/openai_agents_sdk.py`
+- `examples/agents/crewai_agent.py`
+- `examples/agents/agno_agent.py`
+- `examples/agents/llamaindex_agent.py`
 
 ## CLI
 
@@ -195,7 +233,10 @@ aibackends check transformers
 
 ```text
 src/aibackends/
+  backends/
   core/
+  model_support/
+  models/
   schemas/
   steps/
   tasks/
@@ -205,6 +246,15 @@ examples/
 docs/
 tests/
 ```
+
+## Docs
+
+The docs are intentionally small:
+
+- `docs/concepts.md`: task, runtime, backend, model, and workflow vocabulary
+- `docs/usage.md`: install, configure, tasks, workflows, CLI, and agent integrations
+- `docs/extending.md`: add runtimes, model profiles, capability backends, tasks, and workflows
+- `docs/api-reference/index.md`: public API groups
 
 ## Development
 

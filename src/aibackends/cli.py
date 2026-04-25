@@ -12,16 +12,7 @@ from pydantic import BaseModel
 from aibackends.core.config import get_runtime
 from aibackends.core.model_manager import ModelManager
 from aibackends.core.types import RuntimeConfig
-from aibackends.tasks import (
-    analyse_sales_call,
-    analyse_video_ad,
-    classify,
-    embed,
-    extract,
-    extract_invoice,
-    redact_pii,
-    summarize,
-)
+from aibackends.tasks.registry import create_task, get_task
 
 app = typer.Typer(help="AIBackends CLI")
 
@@ -38,33 +29,27 @@ def run_task(
     runtime: str | None = typer.Option(None, help="Runtime override."),
     model: str | None = typer.Option(None, help="Model override."),
 ) -> None:
-    normalized = name.replace("_", "-").lower()
-    result: Any
-    if normalized == "extract-invoice":
-        result = extract_invoice(input, runtime=runtime, model=model)
-    elif normalized == "redact-pii":
-        pii_labels = [item.strip() for item in labels.split(",") if item.strip()] if labels else None
-        result = redact_pii(input, backend=backend, labels=pii_labels)
-    elif normalized == "classify":
-        if not labels:
-            raise typer.BadParameter("--labels is required for classify")
-        result = classify(
-            input, labels=[item.strip() for item in labels.split(",")], runtime=runtime, model=model
-        )
-    elif normalized == "summarize":
-        result = summarize(input, runtime=runtime, model=model)
-    elif normalized == "extract":
+    task = get_task(name)
+    kwargs: dict[str, Any] = {}
+    parsed_labels = _parse_labels(labels)
+    if task.requires_labels and not parsed_labels:
+        raise typer.BadParameter(f"--labels is required for {task.name}")
+    if task.accepts_labels and parsed_labels is not None:
+        kwargs["labels"] = parsed_labels
+    if task.accepts_backend:
+        kwargs["backend"] = backend
+    if task.requires_schema:
         if not schema:
-            raise typer.BadParameter("--schema is required for extract")
-        result = extract(input, schema=_load_schema(schema), runtime=runtime, model=model)
-    elif normalized == "embed":
-        result = embed(input, runtime=runtime, model=model)
-    elif normalized == "analyse-sales-call":
-        result = analyse_sales_call(input, runtime=runtime, model=model)
-    elif normalized == "analyse-video-ad":
-        result = analyse_video_ad(input, runtime=runtime, model=model)
-    else:
-        raise typer.BadParameter(f"Unknown task: {name}")
+            raise typer.BadParameter(f"--schema is required for {task.name}")
+        kwargs["schema"] = _load_schema(schema)
+    task_config: dict[str, Any] = {}
+    if task.accepts_runtime:
+        task_config["runtime"] = runtime
+    if task.accepts_model:
+        task_config["model"] = model
+
+    task_instance = create_task(name, **task_config)
+    result = task_instance.run(input, **kwargs)
     typer.echo(_serialize(result))
 
 
@@ -111,6 +96,13 @@ def _load_schema(import_path: str) -> type[BaseModel]:
     if not isinstance(schema, type) or not issubclass(schema, BaseModel):
         raise typer.BadParameter("Schema must resolve to a Pydantic model class.")
     return schema
+
+
+def _parse_labels(value: str | None) -> list[str] | None:
+    if value is None:
+        return None
+    labels = [item.strip() for item in value.split(",") if item.strip()]
+    return labels or None
 
 
 def _serialize(value: Any) -> str:

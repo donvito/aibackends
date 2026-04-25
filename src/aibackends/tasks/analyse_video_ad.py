@@ -4,7 +4,9 @@ import asyncio
 from pathlib import Path
 from typing import Any
 
+from aibackends.core.registry import TaskSpec
 from aibackends.schemas.video_ad import VideoAdReport
+from aibackends.tasks._base import BaseTask
 from aibackends.tasks._utils import build_messages, load_text_input, run_structured_task
 
 VIDEO_SUFFIXES = {".avi", ".mov", ".mp4", ".mkv", ".webm"}
@@ -84,3 +86,25 @@ def _load_video_context(value: str | Path) -> str:
 
     lines.append("Use the available metadata or surrounding description to assess the ad.")
     return "\n".join(lines)
+
+
+class AnalyseVideoAdTask(BaseTask):
+    name = "analyse-video-ad"
+
+    def run(
+        self,
+        input: str | Path,
+        *,
+        runtime: str | None = None,
+        model: str | None = None,
+        **overrides: Any,
+    ) -> VideoAdReport:
+        options = self._resolve_options(runtime=runtime, model=model, **overrides)
+        return analyse_video_ad(input, **options)
+
+
+TASK_SPEC = TaskSpec(
+    name=AnalyseVideoAdTask.name,
+    task_factory=AnalyseVideoAdTask,
+    aliases=("analyse_video_ad",),
+)

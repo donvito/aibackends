@@ -7,6 +7,7 @@ from typing import Any
 import yaml
 
 from aibackends.core.exceptions import ConfigurationError, RuntimeNotConfiguredError
+from aibackends.core.registry import RuntimeSpec, discover_specs, normalize_name
 from aibackends.core.types import RuntimeConfig
 
 if False:  # pragma: no cover
@@ -20,7 +21,7 @@ _BUILTINS_REGISTERED = False
 
 
 def register_runtime(name: str, factory: RuntimeFactory) -> None:
-    _RUNTIME_FACTORIES[name] = factory
+    _RUNTIME_FACTORIES[normalize_name(name)] = factory
 
 
 def _ensure_builtin_runtimes_registered() -> None:
@@ -28,21 +29,11 @@ def _ensure_builtin_runtimes_registered() -> None:
     if _BUILTINS_REGISTERED:
         return
 
-    from aibackends.core.runtimes.anthropic import AnthropicRuntime
-    from aibackends.core.runtimes.groq import GroqRuntime
-    from aibackends.core.runtimes.llamacpp import LlamaCppRuntime
-    from aibackends.core.runtimes.lmstudio import LMStudioRuntime
-    from aibackends.core.runtimes.ollama import OllamaRuntime
-    from aibackends.core.runtimes.together import TogetherRuntime
-    from aibackends.core.runtimes.transformers import TransformersRuntime
-
-    register_runtime("anthropic", AnthropicRuntime)
-    register_runtime("groq", GroqRuntime)
-    register_runtime("llamacpp", LlamaCppRuntime)
-    register_runtime("lmstudio", LMStudioRuntime)
-    register_runtime("ollama", OllamaRuntime)
-    register_runtime("together", TogetherRuntime)
-    register_runtime("transformers", TransformersRuntime)
+    for spec in discover_specs("aibackends.core.runtimes", "RUNTIME_SPEC"):
+        if not isinstance(spec, RuntimeSpec):
+            raise ConfigurationError(f"Invalid runtime spec: {spec!r}")
+        for name in spec.names:
+            register_runtime(name, spec.factory)
     _BUILTINS_REGISTERED = True
 
 
@@ -95,7 +86,7 @@ def get_runtime(overrides: dict[str, Any] | RuntimeConfig | None = None) -> Base
             "No runtime configured. Call `aibackends.configure(runtime=..., model=...)` first."
         )
     try:
-        factory = _RUNTIME_FACTORIES[config.runtime]
+        factory = _RUNTIME_FACTORIES[normalize_name(config.runtime)]
     except KeyError as exc:
         raise ConfigurationError(f"Unknown runtime: {config.runtime}") from exc
     return factory(config)

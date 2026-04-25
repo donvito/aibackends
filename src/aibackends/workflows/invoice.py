@@ -1,3 +1,4 @@
+from aibackends.core.registry import WorkflowSpec
 from aibackends.schemas.invoice import InvoiceOutput
 from aibackends.steps.enrich import VisionExtractor
 from aibackends.steps.ingest import PDFIngestor
@@ -13,3 +14,10 @@ class InvoiceProcessor(Pipeline):
         VisionExtractor(schema=InvoiceOutput, prompt="Extract invoice data from the document."),
         PydanticValidator(schema=InvoiceOutput),
     ]
+
+
+WORKFLOW_SPEC = WorkflowSpec(
+    name="invoice",
+    workflow_factory=InvoiceProcessor,
+    aliases=("invoice-processor", "invoice_processor"),
+)

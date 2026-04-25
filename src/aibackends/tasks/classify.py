@@ -4,7 +4,9 @@ import asyncio
 from pathlib import Path
 from typing import Any
 
+from aibackends.core.registry import TaskSpec
 from aibackends.schemas.pii import Classification
+from aibackends.tasks._base import BaseTask
 from aibackends.tasks._utils import build_messages, load_text_input, run_structured_task
 
 
@@ -53,3 +55,27 @@ async def classify_async(
         model=model,
         **overrides,
     )
+
+
+class ClassifyTask(BaseTask):
+    name = "classify"
+
+    def run(
+        self,
+        input: str | Path,
+        *,
+        labels: list[str] | None = None,
+        runtime: str | None = None,
+        model: str | None = None,
+        **overrides: Any,
+    ) -> Classification:
+        options = self._resolve_options(labels=labels, runtime=runtime, model=model, **overrides)
+        return classify(input, **options)
+
+
+TASK_SPEC = TaskSpec(
+    name=ClassifyTask.name,
+    task_factory=ClassifyTask,
+    accepts_labels=True,
+    requires_labels=True,
+)

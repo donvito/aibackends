@@ -2,8 +2,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from aibackends import configure
-from aibackends.tasks import extract
+from aibackends.tasks import create_task
 
 
 class Lead(BaseModel):
@@ -15,13 +14,15 @@ class Lead(BaseModel):
     next_step: str | None = None
 
 
-configure(runtime="llamacpp", model="gemma4-e2b")
-
-lead_note_path = Path(__file__).parent.parent / "data" / "lead_note.txt"
-result = extract(
-    lead_note_path,
+task = create_task(
+    "extract",
+    runtime="llamacpp",
+    model="gemma4-e2b",
     schema=Lead,
     instructions="Extract the lead details from the intake note.",
 )
+
+lead_note_path = Path(__file__).parent.parent / "data" / "lead_note.txt"
+result = task.run(lead_note_path)
 
 print(result.model_dump_json(indent=2))

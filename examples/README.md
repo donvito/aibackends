@@ -1,9 +1,10 @@
 # Examples
 
-This directory contains two kinds of examples:
+This directory contains three kinds of examples:
 
-- Runnable core-task examples that use bundled sample text files in `examples/data/`
-- Agent framework integrations that show how to wrap AIBackends tasks as tools
+- Task examples that create configured task objects with `create_task(...)`
+- Workflow examples that create configured pipelines with `create_workflow(...)` or explicit pipeline construction
+- Agent framework integrations that wrap configured task objects as tools
 
 ## Setup
 
@@ -23,7 +24,10 @@ python3 -m pip install -e ".[llamacpp-metal]"
 python3 -m pip install -e ".[transformers]"
 ```
 
-Examples that call `configure(...)` can swap runtimes by changing that call. `redact_text.py` is different: it uses `redact_pii(..., backend="gliner")` and does not depend on the global runtime configuration.
+Task examples use `create_task(...)` so runtime, model, backend, labels, and
+other defaults are configured before `run(...)`. Agent examples follow the same
+pattern: create the task object once, then expose `task.run(...)` through the
+framework's tool wrapper.
 
 `basic_task_transformers.py` uses the smaller instruction-tuned `google/gemma-3-270m-it` model so it stays practical on CPU-only machines. If you swap it to `gemma4-e2b`, expect a much larger first download and slower load time.
 
@@ -32,27 +36,28 @@ Examples that call `configure(...)` can swap runtimes by changing that call. `re
 These examples use the sample files in `examples/data/` and do not require any agent framework package.
 
 ```bash
-python3 examples/basic_task.py
-python3 examples/basic_task_transformers.py
-python3 examples/summarize_text.py
-python3 examples/classify_text.py
-python3 examples/redact_text.py
-python3 examples/extract_custom_schema.py
-python3 examples/sales_call_report.py
-python3 examples/video_ad_report.py
-python3 examples/batch_processing.py
-python3 examples/custom_pipeline.py
+python3 examples/tasks/basic_task.py
+python3 examples/tasks/basic_task_transformers.py
+python3 examples/tasks/summarize_text.py
+python3 examples/tasks/classify_text.py
+python3 examples/tasks/redact_text.py
+python3 examples/tasks/extract_custom_schema.py
+python3 examples/tasks/task_interface.py
+python3 examples/tasks/sales_call_report.py
+python3 examples/tasks/video_ad_report.py
+python3 examples/workflows/batch_processing.py
+python3 examples/workflows/custom_pipeline.py
 ```
 
 ## Framework integration examples
 
 These examples require the corresponding framework packages to be installed separately:
 
-- `langgraph_agent.py`
-- `pydantic_ai_agent.py`
-- `openai_agents_sdk.py`
-- `crewai_agent.py`
-- `agno_agent.py`
-- `llamaindex_agent.py`
+- `examples/agents/langgraph_agent.py`
+- `examples/agents/pydantic_ai_agent.py`
+- `examples/agents/openai_agents_sdk.py`
+- `examples/agents/crewai_agent.py`
+- `examples/agents/agno_agent.py`
+- `examples/agents/llamaindex_agent.py`
 
 They are intended to show how AIBackends tasks plug into agent frameworks as tools.

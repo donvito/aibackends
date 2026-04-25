@@ -8,6 +8,7 @@ from pathlib import Path, PurePosixPath
 from aibackends.core.exceptions import ModelResolutionError, RuntimeImportError
 from aibackends.core.model_registry import resolve_model_alias
 from aibackends.core.types import RuntimeConfig
+from aibackends.model_support import get_model_support
 
 
 @dataclass(slots=True)
@@ -63,17 +64,17 @@ class ModelManager:
         if candidate.exists():
             return ModelLocation(source=resolved, local_path=str(candidate))
 
-        if config.runtime == "llamacpp":
-            local_path = self._download_gguf_repo(resolved)
-            return ModelLocation(source=resolved, local_path=str(local_path))
+        support = get_model_support(config.runtime)
+        if support is not None and support.ensure_model is not None:
+            return support.ensure_model(self, config, resolved)
 
         return ModelLocation(source=resolved, local_path=None)
 
     def pull_model(self, config: RuntimeConfig) -> ModelLocation:
         resolved = self.resolve_model_name(config)
-        if config.runtime == "llamacpp":
-            local_path = self._download_gguf_repo(resolved)
-            return ModelLocation(source=resolved, local_path=str(local_path))
+        support = get_model_support(config.runtime)
+        if support is not None and support.pull_model is not None:
+            return support.pull_model(self, config, resolved)
 
         try:
             from huggingface_hub import snapshot_download

@@ -3,6 +3,7 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 from aibackends.tasks import classify, embed, extract, summarize
+from aibackends.tasks._utils import load_text_input
 
 
 class Person(BaseModel):
@@ -30,3 +31,9 @@ def test_extract_uses_custom_schema():
 def test_embed_returns_vector():
     vector = embed("hello")
     assert vector == [5.0, 1.0, 0.5]
+
+
+def test_load_text_input_treats_invalid_path_like_strings_as_text():
+    value = "x" * 4096
+
+    assert load_text_input(value) == value

@@ -4,6 +4,8 @@ import asyncio
 from pathlib import Path
 from typing import Any
 
+from aibackends.core.registry import TaskSpec
+from aibackends.tasks._base import BaseTask
 from aibackends.tasks._utils import build_messages, load_text_input, run_text_task
 
 
@@ -36,3 +38,21 @@ async def summarize_async(
     **overrides: Any,
 ) -> str:
     return await asyncio.to_thread(summarize, text, runtime=runtime, model=model, **overrides)
+
+
+class SummarizeTask(BaseTask):
+    name = "summarize"
+
+    def run(
+        self,
+        input: str | Path,
+        *,
+        runtime: str | None = None,
+        model: str | None = None,
+        **overrides: Any,
+    ) -> str:
+        options = self._resolve_options(runtime=runtime, model=model, **overrides)
+        return summarize(input, **options)
+
+
+TASK_SPEC = TaskSpec(name=SummarizeTask.name, task_factory=SummarizeTask)

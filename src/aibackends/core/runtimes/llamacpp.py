@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from aibackends.core.exceptions import RuntimeImportError, RuntimeRequestError
 from aibackends.core.model_manager import ModelManager
 from aibackends.core.prompting import schema_prompt
+from aibackends.core.registry import RuntimeSpec
 from aibackends.core.runtimes.base import BaseRuntime
 from aibackends.core.types import Message, RuntimeConfig, RuntimeResponse, TokenUsage
 
@@ -78,3 +79,6 @@ class LlamaCppRuntime(BaseRuntime):
         data = client.create_embedding(text)
         embedding = data["data"][0]["embedding"]
         return [float(value) for value in embedding]
+
+
+RUNTIME_SPEC = RuntimeSpec(name="llamacpp", factory=LlamaCppRuntime)

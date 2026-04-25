@@ -38,7 +38,11 @@ def build_messages(system_prompt: str, user_prompt: str) -> list[Message]:
 
 def load_text_input(value: str | Path) -> str:
     path = Path(value).expanduser()
-    if not path.exists() or not path.is_file():
+    try:
+        is_file = path.exists() and path.is_file()
+    except OSError:
+        return str(value)
+    if not is_file:
         return str(value)
 
     if path.suffix.lower() in TEXT_SUFFIXES:

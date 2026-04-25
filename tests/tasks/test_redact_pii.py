@@ -7,11 +7,20 @@ import pytest
 
 from aibackends.core.exceptions import TaskExecutionError
 
+gliner_module = importlib.import_module("aibackends.backends.pii.gliner")
 redact_pii_module = importlib.import_module("aibackends.tasks.redact_pii")
 
 
 def test_redact_pii_does_not_fallback_to_regex(monkeypatch):
-    monkeypatch.setattr(redact_pii_module, "_gliner_entities", lambda text, labels=None: [])
+    class CompletedProcess:
+        returncode = 0
+        stdout = "[]"
+
+    def fake_run(command, *, input: str, text: bool, capture_output: bool, check: bool):
+        del command, input, text, capture_output, check
+        return CompletedProcess()
+
+    monkeypatch.setattr(gliner_module.subprocess, "run", fake_run)
 
     result = redact_pii_module.redact_pii(
         "Email john@example.com or call +1 555 010 9999", backend="gliner"
@@ -65,19 +74,19 @@ def test_redact_pii_uses_nvidia_gliner_model(monkeypatch):
         captured["check"] = check
         return CompletedProcess()
 
-    monkeypatch.setattr(redact_pii_module.subprocess, "run", fake_run)
+    monkeypatch.setattr(gliner_module.subprocess, "run", fake_run)
 
     result = redact_pii_module.redact_pii(text, backend="gliner")
 
     assert captured["command"] == [
-        redact_pii_module.sys.executable,
-        str(redact_pii_module.GLINER_WORKER_PATH),
+        gliner_module.sys.executable,
+        str(gliner_module.GLINER_WORKER_PATH),
     ]
     assert captured["payload"] == {
-        "model_id": redact_pii_module.GLINER_MODEL_ID,
+        "model_id": gliner_module.GLINER_MODEL_ID,
         "text": text,
-        "labels": redact_pii_module.GLINER_LABELS,
-        "threshold": redact_pii_module.GLINER_THRESHOLD,
+        "labels": list(gliner_module.GLINER_LABELS),
+        "threshold": gliner_module.GLINER_THRESHOLD,
     }
     assert captured["text"] is True
     assert captured["capture_output"] is True
@@ -99,17 +108,17 @@ def test_redact_pii_accepts_custom_gliner_labels(monkeypatch):
         captured["payload"] = json.loads(input)
         return CompletedProcess()
 
-    monkeypatch.setattr(redact_pii_module.subprocess, "run", fake_run)
+    monkeypatch.setattr(gliner_module.subprocess, "run", fake_run)
 
     redact_pii_module.redact_pii(
         "Contact me at john@example.com", backend="gliner", labels=["email", "user_name"]
     )
 
     assert captured["payload"] == {
-        "model_id": redact_pii_module.GLINER_MODEL_ID,
+        "model_id": gliner_module.GLINER_MODEL_ID,
         "text": "Contact me at john@example.com",
         "labels": ["email", "user_name"],
-        "threshold": redact_pii_module.GLINER_THRESHOLD,
+        "threshold": gliner_module.GLINER_THRESHOLD,
     }
 
 
@@ -119,5 +128,5 @@ def test_redact_pii_rejects_unknown_backend():
 
 
 def test_redact_pii_rejects_custom_labels_for_openai_privacy():
-    with pytest.raises(TaskExecutionError, match="Custom labels are only supported"):
+    with pytest.raises(TaskExecutionError, match="Custom labels are not supported"):
         redact_pii_module.redact_pii("hello", backend="openai-privacy", labels=["email"])

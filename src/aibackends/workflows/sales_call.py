@@ -1,3 +1,4 @@
+from aibackends.core.registry import WorkflowSpec
 from aibackends.schemas.sales_call import SalesCallReport
 from aibackends.steps.enrich import LLMAnalyser, PIIRedactor
 from aibackends.steps.ingest import AudioIngestor
@@ -14,3 +15,10 @@ class SalesCallAnalyser(Pipeline):
         LLMAnalyser(schema=SalesCallReport, prompt="Analyse the sales call transcript."),
         PydanticValidator(schema=SalesCallReport),
     ]
+
+
+WORKFLOW_SPEC = WorkflowSpec(
+    name="sales-call",
+    workflow_factory=SalesCallAnalyser,
+    aliases=("sales_call", "sales-call-analyser", "sales_call_analyser"),
+)

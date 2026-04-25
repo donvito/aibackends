@@ -2,13 +2,10 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from aibackends import configure
 from aibackends.steps.enrich import LLMAnalyser
 from aibackends.steps.ingest import FileIngestor
 from aibackends.steps.validate import PydanticValidator
 from aibackends.workflows import Pipeline
-
-configure(runtime="llamacpp", model="gemma4-e2b")
 
 
 class LeadBrief(BaseModel):
@@ -28,5 +25,6 @@ class LeadIntakePipeline(Pipeline):
 
 
 lead_note_path = Path(__file__).parent.parent / "data" / "lead_note.txt"
-result = LeadIntakePipeline().run(lead_note_path)
+workflow = LeadIntakePipeline(runtime="llamacpp", model="gemma4-e2b")
+result = workflow.run(lead_note_path)
 print(result.model_dump_json(indent=2))

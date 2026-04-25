@@ -1,3 +1,4 @@
+from aibackends.core.registry import WorkflowSpec
 from aibackends.schemas.video_ad import VideoAdReport
 from aibackends.steps.enrich import VisionExtractor
 from aibackends.steps.ingest import VideoIngestor
@@ -15,3 +16,10 @@ class VideoAdIntelligence(Pipeline):
         VisionExtractor(schema=VideoAdReport, prompt="Analyse the video ad creative."),
         PydanticValidator(schema=VideoAdReport),
     ]
+
+
+WORKFLOW_SPEC = WorkflowSpec(
+    name="video-ad",
+    workflow_factory=VideoAdIntelligence,
+    aliases=("video_ad", "video-ad-intelligence", "video_ad_intelligence"),
+)
