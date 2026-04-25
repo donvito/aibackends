@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 import aibackends.steps.enrich as enrich_module
+from aibackends.schemas.invoice import InvoiceOutput
 from aibackends.schemas.pii import RedactedText
+from aibackends.steps.enrich import LLMAnalyser
+from aibackends.steps.ingest import FileIngestor
+from aibackends.steps.validate import PydanticValidator
 from aibackends.workflows import InvoiceProcessor, SalesCallAnalyser
+from aibackends.workflows._base import Pipeline
 
 
 def test_invoice_processor_batch_collects_results(tmp_path):
@@ -41,3 +46,19 @@ def test_sales_call_analyser_accepts_transcript_file(tmp_path, monkeypatch):
     result = SalesCallAnalyser(runtime="stub", model="stub-model").run(transcript)
     assert result.score == 7.4
     assert result.sentiment == "positive"
+
+
+def test_custom_pipeline_passes_runtime_config_to_llm_step(tmp_path):
+    class CustomInvoicePipeline(Pipeline):
+        steps = [
+            FileIngestor(),
+            LLMAnalyser(schema=InvoiceOutput, prompt="Extract invoice data."),
+            PydanticValidator(schema=InvoiceOutput),
+        ]
+
+    invoice = tmp_path / "invoice.txt"
+    invoice.write_text("Invoice from Acme Corp for consulting services")
+
+    result = CustomInvoicePipeline(runtime="stub", model="stub-model").run(invoice)
+
+    assert result.total == 1250.0

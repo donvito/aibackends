@@ -6,6 +6,11 @@ This directory contains three kinds of examples:
 - Workflow examples that create configured pipelines with `create_workflow(...)` or explicit pipeline construction
 - Agent framework integrations that wrap configured task objects as tools
 
+The agent examples intentionally keep AIBackends tasks and workflows outside the
+agent framework. The framework layer only wraps `task.run(...)` or
+`workflow.run(...)`, so the same pipeline can be reused if you switch frameworks
+or run more than one framework in the same application.
+
 ## Setup
 
 From the repo root:

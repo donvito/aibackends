@@ -9,6 +9,6 @@ task = create_task(
 )
 
 notes_path = Path(__file__).parent.parent / "data" / "meeting_notes.txt"
-summary = task.run(notes_path)
+summary = task.run("notes_path")
 
 print(summary)

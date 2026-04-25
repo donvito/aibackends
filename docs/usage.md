@@ -135,11 +135,14 @@ aibackends check transformers
 
 ## Agent Frameworks
 
-AIBackends tasks are plain Python callables, so most agent frameworks can use
-them directly or through their function-tool wrapper:
+AIBackends tasks and workflows are plain Python objects. Configure them once,
+then wrap `task.run(...)` or `workflow.run(...)` with the adapter required by
+your agent framework. This keeps pipelines independent of LangGraph,
+pydantic-ai, OpenAI Agents SDK, CrewAI, Agno, LlamaIndex, or any future framework
+you adopt.
 
-- LangGraph: wrap with `@tool`
-- pydantic-ai: pass in `tools=[...]`
+- LangGraph: wrap `task.run` or `workflow.run` with `@tool`
+- pydantic-ai: pass wrapper functions in `tools=[...]`
 - OpenAI Agents SDK: wrap with `@function_tool`
 - CrewAI: wrap with `@tool("Name")`
 - Agno: wrap with `@tool`

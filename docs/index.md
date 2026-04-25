@@ -1,17 +1,19 @@
 # AIBackends
 
-AIBackends is a Python library of ready-made AI tasks that plug into any agent
-framework as tools. Extract invoices, redact PII, classify documents, summarize
-text, analyse sales calls, and analyse video ads with one function call and a
-typed result.
+AIBackends is a Python library of ready-made AI tasks and workflows that are not
+tied to any one agent framework. Build a task or pipeline once, then plug it into
+LangGraph, pydantic-ai, OpenAI Agents SDK, CrewAI, Agno, LlamaIndex, or your own
+application code.
+
+Extract invoices, redact PII, classify documents, summarize text, analyse sales
+calls, and analyse video ads with typed results.
 
 ```python
-from aibackends import configure
-from aibackends.tasks import extract_invoice
+from aibackends.tasks import create_task
 
-configure(runtime="llamacpp", model="gemma4-e2b")
+task = create_task("extract-invoice", runtime="llamacpp", model="gemma4-e2b")
 
-result = extract_invoice("invoice.pdf")
+result = task.run("invoice.pdf")
 print(result.total)
 ```
 

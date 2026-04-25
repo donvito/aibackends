@@ -1,8 +1,12 @@
 # AIBackends
 
-Pluggable AI tasks for any agent framework, powered by local models.
+Framework-agnostic AI tasks and pipelines, powered by pluggable runtimes.
 
-AIBackends is a Python library of ready-made AI tasks that plug into agent frameworks as tools. Extract invoices, redact PII, classify documents, analyse sales calls, and analyse video ads with one function call and a typed result.
+AIBackends is a Python library of ready-made AI tasks and workflows that are not
+tied to any one agent framework. Use the same configured tasks and pipelines in
+LangGraph, pydantic-ai, OpenAI Agents SDK, CrewAI, Agno, LlamaIndex, or your own
+application code. Extract invoices, redact PII, classify documents, analyse
+sales calls, and analyse video ads with typed results.
 
 ```python
 from aibackends.tasks import create_task
@@ -19,10 +23,65 @@ print(result.total)
 
 ## Why AIBackends
 
-- Framework agnostic: LangGraph, pydantic-ai, OpenAI Agents SDK, CrewAI, Agno, LlamaIndex, or your own code
+- Framework agnostic: keep workflows and pipelines independent of whichever agent framework you use today
+- Easy to switch or mix frameworks: wrap the same task or workflow object for LangGraph, pydantic-ai, OpenAI Agents SDK, CrewAI, Agno, LlamaIndex, or your own code
 - Local-first: first-class support for `llama-cpp-python` and `transformers`
 - Typed outputs: every structured task returns a Pydantic model
 - Optional orchestration: workflows add retries, steps, and batch execution without forcing a framework
+
+```mermaid
+flowchart LR
+    subgraph frameworks [Agent frameworks]
+        LG["LangGraph"]
+        PAI["pydantic-ai"]
+        OAI["OpenAI Agents SDK"]
+        Crew["CrewAI"]
+        AgnoFw["Agno"]
+        LI["LlamaIndex"]
+    end
+
+    subgraph custom [Your custom workflows]
+        BackOffice["Back office app"]
+        DataPipeline["Existing data pipeline"]
+        BatchJob["Nightly batch job or CLI"]
+    end
+
+    subgraph aibackends [AIBackends]
+        direction TB
+        subgraph tasks [Tasks]
+            T1["summarize"]
+            T2["extract"]
+            T3["classify"]
+            T4["embed"]
+            T5["redact-pii"]
+            T6["extract-invoice"]
+            T7["analyse-sales-call"]
+            T8["analyse-video-ad"]
+        end
+        subgraph workflows [Workflows]
+            W1["invoice"]
+            W2["pii-redactor"]
+            W3["sales-call"]
+            W4["video-ad"]
+        end
+    end
+
+    LG --> aibackends
+    PAI --> aibackends
+    OAI --> aibackends
+    Crew --> aibackends
+    AgnoFw --> aibackends
+    LI --> aibackends
+
+    BackOffice --> aibackends
+    DataPipeline --> aibackends
+    BatchJob --> aibackends
+```
+
+Agents from any framework and your own custom workflows, apps, and batch jobs
+all call into the same AIBackends tasks and workflows. Swap agent frameworks
+or add new consumers without rewriting the underlying extraction,
+classification, redaction, or analysis logic.
 
 ## Core Concepts
 

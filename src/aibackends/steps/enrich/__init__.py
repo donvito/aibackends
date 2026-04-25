@@ -5,7 +5,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from aibackends.steps._base import BaseStep
+from aibackends.steps._base import BaseStep, StepContext
 from aibackends.tasks._utils import build_messages, load_text_input, run_structured_task
 from aibackends.tasks.redact_pii import redact_pii
 
@@ -48,8 +48,7 @@ class LLMAnalyser(BaseStep):
         self.runtime = runtime
         self.model = model
 
-    def run(self, payload: Any, context: dict[str, Any]) -> BaseModel:
-        del context
+    def run(self, payload: Any, context: StepContext) -> BaseModel:
         data = payload.copy() if isinstance(payload, dict) else {"input": payload}
         content = (
             data.get("transcript")
@@ -67,8 +66,9 @@ class LLMAnalyser(BaseStep):
             task_name=self.prompt,
             schema=self.schema,
             messages=messages,
-            runtime=self.runtime,
-            model=self.model,
+            runtime=self.runtime or context.runtime_config.runtime,
+            model=self.model or context.runtime_config.model,
+            **context.runtime_config.extra_options,
         )
 
 
