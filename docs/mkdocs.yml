@@ -7,5 +7,6 @@ nav:
   - Home: index.md
   - Concepts: concepts.md
   - Usage: usage.md
+  - CLI: cli.md
   - Extending: extending.md
   - API Reference: api-reference/index.md

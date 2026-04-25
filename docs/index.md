@@ -20,7 +20,8 @@ print(result.total)
 ## What To Read
 
 - [Concepts](concepts.md): the framework vocabulary, especially runtime vs backend vs model.
-- [Usage](usage.md): install, configure, call tasks, use workflows, and run the CLI.
+- [Usage](usage.md): install, configure, call tasks, and use workflows.
+- [CLI](cli.md): run tasks, pull models, and check runtimes from the terminal.
 - [Extending](extending.md): add a runtime, model profile, backend, task, or workflow by adding focused files.
 - [API Reference](api-reference/index.md): the public API groups.
 

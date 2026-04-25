@@ -78,6 +78,8 @@ flowchart LR
     BatchJob --> aibackends
 ```
 
+
+
 Agents from any framework and your own custom workflows, apps, and batch jobs
 all call into the same AIBackends tasks and workflows. Swap agent frameworks
 or add new consumers without rewriting the underlying extraction,
@@ -288,6 +290,9 @@ aibackends pull gemma4-e2b --runtime llamacpp
 aibackends check transformers
 ```
 
+See the [CLI guide](docs/cli.md) for the full command reference, per-task
+examples, output formats, and what is and isn't exposed via the CLI.
+
 ## Repo layout
 
 ```text
@@ -311,7 +316,8 @@ tests/
 The docs are intentionally small:
 
 - `docs/concepts.md`: task, runtime, backend, model, and workflow vocabulary
-- `docs/usage.md`: install, configure, tasks, workflows, CLI, and agent integrations
+- `docs/usage.md`: install, configure, tasks, workflows, and agent integrations
+- `docs/cli.md`: command reference for `aibackends task`, `pull`, and `check`
 - `docs/extending.md`: add runtimes, model profiles, capability backends, tasks, and workflows
 - `docs/api-reference/index.md`: public API groups
 

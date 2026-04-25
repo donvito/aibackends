@@ -133,6 +133,9 @@ aibackends pull gemma4-e2b --runtime llamacpp
 aibackends check transformers
 ```
 
+For full command reference (subcommands, flags, output formats, and what is
+not exposed via CLI), see the [CLI guide](cli.md).
+
 ## Agent Frameworks
 
 AIBackends tasks and workflows are plain Python objects. Configure them once,
