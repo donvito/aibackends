@@ -111,11 +111,11 @@ aibackends task extract \
 Notes:
 
 - `redact-pii` does not use the `--runtime` / `--model` flags. It dispatches to
-  a PII backend such as `gliner` or `openai-privacy`.
+a PII backend such as `gliner` or `openai-privacy`.
 - `classify` requires `--labels`. `redact-pii` accepts `--labels` only when used
-  with the `gliner` backend (custom entity types).
+with the `gliner` backend (custom entity types).
 - `extract` requires `--schema` pointing to a Pydantic model class via dotted
-  path (`package.module.SchemaName`).
+path (`package.module.SchemaName`).
 
 ### `aibackends pull` — pre-download a local model
 
@@ -156,14 +156,92 @@ printed:
 So:
 
 - `summarize` writes the summary text directly to stdout, ready to pipe into
-  another tool.
+another tool.
 - Structured tasks (`extract-invoice`, `analyse-sales-call`,
-  `analyse-video-ad`, `classify`, `extract`, `redact-pii`) emit indented JSON
-  you can pipe into `jq`:
-
+`analyse-video-ad`, `classify`, `extract`, `redact-pii`) emit indented JSON
+you can pipe into `jq`:
   ```bash
   aibackends task extract-invoice --input invoice.pdf | jq '.total'
   ```
+
+The JSON shape comes from each task's Pydantic output model. Useful field
+names you'll likely pipe with `jq`:
+
+- `redact-pii` → `RedactedText`: `original_text`, `redacted_text`,
+`entities_found`, `redaction_map`, `backend_used`
+- `extract-invoice` → `InvoiceOutput`: `vendor`, `invoice_number`, `total`,
+`line_items`, ...
+- `classify` → `Classification`: `label`, `confidence`
+- `analyse-sales-call` → `SalesCallReport`
+- `analyse-video-ad` → `VideoAdReport`
+
+## Recipes
+
+### Summarize a resume (PDF)
+
+PDFs are read automatically when the `pdf` extra is installed:
+
+```bash
+pip install 'aibackends[pdf]'
+
+aibackends task summarize \
+  --input ./resume.pdf \
+  --runtime llamacpp --model gemma4-e2b
+```
+
+`summarize` writes plain text to stdout, so saving the summary is a redirect:
+
+```bash
+aibackends task summarize \
+  --input ./resume.pdf \
+  --runtime llamacpp --model gemma4-e2b \
+  > resume_summary.txt
+```
+
+### Redact PII from a resume, then summarize
+
+Two-step pipeline — `redact-pii` extracts the PDF text, scrubs PII, and emits
+JSON; `jq` pulls out the redacted text; `summarize` summarizes it.
+
+```bash
+aibackends task redact-pii \
+  --input ./resume.pdf \
+  --backend gliner \
+  | jq -r '.redacted_text' \
+  > resume_redacted.txt
+
+aibackends task summarize \
+  --input "$(cat resume_redacted.txt)" \
+  --runtime llamacpp --model gemma4-e2b
+```
+
+Notes:
+
+- The field is `.redacted_text` (matches the `RedactedText` schema), not
+`.redacted`.
+- The first run with `--backend gliner` downloads the GLiNER model from
+Hugging Face. Behind a corporate proxy, set `HTTPS_PROXY` /
+`HF_ENDPOINT` accordingly.
+- Image-only / scanned PDFs have no text layer. PyMuPDF returns empty text
+and there is nothing to redact or summarize. AIBackends does not OCR;
+preprocess with a tool like `ocrmypdf` first.
+
+For a single-process Python equivalent of the same recipe (one pipeline
+run, no shell pipe and no intermediate file), see
+`[examples/workflows/resume_redact_summarize.py](https://github.com/donvito/aibackends/blob/main/examples/workflows/resume_redact_summarize.py)`.
+
+### Extract structured fields from a resume
+
+`extract` accepts a custom Pydantic schema by dotted import path:
+
+```bash
+aibackends task extract \
+  --input ./resume.pdf \
+  --schema myproject.schemas.ResumeProfile \
+  --runtime llamacpp --model gemma4-e2b
+```
+
+The schema module must be importable from the current Python environment.
 
 ## What The CLI Does Not Cover
 
@@ -171,7 +249,7 @@ The CLI is intentionally focused on single-task execution. The following are
 Python-API-only today:
 
 - Workflows (`invoice`, `pii-redactor`, `sales-call`, `video-ad`) — use
-  `create_workflow(...)` from `aibackends.workflows`.
+`create_workflow(...)` from `aibackends.workflows`.
 - Batch processing (`workflow.run_batch(...)`).
 - Custom pipelines built on `Pipeline` / `BaseStep`.
 

@@ -270,6 +270,8 @@ Runnable core examples with bundled sample data:
 - `examples/tasks/video_ad_report.py`
 - `examples/workflows/batch_processing.py`
 - `examples/workflows/custom_pipeline.py`
+- `examples/workflows/resume_redact_summarize.py`
+- `examples/workflows/resume_role_match.py`
 
 Framework integration examples:
 

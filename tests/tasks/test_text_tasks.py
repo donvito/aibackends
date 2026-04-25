@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import importlib
+
+import pytest
 from pydantic import BaseModel
 
 from aibackends.tasks import classify, embed, extract, summarize
 from aibackends.tasks._utils import load_text_input
+
+classify_module = importlib.import_module("aibackends.tasks.classify")
 
 
 class Person(BaseModel):
@@ -20,6 +25,61 @@ def test_classify_returns_typed_output():
     result = classify("invoice for April services", labels=["invoice", "contract", "receipt"])
     assert result.label == "invoice"
     assert result.all_scores["invoice"] > result.all_scores["contract"]
+
+
+def test_classify_supports_label_descriptions_and_custom_prompts(monkeypatch):
+    captured: dict[str, object] = {}
+
+    def fake_run_structured_task(*, task_name, schema, messages, runtime=None, model=None, **overrides):
+        captured["task_name"] = task_name
+        captured["schema"] = schema
+        captured["messages"] = messages
+        captured["runtime"] = runtime
+        captured["model"] = model
+        captured["overrides"] = overrides
+        return schema(
+            label="ml-engineer",
+            confidence=0.82,
+            all_scores={"ml-engineer": 0.82, "data-engineer": 0.18},
+        )
+
+    monkeypatch.setattr(classify_module, "run_structured_task", fake_run_structured_task)
+
+    result = classify_module.classify(
+        "Built production ML systems and data pipelines.",
+        labels=["ml-engineer", "data-engineer"],
+        label_descriptions={
+            "ml-engineer": "Owns model training, evaluation, and production inference.",
+            "data-engineer": "Owns ETL pipelines, warehousing, and analytics plumbing.",
+        },
+        system_prompt="You are a recruiter matching resumes to roles.",
+        prompt="Choose the single best-fitting role based only on resume evidence.",
+        runtime="stub",
+        model="stub-model",
+        max_retries=2,
+    )
+
+    assert result.label == "ml-engineer"
+    assert captured["task_name"] == "classify"
+    assert captured["runtime"] == "stub"
+    assert captured["model"] == "stub-model"
+    assert captured["overrides"] == {"max_retries": 2}
+    messages = captured["messages"]
+    assert messages[0]["content"] == "You are a recruiter matching resumes to roles."
+    assert "Choose the single best-fitting role based only on resume evidence." in messages[1]["content"]
+    assert "Label descriptions:" in messages[1]["content"]
+    assert "- ml-engineer: Owns model training, evaluation, and production inference." in messages[1]["content"]
+    assert "- data-engineer: Owns ETL pipelines, warehousing, and analytics plumbing." in messages[1]["content"]
+    assert "Text:\nBuilt production ML systems and data pipelines." in messages[1]["content"]
+
+
+def test_classify_rejects_unknown_label_descriptions():
+    with pytest.raises(ValueError, match="unknown labels: contract"):
+        classify_module.classify(
+            "invoice for April services",
+            labels=["invoice", "receipt"],
+            label_descriptions={"contract": "Agreement between parties."},
+        )
 
 
 def test_extract_uses_custom_schema():

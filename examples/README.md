@@ -52,6 +52,8 @@ python3 examples/tasks/sales_call_report.py
 python3 examples/tasks/video_ad_report.py
 python3 examples/workflows/batch_processing.py
 python3 examples/workflows/custom_pipeline.py
+python3 examples/workflows/resume_redact_summarize.py
+python3 examples/workflows/resume_role_match.py
 ```
 
 ## Framework integration examples
