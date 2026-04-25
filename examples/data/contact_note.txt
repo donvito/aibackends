@@ -1,0 +1,4 @@
+Customer note:
+Jordan Vale can be reached at jordan.vale@example.com or +65 9123 4567.
+Fallback number: +1 (555) 010-4242.
+Private host: 10.42.0.7.

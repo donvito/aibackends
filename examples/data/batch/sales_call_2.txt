@@ -1,0 +1,4 @@
+Agent: Thanks for taking the time. I wanted to cover pricing and rollout.
+Customer: Budget is my main concern, but I do like that everything can run on-prem.
+Agent: We can scope phase one to just PII redaction and call analysis.
+Customer: Send that version over. If legal signs off, I am ready to champion it internally.

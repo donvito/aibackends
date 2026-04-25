@@ -1,0 +1,115 @@
+RESIDENTIAL RENTAL AGREEMENT
+
+This Rental Agreement (“Agreement”) is made and entered into on 1 May 2026, between:
+
+Landlord: Alex Redwood
+ID No.: TEST-ID-0001
+Address: 123 Fictional Avenue, Unit #01-01, Sample City 000000
+Email: landlord@sampledomain.test
+Phone: +65 8000 0000
+
+and
+
+Tenant: Jamie Blue
+Passport No.: TEST-PASS-9999
+Address: 456 Imaginary Road, Unit #02-02, Example Town 111111
+Email: tenant@sampledomain.test
+Phone: +65 8111 1111
+
+⸻
+
+1. Property
+
+The Landlord hereby rents to the Tenant the property located at:
+789 Sample Residences, Unit #10-10, Demo District 222222 (“Premises”).
+
+⸻
+
+2. Term
+
+The lease shall begin on 1 June 2026 and end on 31 May 2027, unless terminated earlier in accordance with this Agreement.
+
+⸻
+
+3. Rent
+
+* Monthly Rent: SGD 3,200
+* Due Date: 1st of each month
+* Payment Method: Bank Transfer to Account TEST-ACC-123456
+
+Late payments may incur a fee of SGD 50 after 5 days.
+
+⸻
+
+4. Security Deposit
+
+The Tenant agrees to pay a security deposit of SGD 3,200 before moving in.
+This deposit will be returned within 14 days after lease termination, subject to deductions for damages or unpaid dues.
+
+⸻
+
+5. Utilities
+
+The Tenant shall be responsible for the following utilities:
+
+* Electricity: Tenant
+* Water: Tenant
+* Internet: Tenant
+* Other: Gas (Tenant)
+
+⸻
+
+6. Use of Premises
+
+The Premises shall be used for residential purposes only.
+No illegal activities are allowed.
+
+⸻
+
+7. Maintenance and Repairs
+
+* Tenant must keep the property clean and in good condition.
+* Tenant must report damages promptly.
+* Major repairs will be handled by the Landlord unless caused by Tenant negligence.
+
+⸻
+
+8. Alterations
+
+The Tenant shall not make any alterations without written consent from the Landlord.
+
+⸻
+
+9. Subleasing
+
+Subleasing or assigning this Agreement is not allowed without prior written consent.
+
+⸻
+
+10. Termination
+
+Either party may terminate this Agreement by giving 30 days written notice.
+
+⸻
+
+11. Entry
+
+The Landlord may enter the Premises with 24 hours notice for inspection, repairs, or emergencies.
+
+⸻
+
+12. Governing Law
+
+This Agreement shall be governed by the laws of Singapore.
+
+⸻
+
+13. Signatures
+
+Landlord Signature: ________________________
+Name: Alex Redwood
+Date: ________________________
+
+Tenant Signature: ________________________
+Name: Jamie Blue
+Date: ________________________

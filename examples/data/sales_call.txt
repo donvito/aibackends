@@ -1,0 +1,5 @@
+Agent: Thanks for joining. I wanted to walk you through the AIBackends pilot.
+Customer: The use case sounds strong, but the price may be too high for our first rollout.
+Agent: Understood. We can start with a smaller document-processing bundle and expand later.
+Customer: That helps. If the security review passes, we could start in June.
+Agent: Great. I will send the proposal and implementation timeline by Friday.

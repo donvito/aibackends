@@ -1,0 +1,4 @@
+Agent: I wanted to show how invoice extraction could fit into your ops workflow.
+Customer: The team likes it, but procurement wants a smaller pilot before we commit.
+Agent: We can start with fifty documents and a two-week review period.
+Customer: If that works, we can move quickly next month.

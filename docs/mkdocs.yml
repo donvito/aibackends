@@ -1,0 +1,16 @@
+site_name: AIBackends
+site_description: Pluggable AI tasks for any agent framework, powered by local models.
+theme:
+  name: material
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Tasks: tasks.md
+  - Runtimes: runtimes.md
+  - Agent Integration: agent-integration.md
+  - Workflows: workflows.md
+  - Custom Pipelines: custom-pipelines.md
+  - Batch Processing: batch-processing.md
+  - Configuration: configuration.md
+  - API Reference: api-reference/index.md

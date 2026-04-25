@@ -1,0 +1,6 @@
+AIBackends launch prep:
+- Finalize README with local-first positioning.
+- Record a short invoice extraction demo.
+- Publish a build log on X and LinkedIn.
+- Reach out to two design partners in fintech and logistics.
+- Prepare a meetup talk outline for Singapore AI.

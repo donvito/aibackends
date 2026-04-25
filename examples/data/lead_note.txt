@@ -1,0 +1,6 @@
+Lead intake note:
+Priya Nair from Acme Retail wants a shelf-audit pilot in June.
+Email: priya@acmeretail.com
+Estimated budget: 12000
+Priority: high
+Next step: send a proposal and timeline by Friday.

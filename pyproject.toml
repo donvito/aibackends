@@ -1,0 +1,182 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aibackends"
+version = "0.1.0"
+description = "Pluggable AI tasks for any agent framework, powered by local models."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Melvin Vivas" },
+]
+keywords = [
+  "agents",
+  "ai",
+  "llama-cpp-python",
+  "local-models",
+  "pydantic",
+  "transformers",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+  "agno>=2.6.1",
+  "httpx",
+  "pydantic",
+  "pyyaml",
+  "tenacity",
+  "typer",
+  "typing-extensions",
+]
+
+[project.optional-dependencies]
+llamacpp = [
+  "huggingface_hub",
+  "llama-cpp-python",
+]
+llamacpp-cuda = [
+  "huggingface_hub",
+  "llama-cpp-python",
+]
+llamacpp-metal = [
+  "huggingface_hub",
+  "llama-cpp-python",
+]
+transformers = [
+  "accelerate",
+  "bitsandbytes; platform_system != 'Darwin'",
+  "huggingface_hub",
+  "peft",
+  "torch",
+  "transformers",
+]
+pdf = [
+  "pillow",
+  "pymupdf",
+]
+audio = [
+  "faster-whisper",
+]
+video = [
+  "ffmpeg-python",
+  "pillow",
+]
+pii = [
+  "gliner",
+  "transformers",
+]
+api = [
+  "fastapi",
+  "uvicorn",
+]
+local = [
+  "accelerate",
+  "huggingface_hub",
+  "llama-cpp-python",
+  "peft",
+  "torch",
+  "transformers",
+]
+pipelines = [
+  "faster-whisper",
+  "ffmpeg-python",
+  "gliner",
+  "pillow",
+  "pymupdf",
+  "transformers",
+]
+dev = [
+  "mkdocs-material",
+  "mkdocstrings[python]",
+  "mypy",
+  "pytest",
+  "pytest-asyncio",
+  "ruff",
+  "types-PyYAML",
+]
+all = [
+  "accelerate",
+  "bitsandbytes; platform_system != 'Darwin'",
+  "fastapi",
+  "faster-whisper",
+  "ffmpeg-python",
+  "gliner",
+  "huggingface_hub",
+  "llama-cpp-python",
+  "mkdocs-material",
+  "mkdocstrings[python]",
+  "mypy",
+  "peft",
+  "pillow",
+  "pymupdf",
+  "pytest",
+  "pytest-asyncio",
+  "ruff",
+  "torch",
+  "transformers",
+  "types-PyYAML",
+  "uvicorn",
+]
+
+[project.scripts]
+aibackends = "aibackends.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/donvito/aibackends"
+Documentation = "https://github.com/donvito/aibackends/tree/main/docs"
+Repository = "https://github.com/donvito/aibackends"
+Issues = "https://github.com/donvito/aibackends/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aibackends"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src", "tests"]
+mypy_path = ["src"]
+namespace_packages = true
+explicit_package_bases = true
+pretty = true
+show_error_codes = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+check_untyped_defs = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = [
+  "ffmpeg",
+  "faster_whisper",
+  "fitz",
+  "gliner",
+  "huggingface_hub",
+  "llama_cpp",
+  "peft",
+  "torch",
+  "transformers",
+]
+ignore_missing_imports = true

@@ -1,0 +1,13 @@
+Invoice
+Vendor: Acme Corp
+Invoice Number: INV-1042
+Invoice Date: 2026-04-10
+Bill To: Northwind Logistics
+
+Line Items
+- AI integration consulting | qty 1 | unit price 1250.00 | amount 1250.00
+
+Subtotal: 1250.00
+Tax: 0.00
+Total: 1250.00
+Payment Terms: Net 30
