@@ -2,15 +2,17 @@ import sys
 from pathlib import Path
 
 from aibackends.core.exceptions import AIBackendsError
-from aibackends.tasks import create_task
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
+from aibackends.tasks import ExtractInvoiceTask, create_task
 
 
 def main() -> None:
     try:
         task = create_task(
-            "extract-invoice",
-            runtime="llamacpp",
-            model="gemma4-e2b",
+            ExtractInvoiceTask,
+            runtime=LLAMACPP,
+            model=GEMMA4_E2B,
         )
         invoice_path = Path(__file__).parent.parent / "data" / "invoice.txt"
         result = task.run(invoice_path)

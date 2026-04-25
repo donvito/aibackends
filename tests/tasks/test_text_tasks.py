@@ -6,6 +6,8 @@ from typing import Any, cast
 import pytest
 from pydantic import BaseModel
 
+from aibackends.core.registry import ModelRef
+from aibackends.runtimes import get_runtime_spec
 from aibackends.tasks import classify, embed, extract, summarize
 from aibackends.tasks._utils import load_text_input
 
@@ -63,15 +65,15 @@ def test_classify_supports_label_descriptions_and_custom_prompts(monkeypatch):
         },
         system_prompt="You are a recruiter matching resumes to roles.",
         prompt="Choose the single best-fitting role based only on resume evidence.",
-        runtime="stub",
-        model="stub-model",
+        runtime=get_runtime_spec("stub"),
+        model=ModelRef(name="stub-model"),
         max_retries=2,
     )
 
     assert result.label == "ml-engineer"
     assert captured["task_name"] == "classify"
-    assert captured["runtime"] == "stub"
-    assert captured["model"] == "stub-model"
+    assert captured["runtime"] == get_runtime_spec("stub")
+    assert captured["model"] == ModelRef(name="stub-model")
     assert captured["overrides"] == {"max_retries": 2}
     messages = cast(list[dict[str, Any]], captured["messages"])
     assert messages[0]["content"] == "You are a recruiter matching resumes to roles."
@@ -98,6 +100,14 @@ def test_classify_rejects_unknown_label_descriptions():
             labels=["invoice", "receipt"],
             label_descriptions={"contract": "Agreement between parties."},
         )
+
+
+def test_summarize_rejects_string_runtime_and_model_refs():
+    with pytest.raises(TypeError, match="runtime must be a RuntimeSpec"):
+        summarize("notes", runtime="stub")  # type: ignore[arg-type]
+
+    with pytest.raises(TypeError, match="model must be a ModelRef"):
+        summarize("notes", model="stub-model")  # type: ignore[arg-type]
 
 
 def test_extract_uses_custom_schema():

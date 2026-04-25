@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import Any
 
 from aibackends.core.assembler import Assembler
-from aibackends.core.config import resolve_runtime_config
+from aibackends.core.config import ensure_model_ref, ensure_runtime_spec, resolve_runtime_config
+from aibackends.core.registry import ModelRef, RuntimeSpec
 from aibackends.core.types import BatchRunResult
 from aibackends.steps._base import BaseStep
 
@@ -12,8 +13,14 @@ class Pipeline:
     steps: list[BaseStep] = []
 
     def __init__(
-        self, *, runtime: str | None = None, model: str | None = None, **overrides: Any
+        self,
+        *,
+        runtime: RuntimeSpec | None = None,
+        model: ModelRef | None = None,
+        **overrides: Any,
     ) -> None:
+        runtime = ensure_runtime_spec(runtime)
+        model = ensure_model_ref(model)
         self.config = resolve_runtime_config({"runtime": runtime, "model": model, **overrides})
         self.steps = list(self.steps)
         self.assembler = Assembler(

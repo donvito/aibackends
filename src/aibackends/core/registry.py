@@ -39,6 +39,11 @@ class RuntimeSpec:
 
 
 @dataclass(frozen=True, slots=True)
+class ModelRef:
+    name: str
+
+
+@dataclass(frozen=True, slots=True)
 class TransformerModelProfile:
     name: str
     model_id: str
@@ -168,3 +173,7 @@ def _flatten_specs(value: Any) -> list[Any]:
     if isinstance(value, (list, tuple, set, frozenset)):
         return [item for item in value if item is not None]
     return [value]
+
+
+RuntimeRefLike = RuntimeSpec | str
+ModelRefLike = ModelRef | str

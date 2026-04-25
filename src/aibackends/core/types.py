@@ -7,6 +7,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from aibackends.core.registry import ModelRef, RuntimeSpec
+
 JSONDict = dict[str, Any]
 Message = dict[str, Any]
 StepCallback = Callable[["StepLog"], None]
@@ -90,6 +92,20 @@ class RuntimeConfig(AIBackendsModel):
         if value is None:
             return None
         return str(Path(value).expanduser())
+
+    @field_validator("runtime", mode="before")
+    @classmethod
+    def normalize_runtime_reference(cls, value: Any) -> Any:
+        if isinstance(value, RuntimeSpec):
+            return value.name
+        return value
+
+    @field_validator("model", mode="before")
+    @classmethod
+    def normalize_model_reference(cls, value: Any) -> Any:
+        if isinstance(value, ModelRef):
+            return value.name
+        return value
 
     @field_validator("chat_template_path")
     @classmethod

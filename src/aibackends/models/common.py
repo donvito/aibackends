@@ -31,4 +31,9 @@ MODEL_PROFILES = [
         model_id="openai/privacy-filter",
         runtime=None,
     ),
+    TransformerModelProfile(
+        name="claude-sonnet-4-5",
+        model_id="claude-sonnet-4-5",
+        runtime="anthropic",
+    ),
 ]

@@ -48,6 +48,9 @@ aibackends task <name> --input <path-or-text> \
 `--input` accepts either a file path or raw text. The CLI uses the same
 `load_text_input(...)` helper as the Python API, so:
 
+The CLI keeps runtime and model selection string-based (`--runtime`, `--model`)
+and resolves those names at the boundary before calling the stricter Python API.
+
 - A real file path (e.g. `./notes.txt`, `./invoice.pdf`) is read from disk.
 - Anything else is treated as raw text.
 
@@ -249,7 +252,7 @@ The CLI is intentionally focused on single-task execution. The following are
 Python-API-only today:
 
 - Workflows (`invoice`, `pii-redactor`, `sales-call`, `video-ad`) — use
-`create_workflow(...)` from `aibackends.workflows`.
+`create_workflow(WorkflowClass, ...)` from `aibackends.workflows`.
 - Batch processing (`workflow.run_batch(...)`).
 - Custom pipelines built on `Pipeline` / `BaseStep`.
 

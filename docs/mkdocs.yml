@@ -6,6 +6,7 @@ theme:
 nav:
   - Home: index.md
   - Concepts: concepts.md
+  - Architecture: architecture.md
   - Usage: usage.md
   - CLI: cli.md
   - Extending: extending.md

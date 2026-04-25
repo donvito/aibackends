@@ -4,7 +4,9 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from aibackends.core.exceptions import AIBackendsError
-from aibackends.tasks import create_task
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
+from aibackends.tasks import ExtractTask, create_task
 
 
 class Lead(BaseModel):
@@ -19,9 +21,9 @@ class Lead(BaseModel):
 def main() -> None:
     try:
         task = create_task(
-            "extract",
-            runtime="llamacpp",
-            model="gemma4-e2b",
+            ExtractTask,
+            runtime=LLAMACPP,
+            model=GEMMA4_E2B,
             schema=Lead,
             instructions="Extract the lead details from the intake note.",
         )

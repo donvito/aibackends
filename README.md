@@ -9,12 +9,14 @@ application code. Extract invoices, redact PII, classify documents, analyse
 sales calls, and analyse video ads with typed results.
 
 ```python
-from aibackends.tasks import create_task
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
+from aibackends.tasks import ExtractInvoiceTask, create_task
 
 task = create_task(
-    "extract-invoice",
-    runtime="llamacpp",
-    model="gemma4-e2b",
+    ExtractInvoiceTask,
+    runtime=LLAMACPP,
+    model=GEMMA4_E2B,
 )
 
 result = task.run("invoice.pdf")
@@ -121,17 +123,19 @@ cd ~/.cache/huggingface/hub
 ## Quickstart
 
 ```python
-from aibackends.tasks import create_task
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
+from aibackends.tasks import ClassifyTask, RedactPIITask, SummarizeTask, create_task
 
-summarizer = create_task("summarize", runtime="llamacpp", model="gemma4-e2b")
+summarizer = create_task(SummarizeTask, runtime=LLAMACPP, model=GEMMA4_E2B)
 classifier = create_task(
-    "classify",
-    runtime="llamacpp",
-    model="gemma4-e2b",
+    ClassifyTask,
+    runtime=LLAMACPP,
+    model=GEMMA4_E2B,
     labels=["invoice", "contract", "receipt"],
 )
 redactor = create_task(
-    "redact-pii",
+    RedactPIITask,
     backend="gliner",
     labels=["email", "phone_number"],
 )
@@ -148,6 +152,7 @@ redacted = redactor.run("john@example.com called from +1 555 0100")
 ```python
 from aibackends.tasks import (
     BaseTask,
+    SummarizeTask,
     create_task,
     analyse_sales_call,
     analyse_video_ad,
@@ -161,15 +166,18 @@ from aibackends.tasks import (
 ```
 
 Direct function calls are the simplest API. The same tasks are also available as
-configured `BaseTask` objects through the factory:
+configured `BaseTask` objects through the factory, using the exported task
+classes for autocomplete-friendly discovery:
 
 ```python
-from aibackends.tasks import create_task
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
+from aibackends.tasks import SummarizeTask, create_task
 
 task = create_task(
-    "summarize",
-    runtime="llamacpp",
-    model="gemma4-e2b",
+    SummarizeTask,
+    runtime=LLAMACPP,
+    model=GEMMA4_E2B,
 )
 summary = task.run("notes.txt")
 ```
@@ -187,20 +195,30 @@ Included structured outputs:
 Preferred per-object configuration:
 
 ```python
-from aibackends.tasks import create_task
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
+from aibackends.tasks import ExtractInvoiceTask, create_task
 
-task = create_task("extract-invoice", runtime="llamacpp", model="gemma4-e2b")
+task = create_task(ExtractInvoiceTask, runtime=LLAMACPP, model=GEMMA4_E2B)
 ```
 
 Direct function calls can still override runtime settings per call:
 
 ```python
+from aibackends.models import CLAUDE_SONNET_4_5
+from aibackends.runtimes import ANTHROPIC
 from aibackends.tasks import extract_invoice
 
-result = extract_invoice("invoice.pdf", runtime="anthropic", model="claude-sonnet-4-5")
+result = extract_invoice("invoice.pdf", runtime=ANTHROPIC, model=CLAUDE_SONNET_4_5)
 ```
 
 You can also use `configure(...)` for global defaults when that fits your app.
+
+Use `available_runtimes()` and `available_models()` to inspect the curated
+runtime and model catalog exposed by the Python API.
+
+Python code should pass typed refs like `LLAMACPP` and `GEMMA4_E2B`; string
+names remain supported at text boundaries such as the CLI and YAML config.
 
 Supported runtimes:
 
@@ -215,11 +233,13 @@ Supported runtimes:
 For local `transformers` models, prompt rendering is configurable:
 
 ```python
+from aibackends.models import GEMMA3_270M_IT
 from aibackends import configure
+from aibackends.runtimes import TRANSFORMERS
 
 configure(
-    runtime="transformers",
-    model="google/gemma-3-270m-it",
+    runtime=TRANSFORMERS,
+    model=GEMMA3_270M_IT,
     prompt_format="auto",  # auto | chat_template | text
 )
 ```
@@ -231,12 +251,14 @@ configure(
 ```python
 from pathlib import Path
 
-from aibackends.workflows import create_workflow
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
+from aibackends.workflows import SalesCallAnalyser, create_workflow
 
 workflow = create_workflow(
-    "sales-call",
-    runtime="llamacpp",
-    model="gemma4-e2b",
+    SalesCallAnalyser,
+    runtime=LLAMACPP,
+    model=GEMMA4_E2B,
 )
 
 results = workflow.run_batch(
@@ -259,6 +281,7 @@ See `examples/README.md` for setup and usage.
 
 Runnable core examples with bundled sample data:
 
+- `examples/list_available.py`
 - `examples/tasks/basic_task.py`
 - `examples/tasks/basic_task_transformers.py`
 - `examples/tasks/summarize_text.py`

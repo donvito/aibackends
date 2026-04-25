@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from aibackends import configure, register_runtime, reset_config
 from aibackends.core.prompting import render_messages_as_text
+from aibackends.core.registry import ModelRef
 from aibackends.core.runtimes.base import BaseRuntime
 from aibackends.core.types import Message, RuntimeConfig, RuntimeResponse
 
@@ -80,8 +81,9 @@ class StubRuntime(BaseRuntime):
 
 @pytest.fixture(autouse=True)
 def configure_stub_runtime():
-    register_runtime("stub", StubRuntime)
+    stub_runtime = register_runtime("stub", StubRuntime)
+    stub_model = ModelRef(name="stub-model")
     reset_config()
-    configure(runtime="stub", model="stub-model")
-    yield RuntimeConfig(runtime="stub", model="stub-model")
+    configure(runtime=stub_runtime, model=stub_model)
+    yield RuntimeConfig.model_validate({"runtime": stub_runtime, "model": stub_model})
     reset_config()

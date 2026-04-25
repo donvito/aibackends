@@ -27,16 +27,26 @@ Use `configure()` to set global LLM/embedding defaults:
 
 ```python
 from aibackends import configure
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
 
-configure(runtime="llamacpp", model="gemma4-e2b")
+configure(runtime=LLAMACPP, model=GEMMA4_E2B)
 ```
+
+Use `available_runtimes()` and `available_models()` when you want to inspect the
+curated Python-facing catalog of supported runtime and model refs.
+
+In Python, pass typed refs such as `LLAMACPP` and `GEMMA4_E2B`. String names are
+kept for text boundaries like CLI flags and YAML config files.
 
 Override the runtime for one call:
 
 ```python
+from aibackends.models import CLAUDE_SONNET_4_5
+from aibackends.runtimes import ANTHROPIC
 from aibackends.tasks import extract_invoice
 
-result = extract_invoice("invoice.pdf", runtime="anthropic", model="claude-sonnet-4-5")
+result = extract_invoice("invoice.pdf", runtime=ANTHROPIC, model=CLAUDE_SONNET_4_5)
 ```
 
 You can also load YAML:
@@ -50,9 +60,12 @@ load_config("aibackends.yml")
 For local `transformers` models, prompt rendering is configurable:
 
 ```python
+from aibackends.models import GEMMA3_270M_IT
+from aibackends.runtimes import TRANSFORMERS
+
 configure(
-    runtime="transformers",
-    model="google/gemma-3-270m-it",
+    runtime=TRANSFORMERS,
+    model=GEMMA3_270M_IT,
     prompt_format="auto",  # auto | chat_template | text
     # chat_template="...",
     # chat_template_path="template.jinja",
@@ -81,15 +94,17 @@ or `backend="openai-privacy"`.
 
 Every task also exposes an async variant with the `_async` suffix.
 
-Tasks are also available through the task registry as `BaseTask` objects:
+Tasks are also available as configured `BaseTask` objects through the factory:
 
 ```python
-from aibackends.tasks import create_task
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
+from aibackends.tasks import SummarizeTask, create_task
 
 task = create_task(
-    "summarize",
-    runtime="llamacpp",
-    model="gemma4-e2b",
+    SummarizeTask,
+    runtime=LLAMACPP,
+    model=GEMMA4_E2B,
 )
 summary = task.run("notes.txt")
 ```
@@ -99,12 +114,14 @@ summary = task.run("notes.txt")
 ```python
 from pathlib import Path
 
-from aibackends.workflows import create_workflow
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
+from aibackends.workflows import SalesCallAnalyser, create_workflow
 
 workflow = create_workflow(
-    "sales-call",
-    runtime="llamacpp",
-    model="gemma4-e2b",
+    SalesCallAnalyser,
+    runtime=LLAMACPP,
+    model=GEMMA4_E2B,
 )
 
 results = workflow.run_batch(

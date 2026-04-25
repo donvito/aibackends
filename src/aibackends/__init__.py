@@ -1,4 +1,5 @@
 from aibackends.core.config import (
+    available_runtimes,
     configure,
     get_runtime,
     get_settings,
@@ -6,6 +7,7 @@ from aibackends.core.config import (
     register_runtime,
     reset_config,
 )
+from aibackends.models import available_models
 from aibackends.tasks import (
     analyse_sales_call,
     analyse_sales_call_async,
@@ -32,6 +34,8 @@ __all__ = [
     "analyse_sales_call_async",
     "analyse_video_ad",
     "analyse_video_ad_async",
+    "available_models",
+    "available_runtimes",
     "classify",
     "classify_async",
     "configure",

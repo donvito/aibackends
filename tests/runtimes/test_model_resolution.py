@@ -9,6 +9,8 @@ import aibackends.core.model_manager as model_manager_module
 from aibackends.core.model_manager import ModelManager
 from aibackends.core.model_registry import resolve_model_alias
 from aibackends.core.types import RuntimeConfig
+from aibackends.models import GEMMA3_270M_IT, GEMMA4_E4B, available_models
+from aibackends.runtimes import ANTHROPIC, LLAMACPP, TRANSFORMERS
 
 
 def test_resolve_model_alias_uses_llamacpp_gemma_overrides():
@@ -23,7 +25,26 @@ def test_resolve_model_alias_uses_llamacpp_gemma_overrides():
 def test_resolve_model_alias_falls_back_to_shared_registry():
     assert resolve_model_alias("gemma4-e4b", runtime="transformers") == "google/gemma-4-E4B-it"
     assert resolve_model_alias("bge-small", runtime="llamacpp") == "BAAI/bge-small-en-v1.5"
+    assert resolve_model_alias("gemma3-270m-it", runtime="llamacpp") == "gemma3-270m-it"
     assert resolve_model_alias("custom/model", runtime="llamacpp") == "custom/model"
+
+
+def test_resolve_model_alias_accepts_typed_refs():
+    assert resolve_model_alias(GEMMA4_E4B, runtime=LLAMACPP) == "unsloth/gemma-4-E4B-it-GGUF"
+    assert resolve_model_alias(GEMMA4_E4B, runtime=TRANSFORMERS) == "google/gemma-4-E4B-it"
+
+
+def test_available_models_can_filter_by_runtime():
+    all_models = available_models()
+    anthropic_models = available_models(runtime=ANTHROPIC)
+    llama_models = available_models(runtime=LLAMACPP)
+    transformers_models = available_models(runtime=TRANSFORMERS)
+
+    assert all_models["gemma4-e4b"] == GEMMA4_E4B
+    assert "claude-sonnet-4-5" in anthropic_models
+    assert "gemma4-e4b" not in anthropic_models
+    assert "gemma3-270m-it" not in llama_models
+    assert transformers_models["gemma3-270m-it"] == GEMMA3_270M_IT
 
 
 def test_model_manager_resolve_model_name_uses_runtime_aliases(tmp_path):

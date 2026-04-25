@@ -11,6 +11,7 @@ from pydantic import BaseModel, ValidationError
 from aibackends.core.config import get_runtime, resolve_runtime_config
 from aibackends.core.exceptions import TaskExecutionError, ValidationRetryExhaustedError
 from aibackends.core.logging import emit_task_log
+from aibackends.core.registry import ModelRefLike, RuntimeRefLike
 from aibackends.core.types import Message, TaskLog
 
 T = TypeVar("T", bound=BaseModel)
@@ -92,8 +93,8 @@ def run_structured_task(
     task_name: str,
     schema: type[T],
     messages: list[Message],
-    runtime: str | None = None,
-    model: str | None = None,
+    runtime: RuntimeRefLike | None = None,
+    model: ModelRefLike | None = None,
     **overrides: Any,
 ) -> T:
     config = resolve_runtime_config({"runtime": runtime, "model": model, **overrides})
@@ -166,8 +167,8 @@ def run_text_task(
     *,
     task_name: str,
     messages: list[Message],
-    runtime: str | None = None,
-    model: str | None = None,
+    runtime: RuntimeRefLike | None = None,
+    model: ModelRefLike | None = None,
     **overrides: Any,
 ) -> str:
     config = resolve_runtime_config({"runtime": runtime, "model": model, **overrides})
@@ -202,8 +203,8 @@ def run_embedding_task(
     *,
     task_name: str,
     text: str,
-    runtime: str | None = None,
-    model: str | None = None,
+    runtime: RuntimeRefLike | None = None,
+    model: ModelRefLike | None = None,
     **overrides: Any,
 ) -> list[float]:
     config = resolve_runtime_config({"runtime": runtime, "model": model, **overrides})

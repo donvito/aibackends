@@ -66,7 +66,7 @@ Create one task module under `src/aibackends/tasks`, implement `BaseTask`, and
 export `TASK_SPEC`:
 
 ```python
-from aibackends.core.registry import TaskSpec
+from aibackends.core.registry import ModelRefLike, RuntimeRefLike, TaskSpec
 from aibackends.tasks import BaseTask
 
 
@@ -77,8 +77,8 @@ class MyTask(BaseTask):
         self,
         input: str,
         *,
-        runtime: str | None = None,
-        model: str | None = None,
+        runtime: RuntimeRefLike | None = None,
+        model: ModelRefLike | None = None,
     ):
         ...
 
@@ -93,9 +93,11 @@ structured output. Public function wrappers are still useful for the simple
 Task instances can be configured before they run:
 
 ```python
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
 from aibackends.tasks import create_task
 
-task = create_task("my-task", runtime="llamacpp", model="gemma4-e2b")
+task = create_task(MyTask, runtime=LLAMACPP, model=GEMMA4_E2B)
 result = task.run("input text")
 ```
 
@@ -122,9 +124,11 @@ runtime config.
 Workflow instances can be configured before they run:
 
 ```python
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
 from aibackends.workflows import create_workflow
 
-workflow = create_workflow("my-workflow", runtime="llamacpp", model="gemma4-e2b")
+workflow = create_workflow(MyWorkflow, runtime=LLAMACPP, model=GEMMA4_E2B)
 result = workflow.run("input.txt")
 ```
 
@@ -135,3 +139,4 @@ result = workflow.run("input.txt")
 - Backend tests should verify backend-specific defaults and errors.
 - Task tests should focus on API behavior and validation.
 - Workflow tests should cover orchestration and batch behavior.
+

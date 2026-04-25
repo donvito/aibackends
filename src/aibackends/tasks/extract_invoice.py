@@ -4,7 +4,8 @@ import asyncio
 from pathlib import Path
 from typing import Any
 
-from aibackends.core.registry import TaskSpec
+from aibackends.core.config import ensure_model_ref, ensure_runtime_spec
+from aibackends.core.registry import ModelRef, RuntimeSpec, TaskSpec
 from aibackends.schemas.invoice import InvoiceOutput
 from aibackends.tasks._base import BaseTask
 from aibackends.tasks._utils import build_messages, load_text_input, run_structured_task
@@ -13,10 +14,12 @@ from aibackends.tasks._utils import build_messages, load_text_input, run_structu
 def extract_invoice(
     file_path: str | Path,
     *,
-    runtime: str | None = None,
-    model: str | None = None,
+    runtime: RuntimeSpec | None = None,
+    model: ModelRef | None = None,
     **overrides: Any,
 ) -> InvoiceOutput:
+    runtime = ensure_runtime_spec(runtime)
+    model = ensure_model_ref(model)
     content = load_text_input(file_path)
     messages = build_messages(
         "You extract structured fields from invoices and receipts.",
@@ -40,8 +43,8 @@ def extract_invoice(
 async def extract_invoice_async(
     file_path: str | Path,
     *,
-    runtime: str | None = None,
-    model: str | None = None,
+    runtime: RuntimeSpec | None = None,
+    model: ModelRef | None = None,
     **overrides: Any,
 ) -> InvoiceOutput:
     return await asyncio.to_thread(
@@ -60,8 +63,8 @@ class ExtractInvoiceTask(BaseTask):
         self,
         input: str | Path,
         *,
-        runtime: str | None = None,
-        model: str | None = None,
+        runtime: RuntimeSpec | None = None,
+        model: ModelRef | None = None,
         **overrides: Any,
     ) -> InvoiceOutput:
         options = self._resolve_options(runtime=runtime, model=model, **overrides)

@@ -2,15 +2,17 @@ import sys
 from pathlib import Path
 
 from aibackends.core.exceptions import AIBackendsError
-from aibackends.tasks import create_task
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
+from aibackends.tasks import SummarizeTask, create_task
 
 
 def main() -> None:
     try:
         task = create_task(
-            "summarize",
-            runtime="llamacpp",
-            model="gemma4-e2b",
+            SummarizeTask,
+            runtime=LLAMACPP,
+            model=GEMMA4_E2B,
         )
         notes_path = Path(__file__).parent.parent / "data" / "meeting_notes.txt"
         summary = task.run(notes_path)

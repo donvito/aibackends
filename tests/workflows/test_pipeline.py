@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import aibackends.steps.enrich as enrich_module
+from aibackends.core.registry import ModelRef
+from aibackends.runtimes import get_runtime_spec
 from aibackends.schemas.invoice import InvoiceOutput
 from aibackends.schemas.pii import RedactedText
 from aibackends.steps.enrich import LLMAnalyser, LLMTextGenerator, TaskRunner
 from aibackends.steps.ingest import FileIngestor
 from aibackends.steps.validate import PydanticValidator
+from aibackends.tasks import ClassifyTask
 from aibackends.workflows import InvoiceProcessor, SalesCallAnalyser
 from aibackends.workflows._base import Pipeline
 
@@ -16,7 +19,10 @@ def test_invoice_processor_batch_collects_results(tmp_path):
     file_a.write_text("Invoice from Acme Corp for consulting services")
     file_b.write_text("Invoice from Acme Corp for support services")
 
-    result = InvoiceProcessor(runtime="stub", model="stub-model").run_batch(
+    result = InvoiceProcessor(
+        runtime=get_runtime_spec("stub"),
+        model=ModelRef(name="stub-model"),
+    ).run_batch(
         inputs=[file_a, file_b],
         max_concurrency=2,
         on_error="collect",
@@ -43,7 +49,10 @@ def test_sales_call_analyser_accepts_transcript_file(tmp_path, monkeypatch):
         ),
     )
 
-    result = SalesCallAnalyser(runtime="stub", model="stub-model").run(transcript)
+    result = SalesCallAnalyser(
+        runtime=get_runtime_spec("stub"),
+        model=ModelRef(name="stub-model"),
+    ).run(transcript)
     assert result.score == 7.4
     assert result.sentiment == "positive"
 
@@ -59,7 +68,10 @@ def test_custom_pipeline_passes_runtime_config_to_llm_step(tmp_path):
     invoice = tmp_path / "invoice.txt"
     invoice.write_text("Invoice from Acme Corp for consulting services")
 
-    result = CustomInvoicePipeline(runtime="stub", model="stub-model").run(invoice)
+    result = CustomInvoicePipeline(
+        runtime=get_runtime_spec("stub"),
+        model=ModelRef(name="stub-model"),
+    ).run(invoice)
 
     assert result.total == 1250.0
 
@@ -80,7 +92,10 @@ def test_llm_analyser_can_store_result_under_output_key(tmp_path):
     invoice = tmp_path / "invoice.txt"
     invoice.write_text("Invoice from Acme Corp for consulting services")
 
-    result = CustomInvoicePipeline(runtime="stub", model="stub-model").run(invoice)
+    result = CustomInvoicePipeline(
+        runtime=get_runtime_spec("stub"),
+        model=ModelRef(name="stub-model"),
+    ).run(invoice)
 
     assert result["text"] == "Invoice from Acme Corp for consulting services"
     assert result["invoice"].total == 1250.0
@@ -101,7 +116,10 @@ def test_llm_text_generator_can_store_text_under_output_key(tmp_path):
     note = tmp_path / "note.txt"
     note.write_text("Alice owns pricing and Bob owns analytics.")
 
-    result = SummaryPipeline(runtime="stub", model="stub-model").run(note)
+    result = SummaryPipeline(
+        runtime=get_runtime_spec("stub"),
+        model=ModelRef(name="stub-model"),
+    ).run(note)
 
     assert result["text"] == "Alice owns pricing and Bob owns analytics."
     assert result["summary"] == "Stub summary"
@@ -112,7 +130,7 @@ def test_task_runner_executes_registered_task_with_output_key(tmp_path):
         steps = [
             FileIngestor(),
             TaskRunner(
-                task_name="classify",
+                task=ClassifyTask,
                 input_key="text",
                 output_key="classification",
                 task_config={"labels": ["invoice", "contract", "receipt"]},
@@ -122,7 +140,10 @@ def test_task_runner_executes_registered_task_with_output_key(tmp_path):
     document = tmp_path / "doc.txt"
     document.write_text("Invoice from Acme Corp for consulting services")
 
-    result = ClassificationPipeline(runtime="stub", model="stub-model").run(document)
+    result = ClassificationPipeline(
+        runtime=get_runtime_spec("stub"),
+        model=ModelRef(name="stub-model"),
+    ).run(document)
 
     assert result["text"] == "Invoice from Acme Corp for consulting services"
     assert result["classification"].label == "invoice"

@@ -22,6 +22,8 @@ import sys
 from pathlib import Path
 
 from aibackends.core.exceptions import AIBackendsError
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
 from aibackends.steps.enrich import LLMTextGenerator
 from aibackends.steps.enrich import PIIRedactor as PIIRedactorStep
 from aibackends.steps.ingest import FileIngestor
@@ -80,7 +82,7 @@ def main() -> None:
     try:
         resume_path = Path(__file__).parent.parent / "data" / "pdf" / "resume-sample.pdf"
 
-        workflow = ResumeRedactSummarizer(runtime="llamacpp", model="gemma4-e2b")
+        workflow = ResumeRedactSummarizer(runtime=LLAMACPP, model=GEMMA4_E2B)
         result = workflow.run(resume_path)
 
         redaction = result["pii_redaction"]

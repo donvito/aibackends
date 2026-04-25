@@ -11,6 +11,8 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from aibackends.core.exceptions import AIBackendsError
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
 from aibackends.schemas.pii import Classification
 from aibackends.steps.enrich import (
     LLMTextGenerator,
@@ -20,6 +22,7 @@ from aibackends.steps.enrich import (
     PIIRedactor as PIIRedactorStep,
 )
 from aibackends.steps.ingest import FileIngestor
+from aibackends.tasks import ClassifyTask
 from aibackends.workflows import Pipeline
 
 
@@ -112,7 +115,7 @@ class ResumeRoleMatcher(Pipeline):
             output_key="summary",
         ),
         TaskRunner(
-            task_name="classify",
+            task=ClassifyTask,
             input_key="text",
             output_key="role_match",
             task_config={
@@ -129,7 +132,7 @@ def main() -> None:
     try:
         resume_path = Path(__file__).parent.parent / "data" / "pdf" / "resume-sample.pdf"
 
-        workflow = ResumeRoleMatcher(runtime="llamacpp", model="gemma4-e2b")
+        workflow = ResumeRoleMatcher(runtime=LLAMACPP, model=GEMMA4_E2B)
         raw_result = workflow.run(resume_path)
         redaction = raw_result["pii_redaction"]
         result = ResumeMatchResult(

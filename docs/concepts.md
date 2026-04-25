@@ -45,7 +45,8 @@ tasks. Examples:
 - `groq`
 
 Runtime modules live in `src/aibackends/core/runtimes` and export
-`RUNTIME_SPEC`.
+`RUNTIME_SPEC`. The supported Python-facing runtime refs are exported from
+`aibackends.runtimes`.
 
 ## Backend
 
@@ -76,7 +77,8 @@ Examples:
 
 Transformer model profiles live under `src/aibackends/models`. They can provide
 aliases, Hugging Face model ids, chat templates, and generation defaults. User
-configuration always takes precedence over profile defaults.
+configuration always takes precedence over profile defaults. The supported
+Python-facing model refs are exported from `aibackends.models`.
 
 ## Workflow
 
@@ -85,8 +87,9 @@ for multi-stage work such as ingesting a file, processing it, running an LLM
 analysis step, validating the result, and running batches.
 
 Workflow classes live in `src/aibackends/workflows` and can be registered with
-`WORKFLOW_SPEC`. Use `create_workflow(...)` to build a configured workflow
-instance by name.
+`WORKFLOW_SPEC`. Use `create_workflow(SalesCallAnalyser, ...)` or instantiate the
+workflow class directly to build a configured workflow instance. For dynamic
+lookup by name, use `get_workflow(name)`.
 
 Workflows should stay independent of agent frameworks. If an agent needs a
 workflow, wrap `workflow.run(...)` as that framework's tool function instead of

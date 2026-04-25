@@ -2,13 +2,13 @@ import sys
 from pathlib import Path
 
 from aibackends.core.exceptions import AIBackendsError
-from aibackends.tasks import create_task
+from aibackends.tasks import RedactPIITask, create_task
 
 
 def main() -> None:
     try:
         task = create_task(
-            "redact-pii",
+            RedactPIITask,
             backend="gliner",
             labels=[
                 "name",

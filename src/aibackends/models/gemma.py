@@ -31,4 +31,9 @@ MODEL_PROFILES = [
         model_id="bartowski/gemma-3-12b-it-GGUF",
         runtime=None,
     ),
+    TransformerModelProfile(
+        name="gemma3-270m-it",
+        model_id="google/gemma-3-270m-it",
+        runtime="transformers",
+    ),
 ]

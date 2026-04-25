@@ -1,20 +1,37 @@
 from __future__ import annotations
 
-from aibackends.core.registry import TransformerModelProfile, discover_specs, normalize_name
+from aibackends.core.exceptions import ModelResolutionError
+from aibackends.core.registry import (
+    ModelRef,
+    ModelRefLike,
+    RuntimeRefLike,
+    RuntimeSpec,
+    TransformerModelProfile,
+    discover_specs,
+    normalize_name,
+)
 from aibackends.core.types import RuntimeConfig
 
 MODEL_REGISTRY: dict[str, str] = {}
 RUNTIME_MODEL_REGISTRY: dict[str, dict[str, str]] = {}
 
 _MODEL_PROFILES: dict[tuple[str | None, str], TransformerModelProfile] = {}
+_MODEL_REFS: dict[str, ModelRef] = {}
+_MODEL_REF_ALIASES: dict[str, ModelRef] = {}
 _PROFILES_REGISTERED = False
+_SHARED_MODEL_RUNTIMES = {"llamacpp", "transformers"}
 
 
 def register_model_profile(profile: TransformerModelProfile) -> None:
     runtime = normalize_name(profile.runtime) if profile.runtime else None
+    model_ref = _MODEL_REFS.setdefault(
+        normalize_name(profile.name),
+        ModelRef(name=profile.name),
+    )
     for name in profile.names:
         normalized = normalize_name(name)
         _MODEL_PROFILES[(runtime, normalized)] = profile
+        _MODEL_REF_ALIASES[normalized] = model_ref
         if runtime is None:
             MODEL_REGISTRY[normalized] = profile.model_id
         else:
@@ -32,33 +49,65 @@ def _ensure_model_profiles_registered() -> None:
     _PROFILES_REGISTERED = True
 
 
-def resolve_model_alias(name: str | None, *, runtime: str | None = None) -> str | None:
+def get_model_ref(name: str) -> ModelRef:
+    _ensure_model_profiles_registered()
+    try:
+        return _MODEL_REF_ALIASES[normalize_name(name)]
+    except KeyError as exc:
+        raise ModelResolutionError(f"Unknown supported model: {name}") from exc
+
+
+def available_models(runtime: RuntimeRefLike | None = None) -> dict[str, ModelRef]:
+    _ensure_model_profiles_registered()
+    normalized_runtime = _runtime_name(runtime)
+    names = sorted(_MODEL_REFS)
+    supported: dict[str, ModelRef] = {}
+    for normalized_name in names:
+        model_ref = _MODEL_REFS[normalized_name]
+        if normalized_runtime is not None and not _supports_runtime(
+            normalized_name,
+            normalized_runtime,
+        ):
+            continue
+        supported[model_ref.name] = model_ref
+    return supported
+
+
+def resolve_model_alias(
+    name: ModelRefLike | None,
+    *,
+    runtime: RuntimeRefLike | None = None,
+) -> str | None:
     profile = resolve_model_profile(name, runtime=runtime)
     if profile is not None:
         return profile.model_id
     if not name:
         return None
-    return name
+    return name.name if isinstance(name, ModelRef) else name
 
 
 def resolve_model_profile(
-    name: str | None,
+    name: ModelRefLike | None,
     *,
-    runtime: str | None = None,
+    runtime: RuntimeRefLike | None = None,
 ) -> TransformerModelProfile | None:
     if not name:
         return None
     _ensure_model_profiles_registered()
-    normalized_name = normalize_name(name)
-    normalized_runtime = normalize_name(runtime) if runtime else None
+    normalized_name = normalize_name(name.name if isinstance(name, ModelRef) else name)
+    normalized_runtime = _runtime_name(runtime)
     if normalized_runtime is not None:
         runtime_profile = _MODEL_PROFILES.get((normalized_runtime, normalized_name))
         if runtime_profile is not None:
             return runtime_profile
     shared_profile = _MODEL_PROFILES.get((None, normalized_name))
-    if shared_profile is not None:
+    if shared_profile is not None and (
+        normalized_runtime is None or normalized_runtime in _SHARED_MODEL_RUNTIMES
+    ):
         return shared_profile
-    return _MODEL_PROFILES.get(("transformers", normalized_name))
+    if normalized_runtime in {None, "transformers"}:
+        return _MODEL_PROFILES.get(("transformers", normalized_name))
+    return None
 
 
 def apply_transformer_model_profile(config: RuntimeConfig) -> RuntimeConfig:
@@ -83,3 +132,15 @@ def apply_transformer_model_profile(config: RuntimeConfig) -> RuntimeConfig:
     if not updates:
         return config
     return config.model_copy(update=updates)
+
+
+def _runtime_name(runtime: RuntimeRefLike | None) -> str | None:
+    if runtime is None:
+        return None
+    return normalize_name(runtime.name if isinstance(runtime, RuntimeSpec) else runtime)
+
+
+def _supports_runtime(name: str, runtime: str) -> bool:
+    return (runtime, name) in _MODEL_PROFILES or (
+        runtime in _SHARED_MODEL_RUNTIMES and (None, name) in _MODEL_PROFILES
+    )

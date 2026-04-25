@@ -4,7 +4,8 @@ import asyncio
 from pathlib import Path
 from typing import Any
 
-from aibackends.core.registry import TaskSpec
+from aibackends.core.config import ensure_model_ref, ensure_runtime_spec
+from aibackends.core.registry import ModelRef, RuntimeSpec, TaskSpec
 from aibackends.schemas.video_ad import VideoAdReport
 from aibackends.tasks._base import BaseTask
 from aibackends.tasks._utils import build_messages, load_text_input, run_structured_task
@@ -15,10 +16,12 @@ VIDEO_SUFFIXES = {".avi", ".mov", ".mp4", ".mkv", ".webm"}
 def analyse_video_ad(
     video_or_brief: str | Path,
     *,
-    runtime: str | None = None,
-    model: str | None = None,
+    runtime: RuntimeSpec | None = None,
+    model: ModelRef | None = None,
     **overrides: Any,
 ) -> VideoAdReport:
+    runtime = ensure_runtime_spec(runtime)
+    model = ensure_model_ref(model)
     context = _load_video_context(video_or_brief)
     messages = build_messages(
         "You review short-form video ads for creative effectiveness.",
@@ -42,8 +45,8 @@ def analyse_video_ad(
 async def analyse_video_ad_async(
     video_or_brief: str | Path,
     *,
-    runtime: str | None = None,
-    model: str | None = None,
+    runtime: RuntimeSpec | None = None,
+    model: ModelRef | None = None,
     **overrides: Any,
 ) -> VideoAdReport:
     return await asyncio.to_thread(
@@ -95,8 +98,8 @@ class AnalyseVideoAdTask(BaseTask):
         self,
         input: str | Path,
         *,
-        runtime: str | None = None,
-        model: str | None = None,
+        runtime: RuntimeSpec | None = None,
+        model: ModelRef | None = None,
         **overrides: Any,
     ) -> VideoAdReport:
         options = self._resolve_options(runtime=runtime, model=model, **overrides)

@@ -4,7 +4,8 @@ import asyncio
 from pathlib import Path
 from typing import Any
 
-from aibackends.core.registry import TaskSpec
+from aibackends.core.config import ensure_model_ref, ensure_runtime_spec
+from aibackends.core.registry import ModelRef, RuntimeSpec, TaskSpec
 from aibackends.tasks._base import BaseTask
 from aibackends.tasks._utils import build_messages, load_text_input, run_text_task
 
@@ -12,10 +13,12 @@ from aibackends.tasks._utils import build_messages, load_text_input, run_text_ta
 def summarize(
     text: str | Path,
     *,
-    runtime: str | None = None,
-    model: str | None = None,
+    runtime: RuntimeSpec | None = None,
+    model: ModelRef | None = None,
     **overrides: Any,
 ) -> str:
+    runtime = ensure_runtime_spec(runtime)
+    model = ensure_model_ref(model)
     content = load_text_input(text)
     messages = build_messages(
         "You are an expert summarization engine.",
@@ -33,8 +36,8 @@ def summarize(
 async def summarize_async(
     text: str | Path,
     *,
-    runtime: str | None = None,
-    model: str | None = None,
+    runtime: RuntimeSpec | None = None,
+    model: ModelRef | None = None,
     **overrides: Any,
 ) -> str:
     return await asyncio.to_thread(summarize, text, runtime=runtime, model=model, **overrides)
@@ -47,8 +50,8 @@ class SummarizeTask(BaseTask):
         self,
         input: str | Path,
         *,
-        runtime: str | None = None,
-        model: str | None = None,
+        runtime: RuntimeSpec | None = None,
+        model: ModelRef | None = None,
         **overrides: Any,
     ) -> str:
         options = self._resolve_options(runtime=runtime, model=model, **overrides)

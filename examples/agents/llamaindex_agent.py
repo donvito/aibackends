@@ -1,7 +1,9 @@
 import sys
 
 from aibackends.core.exceptions import AIBackendsError
-from aibackends.tasks import create_task
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
+from aibackends.tasks import ExtractInvoiceTask, create_task
 
 
 def main() -> None:
@@ -15,7 +17,7 @@ def main() -> None:
         raise SystemExit(1) from exc
 
     try:
-        invoice_task = create_task("extract-invoice", runtime="llamacpp", model="gemma4-e2b")
+        invoice_task = create_task(ExtractInvoiceTask, runtime=LLAMACPP, model=GEMMA4_E2B)
 
         def extract_invoice(file_path: str):
             return invoice_task.run(file_path)

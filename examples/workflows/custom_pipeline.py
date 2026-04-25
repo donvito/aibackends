@@ -4,6 +4,8 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from aibackends.core.exceptions import AIBackendsError
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
 from aibackends.steps.enrich import LLMAnalyser
 from aibackends.steps.ingest import FileIngestor
 from aibackends.steps.validate import PydanticValidator
@@ -29,7 +31,7 @@ class LeadIntakePipeline(Pipeline):
 def main() -> None:
     try:
         lead_note_path = Path(__file__).parent.parent / "data" / "lead_note.txt"
-        workflow = LeadIntakePipeline(runtime="llamacpp", model="gemma4-e2b")
+        workflow = LeadIntakePipeline(runtime=LLAMACPP, model=GEMMA4_E2B)
         result = workflow.run(lead_note_path)
         print(result.model_dump_json(indent=2))
     except KeyboardInterrupt:

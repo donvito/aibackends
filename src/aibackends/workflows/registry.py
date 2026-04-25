@@ -1,7 +1,17 @@
 from __future__ import annotations
 
+from typing import Any
+
+from aibackends.core.config import ensure_model_ref, ensure_runtime_spec
 from aibackends.core.exceptions import TaskExecutionError
-from aibackends.core.registry import WorkflowSpec, discover_specs, normalize_name, register_spec
+from aibackends.core.registry import (
+    ModelRef,
+    RuntimeSpec,
+    WorkflowSpec,
+    discover_specs,
+    normalize_name,
+    register_spec,
+)
 from aibackends.workflows._base import Pipeline
 
 _WORKFLOWS: dict[str, WorkflowSpec] = {}
@@ -20,8 +30,38 @@ def get_workflow(name: str) -> WorkflowSpec:
         raise TaskExecutionError(f"Unknown workflow: {name}") from exc
 
 
-def create_workflow(name: str, **config) -> Pipeline:
-    return get_workflow(name).create(**config)
+def create_workflow(
+    workflow: type[Pipeline] | WorkflowSpec,
+    *,
+    runtime: RuntimeSpec | None = None,
+    model: ModelRef | None = None,
+    **config: Any,
+) -> Pipeline:
+    if "runtime" in config:
+        runtime = ensure_runtime_spec(config.pop("runtime"))
+    else:
+        runtime = ensure_runtime_spec(runtime)
+    if "model" in config:
+        model = ensure_model_ref(config.pop("model"))
+    else:
+        model = ensure_model_ref(model)
+    resolved_config = {
+        **config,
+        "runtime": runtime,
+        "model": model,
+    }
+    if isinstance(workflow, WorkflowSpec):
+        return workflow.create(**resolved_config)
+    if isinstance(workflow, type) and issubclass(workflow, Pipeline):
+        return workflow(**resolved_config)
+    raise TypeError(
+        "create_workflow() expects a Pipeline subclass or WorkflowSpec. "
+        "Use get_workflow(name) to resolve string workflow names."
+    )
+
+
+def available_workflows() -> dict[str, type[Pipeline]]:
+    return {name: get_workflow(name).pipeline_cls for name in list_workflows()}
 
 
 def list_workflows() -> list[str]:
@@ -41,6 +81,7 @@ def _ensure_builtin_workflows_registered() -> None:
 
 
 __all__ = [
+    "available_workflows",
     "create_workflow",
     "get_workflow",
     "list_workflows",

@@ -2,15 +2,32 @@ from __future__ import annotations
 
 from types import MethodType
 
+import pytest
+
 from aibackends.backends.pii import get_pii_backend
 from aibackends.core.config import get_runtime
 from aibackends.core.model_registry import register_model_profile
-from aibackends.core.registry import TransformerModelProfile
+from aibackends.core.registry import ModelRef, TransformerModelProfile
 from aibackends.core.runtimes.transformers import TransformersRuntime
 from aibackends.core.types import RuntimeConfig
-from aibackends.tasks import BaseTask, create_task
+from aibackends.models import GEMMA4_E2B, available_models, get_model_ref
+from aibackends.runtimes import OLLAMA, available_runtimes, get_runtime_spec
+from aibackends.tasks import (
+    BaseTask,
+    ClassifyTask,
+    ExtractInvoiceTask,
+    SummarizeTask,
+    available_tasks,
+    create_task,
+)
 from aibackends.tasks.registry import get_task
-from aibackends.workflows import Pipeline, create_workflow
+from aibackends.workflows import (
+    InvoiceProcessor,
+    Pipeline,
+    SalesCallAnalyser,
+    available_workflows,
+    create_workflow,
+)
 from aibackends.workflows.registry import get_workflow
 
 
@@ -64,6 +81,16 @@ def test_pii_backend_is_discovered_from_backend_spec():
     assert backend.model_id == "openai/privacy-filter"
 
 
+def test_runtime_and_model_catalogs_are_discoverable():
+    runtimes = available_runtimes()
+    models = available_models()
+
+    assert runtimes["ollama"] is OLLAMA
+    assert get_runtime_spec("ollama") is OLLAMA
+    assert models["gemma4-e2b"] == GEMMA4_E2B
+    assert get_model_ref("gemma4-e2b") == GEMMA4_E2B
+
+
 def test_task_and_workflow_specs_are_discovered():
     task = get_task("extract_invoice")
     workflow = get_workflow("sales-call-analyser")
@@ -71,6 +98,22 @@ def test_task_and_workflow_specs_are_discovered():
     assert task.name == "extract-invoice"
     assert workflow.name == "sales-call"
     assert workflow.pipeline_cls.__name__ == "SalesCallAnalyser"
+
+
+def test_available_tasks_returns_canonical_names_mapped_to_task_classes():
+    tasks = available_tasks()
+
+    assert tasks["summarize"] is SummarizeTask
+    assert tasks["extract-invoice"] is ExtractInvoiceTask
+    assert "extract_invoice" not in tasks
+
+
+def test_available_workflows_returns_canonical_names_mapped_to_pipeline_classes():
+    workflows = available_workflows()
+
+    assert workflows["invoice"] is InvoiceProcessor
+    assert workflows["sales-call"] is SalesCallAnalyser
+    assert "sales-call-analyser" not in workflows
 
 
 def test_task_spec_exposes_base_task_interface():
@@ -86,30 +129,54 @@ def test_task_spec_exposes_base_task_interface():
 
 def test_create_task_returns_configured_task_instance():
     task = create_task(
-        "classify",
+        ClassifyTask,
         labels=["invoice", "contract", "receipt"],
-        runtime="stub",
-        model="configured-model",
+        runtime=get_runtime_spec("stub"),
+        model=ModelRef(name="configured-model"),
     )
 
     result = task.run("invoice for April services")
 
     assert result.label == "invoice"
-    assert task.defaults["model"] == "configured-model"
+    assert task.defaults["model"] == ModelRef(name="configured-model")
 
 
 def test_create_task_returns_fresh_instances():
-    first = create_task("summarize", model="first-model")
-    second = create_task("summarize", model="second-model")
+    first = create_task(SummarizeTask, model=ModelRef(name="first-model"))
+    second = create_task(SummarizeTask, model=ModelRef(name="second-model"))
 
     assert first is not second
-    assert first.defaults["model"] == "first-model"
-    assert second.defaults["model"] == "second-model"
-    assert create_task("summarize").defaults == {}
+    assert first.defaults["model"] == ModelRef(name="first-model")
+    assert second.defaults["model"] == ModelRef(name="second-model")
+    assert create_task(SummarizeTask).defaults == {}
+
+
+def test_create_task_accepts_task_spec():
+    task = create_task(get_task("summarize"), model=ModelRef(name="spec-model"))
+
+    assert isinstance(task, BaseTask)
+    assert task.defaults["model"] == ModelRef(name="spec-model")
+
+
+def test_create_task_rejects_string_lookup():
+    with pytest.raises(TypeError):
+        create_task("summarize")  # type: ignore[arg-type]
+
+
+def test_create_task_rejects_string_runtime_and_model_refs():
+    with pytest.raises(TypeError, match="runtime must be a RuntimeSpec"):
+        create_task(SummarizeTask, runtime="stub")  # type: ignore[arg-type]
+
+    with pytest.raises(TypeError, match="model must be a ModelRef"):
+        create_task(SummarizeTask, model="stub-model")  # type: ignore[arg-type]
 
 
 def test_create_workflow_returns_configured_pipeline_instance():
-    workflow = create_workflow("invoice", runtime="stub", model="configured-model")
+    workflow = create_workflow(
+        InvoiceProcessor,
+        runtime=get_runtime_spec("stub"),
+        model=ModelRef(name="configured-model"),
+    )
 
     assert isinstance(workflow, Pipeline)
     assert workflow.config.runtime == "stub"
@@ -117,9 +184,29 @@ def test_create_workflow_returns_configured_pipeline_instance():
 
 
 def test_create_workflow_returns_fresh_instances():
-    first = create_workflow("invoice", model="first-model")
-    second = create_workflow("invoice", model="second-model")
+    first = create_workflow(InvoiceProcessor, model=ModelRef(name="first-model"))
+    second = create_workflow(InvoiceProcessor, model=ModelRef(name="second-model"))
 
     assert first is not second
     assert first.config.model == "first-model"
     assert second.config.model == "second-model"
+
+
+def test_create_workflow_accepts_workflow_spec():
+    workflow = create_workflow(get_workflow("invoice"), model=ModelRef(name="spec-model"))
+
+    assert isinstance(workflow, Pipeline)
+    assert workflow.config.model == "spec-model"
+
+
+def test_create_workflow_rejects_string_lookup():
+    with pytest.raises(TypeError):
+        create_workflow("invoice")  # type: ignore[arg-type]
+
+
+def test_create_workflow_rejects_string_runtime_and_model_refs():
+    with pytest.raises(TypeError, match="runtime must be a RuntimeSpec"):
+        create_workflow(InvoiceProcessor, runtime="stub")  # type: ignore[arg-type]
+
+    with pytest.raises(TypeError, match="model must be a ModelRef"):
+        create_workflow(InvoiceProcessor, model="stub-model")  # type: ignore[arg-type]

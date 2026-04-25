@@ -5,7 +5,15 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from aibackends.core.config import (
+    ensure_model_ref,
+    ensure_runtime_spec,
+    get_runtime_spec,
+    parse_model_text,
+)
+from aibackends.core.registry import ModelRef, RuntimeSpec, TaskSpec
 from aibackends.steps._base import BaseStep, StepContext
+from aibackends.tasks._base import BaseTask
 from aibackends.tasks._utils import (
     build_messages,
     load_text_input,
@@ -13,7 +21,7 @@ from aibackends.tasks._utils import (
     run_text_task,
 )
 from aibackends.tasks.redact_pii import redact_pii
-from aibackends.tasks.registry import create_task, get_task
+from aibackends.tasks.registry import create_task
 
 
 def _coerce_payload(payload: Any) -> dict[str, Any]:
@@ -66,9 +74,11 @@ class LLMTextGenerator(BaseStep):
         system_prompt: str = "You are a helpful AI assistant.",
         input_key: str | None = None,
         output_key: str | None = None,
-        runtime: str | None = None,
-        model: str | None = None,
+        runtime: RuntimeSpec | None = None,
+        model: ModelRef | None = None,
     ) -> None:
+        runtime = ensure_runtime_spec(runtime)
+        model = ensure_model_ref(model)
         self.prompt = prompt
         self.task_name = task_name
         self.system_prompt = system_prompt
@@ -103,13 +113,13 @@ class TaskRunner(BaseStep):
     def __init__(
         self,
         *,
-        task_name: str,
+        task: type[BaseTask] | TaskSpec,
         input_key: str | None = None,
         output_key: str | None = None,
         task_config: dict[str, Any] | None = None,
         run_kwargs: dict[str, Any] | None = None,
     ) -> None:
-        self.task_name = task_name
+        self.task = task
         self.input_key = input_key
         self.output_key = output_key
         self.task_config = task_config or {}
@@ -118,15 +128,29 @@ class TaskRunner(BaseStep):
     def run(self, payload: Any, context: StepContext) -> Any:
         data = _coerce_payload(payload)
         content = _resolve_content(data, payload, self.input_key)
-        task_spec = get_task(self.task_name)
         task_config = dict(context.runtime_config.extra_options)
         task_config.update(self.task_config)
-        if task_spec.accepts_runtime and "runtime" not in task_config:
-            task_config["runtime"] = context.runtime_config.runtime
-        if task_spec.accepts_model and "model" not in task_config:
-            task_config["model"] = context.runtime_config.model
-        task = create_task(self.task_name, **task_config)
-        result = task.run(content, **self.run_kwargs)
+        if isinstance(self.task, TaskSpec):
+            if self.task.accepts_runtime and "runtime" not in task_config:
+                task_config["runtime"] = (
+                    get_runtime_spec(context.runtime_config.runtime)
+                    if context.runtime_config.runtime
+                    else None
+                )
+            if self.task.accepts_model and "model" not in task_config:
+                task_config["model"] = parse_model_text(context.runtime_config.model)
+        else:
+            task_config.setdefault(
+                "runtime",
+                (
+                    get_runtime_spec(context.runtime_config.runtime)
+                    if context.runtime_config.runtime
+                    else None
+                ),
+            )
+            task_config.setdefault("model", parse_model_text(context.runtime_config.model))
+        task_instance = create_task(self.task, **task_config)
+        result = task_instance.run(content, **self.run_kwargs)
         if self.output_key is None:
             return result
         data[self.output_key] = result
@@ -145,9 +169,11 @@ class LLMAnalyser(BaseStep):
         system_prompt: str = "You are a structured analysis engine.",
         input_key: str | None = None,
         output_key: str | None = None,
-        runtime: str | None = None,
-        model: str | None = None,
+        runtime: RuntimeSpec | None = None,
+        model: ModelRef | None = None,
     ) -> None:
+        runtime = ensure_runtime_spec(runtime)
+        model = ensure_model_ref(model)
         self.schema = schema
         self.prompt = prompt
         self.task_name = task_name or prompt

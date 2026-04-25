@@ -1,4 +1,5 @@
-from aibackends.core.registry import WorkflowSpec
+from aibackends.core.config import ensure_model_ref, ensure_runtime_spec
+from aibackends.core.registry import ModelRef, RuntimeSpec, WorkflowSpec
 from aibackends.steps.enrich import PIIRedactor as PIIRedactorStep
 from aibackends.steps.ingest import FileIngestor
 from aibackends.steps.output import OutputPassthrough
@@ -11,10 +12,12 @@ class PIIRedactorWorkflow(Pipeline):
         *,
         pii_backend: str = "gliner",
         labels: list[str] | None = None,
-        runtime: str | None = None,
-        model: str | None = None,
+        runtime: RuntimeSpec | None = None,
+        model: ModelRef | None = None,
         **overrides,
     ) -> None:
+        runtime = ensure_runtime_spec(runtime)
+        model = ensure_model_ref(model)
         self.steps = [
             FileIngestor(),
             PIIRedactorStep(backend=pii_backend, labels=labels),

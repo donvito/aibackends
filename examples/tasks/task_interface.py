@@ -2,7 +2,7 @@ import sys
 
 from aibackends.core.exceptions import AIBackendsError
 from aibackends.core.registry import TaskSpec
-from aibackends.tasks import BaseTask, create_task, register_task
+from aibackends.tasks import BaseTask, create_task, get_task, register_task
 
 
 class WordCountTask(BaseTask):
@@ -21,7 +21,7 @@ class WordCountTask(BaseTask):
 def main() -> None:
     try:
         register_task(TaskSpec(name=WordCountTask.name, task_factory=WordCountTask))
-        task = create_task("word-count", strip=True)
+        task = create_task(get_task("word-count"), strip=True)
         result = task.run("AIBackends tasks can be objects too.")
         print(result)
     except KeyboardInterrupt:

@@ -2,8 +2,8 @@
 
 This directory contains three kinds of examples:
 
-- Task examples that create configured task objects with `create_task(...)`
-- Workflow examples that create configured pipelines with `create_workflow(...)` or explicit pipeline construction
+- Task examples that create configured task objects with `create_task(TaskClass, ...)`
+- Workflow examples that create configured pipelines with `create_workflow(WorkflowClass, ...)` or explicit pipeline construction
 - Agent framework integrations that wrap configured task objects as tools
 
 The agent examples intentionally keep AIBackends tasks and workflows outside the
@@ -29,18 +29,21 @@ python3 -m pip install -e ".[llamacpp-metal]"
 python3 -m pip install -e ".[transformers]"
 ```
 
-Task examples use `create_task(...)` so runtime, model, backend, labels, and
-other defaults are configured before `run(...)`. Agent examples follow the same
-pattern: create the task object once, then expose `task.run(...)` through the
-framework's tool wrapper.
+Task examples use `create_task(TaskClass, ...)` with supported runtime/model
+refs such as `LLAMACPP` and `GEMMA4_E2B`, so defaults are configured before
+`run(...)`. Agent examples follow the same pattern: create the task object once,
+then expose `task.run(...)` through the framework's tool wrapper.
 
-`basic_task_transformers.py` uses the smaller instruction-tuned `google/gemma-3-270m-it` model so it stays practical on CPU-only machines. If you swap it to `gemma4-e2b`, expect a much larger first download and slower load time.
+`basic_task_transformers.py` uses the smaller `GEMMA3_270M_IT` profile so it
+stays practical on CPU-only machines. If you swap it to `GEMMA4_E2B`, expect a
+much larger first download and slower load time.
 
 ## Runnable core examples
 
 These examples use the sample files in `examples/data/` and do not require any agent framework package.
 
 ```bash
+python3 examples/list_available.py
 python3 examples/tasks/basic_task.py
 python3 examples/tasks/basic_task_transformers.py
 python3 examples/tasks/summarize_text.py
@@ -68,3 +71,7 @@ These examples require the corresponding framework packages to be installed sepa
 - `examples/agents/llamaindex_agent.py`
 
 They are intended to show how AIBackends tasks plug into agent frameworks as tools.
+
+`list_available.py` has no runtime dependency. It prints the supported runtime
+and model catalog plus the canonical task/workflow names returned by the public
+`available_*()` helpers.

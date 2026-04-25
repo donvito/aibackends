@@ -2,7 +2,9 @@ import sys
 from pathlib import Path
 
 from aibackends.core.exceptions import AIBackendsError
-from aibackends.workflows import create_workflow
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
+from aibackends.workflows import SalesCallAnalyser, create_workflow
 
 
 def main() -> None:
@@ -14,11 +16,11 @@ def main() -> None:
         for path in transcript_paths:
             print(f"- {path.name}", flush=True)
 
-        workflow = create_workflow(
-            "sales-call",
-            runtime="llamacpp",
-            model="gemma4-e2b",
-        )
+            workflow = create_workflow(
+                SalesCallAnalyser,
+                runtime=LLAMACPP,
+                model=GEMMA4_E2B,
+            )
 
         print("Running sales-call workflow batch...", flush=True)
         results = workflow.run_batch(

@@ -9,7 +9,7 @@ from typing import Any
 import typer
 from pydantic import BaseModel
 
-from aibackends.core.config import get_runtime
+from aibackends.core.config import get_runtime, parse_model_text, parse_runtime_text
 from aibackends.core.model_manager import ModelManager
 from aibackends.core.types import RuntimeConfig
 from aibackends.tasks.registry import create_task, get_task
@@ -44,11 +44,11 @@ def run_task(
         kwargs["schema"] = _load_schema(schema)
     task_config: dict[str, Any] = {}
     if task.accepts_runtime:
-        task_config["runtime"] = runtime
+        task_config["runtime"] = parse_runtime_text(runtime)
     if task.accepts_model:
-        task_config["model"] = model
+        task_config["model"] = parse_model_text(model)
 
-    task_instance = create_task(name, **task_config)
+    task_instance = create_task(task, **task_config)
     result = task_instance.run(input, **kwargs)
     typer.echo(_serialize(result))
 
@@ -62,7 +62,15 @@ def pull_model(
     ),
 ) -> None:
     manager = ModelManager(cache_dir=cache_dir)
-    location = manager.pull_model(RuntimeConfig(runtime=runtime, model=model, cache_dir=cache_dir))
+    location = manager.pull_model(
+        RuntimeConfig.model_validate(
+            {
+                "runtime": parse_runtime_text(runtime),
+                "model": parse_model_text(model),
+                "cache_dir": cache_dir,
+            }
+        )
+    )
     typer.echo(_serialize(location))
 
 
@@ -72,7 +80,15 @@ def check_runtime(
     model: str | None = typer.Option(None, "--model", help="Optional model to resolve."),
     base_url: str | None = typer.Option(None, "--base-url", help="Optional base URL override."),
 ) -> None:
-    client = get_runtime(RuntimeConfig(runtime=runtime, model=model, base_url=base_url))
+    client = get_runtime(
+        RuntimeConfig.model_validate(
+            {
+                "runtime": parse_runtime_text(runtime),
+                "model": parse_model_text(model),
+                "base_url": base_url,
+            }
+        )
+    )
     typer.echo(
         _serialize(
             {

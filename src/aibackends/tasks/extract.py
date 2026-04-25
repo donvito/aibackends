@@ -6,7 +6,8 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
-from aibackends.core.registry import TaskSpec
+from aibackends.core.config import ensure_model_ref, ensure_runtime_spec
+from aibackends.core.registry import ModelRef, RuntimeSpec, TaskSpec
 from aibackends.tasks._base import BaseTask
 from aibackends.tasks._utils import build_messages, load_text_input, run_structured_task
 
@@ -18,10 +19,12 @@ def extract(
     *,
     schema: type[T],
     instructions: str | None = None,
-    runtime: str | None = None,
-    model: str | None = None,
+    runtime: RuntimeSpec | None = None,
+    model: ModelRef | None = None,
     **overrides: Any,
 ) -> T:
+    runtime = ensure_runtime_spec(runtime)
+    model = ensure_model_ref(model)
     content = load_text_input(text)
     prompt = instructions or "Extract the requested structured information from the content."
     messages = build_messages(
@@ -43,8 +46,8 @@ async def extract_async(
     *,
     schema: type[T],
     instructions: str | None = None,
-    runtime: str | None = None,
-    model: str | None = None,
+    runtime: RuntimeSpec | None = None,
+    model: ModelRef | None = None,
     **overrides: Any,
 ) -> T:
     def _run() -> T:
@@ -69,8 +72,8 @@ class ExtractTask(BaseTask):
         *,
         schema: type[T] | None = None,
         instructions: str | None = None,
-        runtime: str | None = None,
-        model: str | None = None,
+        runtime: RuntimeSpec | None = None,
+        model: ModelRef | None = None,
         **overrides: Any,
     ) -> T:
         options = self._resolve_options(
