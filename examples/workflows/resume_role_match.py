@@ -5,10 +5,12 @@ Outputs ATS-friendly JSON by composing built-in workflow steps.
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from pydantic import BaseModel
 
+from aibackends.core.exceptions import AIBackendsError
 from aibackends.schemas.pii import Classification
 from aibackends.steps.enrich import (
     LLMTextGenerator,
@@ -123,22 +125,33 @@ class ResumeRoleMatcher(Pipeline):
     ]
 
 
+def main() -> None:
+    try:
+        resume_path = Path(__file__).parent.parent / "data" / "pdf" / "resume-sample.pdf"
+
+        workflow = ResumeRoleMatcher(runtime="llamacpp", model="gemma4-e2b")
+        raw_result = workflow.run(resume_path)
+        redaction = raw_result["pii_redaction"]
+        result = ResumeMatchResult(
+            source=str(raw_result.get("path", "")),
+            redacted_text=raw_result.get("text", ""),
+            summary=raw_result["summary"],
+            role_match=raw_result["role_match"],
+            pii=PIISummary(
+                backend=redaction.backend_used,
+                entities_redacted=len(redaction.entities_found),
+                redaction_map=redaction.redaction_map,
+            ),
+        )
+
+        print(result.model_dump_json(indent=2))
+    except KeyboardInterrupt:
+        print("Example cancelled by user.", file=sys.stderr)
+        raise SystemExit(130) from None
+    except AIBackendsError as exc:
+        print(f"Example failed: {exc}", file=sys.stderr)
+        raise SystemExit(1) from exc
+
+
 if __name__ == "__main__":
-    resume_path = Path(__file__).parent.parent / "data" / "pdf" / "resume-sample.pdf"
-
-    workflow = ResumeRoleMatcher(runtime="llamacpp", model="gemma4-e2b")
-    raw_result = workflow.run(resume_path)
-    redaction = raw_result["pii_redaction"]
-    result = ResumeMatchResult(
-        source=str(raw_result.get("path", "")),
-        redacted_text=raw_result.get("text", ""),
-        summary=raw_result["summary"],
-        role_match=raw_result["role_match"],
-        pii=PIISummary(
-            backend=redaction.backend_used,
-            entities_redacted=len(redaction.entities_found),
-            redaction_map=redaction.redaction_map,
-        ),
-    )
-
-    print(result.model_dump_json(indent=2))
+    main()

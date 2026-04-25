@@ -18,8 +18,10 @@ Requires:
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
+from aibackends.core.exceptions import AIBackendsError
 from aibackends.steps.enrich import LLMTextGenerator
 from aibackends.steps.enrich import PIIRedactor as PIIRedactorStep
 from aibackends.steps.ingest import FileIngestor
@@ -74,18 +76,29 @@ class ResumeRedactSummarizer(Pipeline):
     ]
 
 
+def main() -> None:
+    try:
+        resume_path = Path(__file__).parent.parent / "data" / "pdf" / "resume-sample.pdf"
+
+        workflow = ResumeRedactSummarizer(runtime="llamacpp", model="gemma4-e2b")
+        result = workflow.run(resume_path)
+
+        redaction = result["pii_redaction"]
+        print(f"Redacted {len(redaction.entities_found)} PII entities "
+              f"using backend '{redaction.backend_used}'.\n", flush=True)
+
+        print("Redacted text (first 300 chars):", flush=True)
+        print(result["text"][:300] + "...\n", flush=True)
+
+        print("Summary:", flush=True)
+        print(result["summary"], flush=True)
+    except KeyboardInterrupt:
+        print("Example cancelled by user.", file=sys.stderr)
+        raise SystemExit(130) from None
+    except AIBackendsError as exc:
+        print(f"Example failed: {exc}", file=sys.stderr)
+        raise SystemExit(1) from exc
+
+
 if __name__ == "__main__":
-    resume_path = Path(__file__).parent.parent / "data" / "pdf" / "resume-sample.pdf"
-
-    workflow = ResumeRedactSummarizer(runtime="llamacpp", model="gemma4-e2b")
-    result = workflow.run(resume_path)
-
-    redaction = result["pii_redaction"]
-    print(f"Redacted {len(redaction.entities_found)} PII entities "
-          f"using backend '{redaction.backend_used}'.\n", flush=True)
-
-    print("Redacted text (first 300 chars):", flush=True)
-    print(result["text"][:300] + "...\n", flush=True)
-
-    print("Summary:", flush=True)
-    print(result["summary"], flush=True)
+    main()

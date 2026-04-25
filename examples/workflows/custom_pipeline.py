@@ -1,7 +1,9 @@
+import sys
 from pathlib import Path
 
 from pydantic import BaseModel
 
+from aibackends.core.exceptions import AIBackendsError
 from aibackends.steps.enrich import LLMAnalyser
 from aibackends.steps.ingest import FileIngestor
 from aibackends.steps.validate import PydanticValidator
@@ -24,7 +26,19 @@ class LeadIntakePipeline(Pipeline):
     ]
 
 
-lead_note_path = Path(__file__).parent.parent / "data" / "lead_note.txt"
-workflow = LeadIntakePipeline(runtime="llamacpp", model="gemma4-e2b")
-result = workflow.run(lead_note_path)
-print(result.model_dump_json(indent=2))
+def main() -> None:
+    try:
+        lead_note_path = Path(__file__).parent.parent / "data" / "lead_note.txt"
+        workflow = LeadIntakePipeline(runtime="llamacpp", model="gemma4-e2b")
+        result = workflow.run(lead_note_path)
+        print(result.model_dump_json(indent=2))
+    except KeyboardInterrupt:
+        print("Example cancelled by user.", file=sys.stderr)
+        raise SystemExit(130) from None
+    except AIBackendsError as exc:
+        print(f"Example failed: {exc}", file=sys.stderr)
+        raise SystemExit(1) from exc
+
+
+if __name__ == "__main__":
+    main()
