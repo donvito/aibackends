@@ -55,12 +55,14 @@ python3 examples/tasks/extract_custom_schema.py
 python3 examples/tasks/task_interface.py
 python3 examples/tasks/sales_call_report.py
 python3 examples/tasks/video_ad_report.py
+python3 examples/workflows/audio_transcribe.py
 python3 examples/workflows/batch_processing.py
 python3 examples/workflows/custom_pipeline.py
 python3 examples/workflows/embedding_similarity.py
 python3 examples/workflows/invoice_redact_extract.py
 python3 examples/workflows/resume_redact_summarize.py
 python3 examples/workflows/resume_role_match.py
+python3 examples/workflows/support_transcript_redact_validate.py
 ```
 
 `list_available.py` has no runtime dependency. It prints the supported runtime

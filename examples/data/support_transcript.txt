@@ -1,0 +1,83 @@
+========================================
+SUPPORT TRANSCRIPT — CASE #TK-48821
+========================================
+Date:     April 24, 2026
+Channel:  Live Chat
+Duration: 14 minutes
+Status:   Resolved
+
+Participants:
+  - Sandra Ortega       (Customer)
+  - Liam Chen           (Support Agent, Tier 2)
+========================================
+
+[2:04 PM] Liam Chen:
+Hi Sandra, thanks for reaching out to NovaPay Support! My name is Liam.
+How can I help you today?
+
+[2:05 PM] Sandra Ortega:
+Hi Liam. I made a payment to a vendor last Friday — reference number
+PAY-992341 — and it was supposed to arrive within two business days.
+But the vendor says they still haven't received anything.
+
+[2:06 PM] Liam Chen:
+I'm sorry to hear that. Let me pull up that transaction right away.
+Can you confirm the amount and the recipient name on the payment?
+
+[2:07 PM] Sandra Ortega:
+It was $1,450.00 to Greenfield Supplies Ltd.
+
+[2:08 PM] Liam Chen:
+Got it, I found the transaction. I can see it was initiated on Friday
+the 19th. There's actually a compliance review flag on it — that can
+sometimes add a 1–2 day delay beyond the usual processing window.
+I apologize we didn't notify you about that automatically.
+
+[2:09 PM] Sandra Ortega:
+Oh, I didn't know that was a thing. Is there anything you can do to
+speed it up? The vendor is threatening to cancel our order.
+
+[2:10 PM] Liam Chen:
+Totally understand — that's stressful. I can escalate the review
+right now and mark it as time-sensitive. Typically once escalated,
+compliance clears these within 2–4 hours during business hours.
+
+[2:11 PM] Sandra Ortega:
+That would be great. Can you also send something to the vendor
+confirming the payment is on the way? They're asking for proof.
+
+[2:12 PM] Liam Chen:
+Absolutely. I can generate a payment confirmation letter with the
+transaction details and our reference number. I just need the vendor's
+email address and I'll send it out within the next few minutes.
+
+[2:13 PM] Sandra Ortega:
+Sure, it's accounts@greenfieldsupplies.com.
+
+[2:14 PM] Liam Chen:
+Perfect. I've submitted the escalation request and the confirmation
+letter is on its way to that address now. You should also receive a
+copy at the email on your NovaPay account. Is there anything else
+I can help you with today, Sandra?
+
+[2:15 PM] Sandra Ortega:
+No, that's everything. Thank you so much, Liam — you were really
+helpful.
+
+[2:16 PM] Liam Chen:
+Happy to help! You'll receive a follow-up email once the payment
+clears. Have a great rest of your day, Sandra.
+
+[2:16 PM] Sandra Ortega:
+You too, bye!
+
+========================================
+RESOLUTION SUMMARY
+========================================
+Issue:      Payment PAY-992341 delayed due to compliance review flag.
+Action:     Escalated to compliance team; payment confirmation letter
+            sent to vendor (accounts@greenfieldsupplies.com).
+Outcome:    Customer satisfied. Case closed.
+Agent note: Customer not notified of compliance hold — flagged for
+            process improvement review.
+========================================
