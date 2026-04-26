@@ -56,6 +56,7 @@ def test_build_llamacpp_multimodal_messages_inlines_system_prompt_and_image(tmp_
             },
         ],
         schema=VisionResult,
+        merge_system_into_first_user=True,
     )
 
     assert len(messages) == 1
@@ -73,6 +74,33 @@ def test_build_llamacpp_multimodal_messages_inlines_system_prompt_and_image(tmp_
     assert image_url.startswith("data:image/png;base64,")
     encoded = image_url.split(",", 1)[1]
     assert base64.b64decode(encoded).startswith(b"\x89PNG\r\n\x1a\n")
+
+
+def test_build_llamacpp_multimodal_messages_keeps_system_prompt_for_qwen(tmp_path):
+    image_path = tmp_path / "receipt.png"
+    image_path.write_bytes(b"\x89PNG\r\n\x1a\nreceipt")
+
+    messages = build_llamacpp_multimodal_messages(
+        [
+            {"role": "system", "content": "You extract receipt text."},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Describe this image."},
+                    {"type": "image_url", "image_url": {"url": str(image_path)}},
+                ],
+            },
+        ],
+        schema=VisionResult,
+    )
+
+    assert len(messages) == 2
+    assert messages[0]["role"] == "system"
+    assert "Return exactly one JSON object" in messages[0]["content"]
+    assert "You extract receipt text." in messages[0]["content"]
+    assert messages[1]["role"] == "user"
+    assert isinstance(messages[1]["content"], list)
+    assert messages[1]["content"][0]["text"] == "Describe this image."
 
 
 def test_llamacpp_runtime_uses_multimodal_client_for_image_messages(monkeypatch, tmp_path):
@@ -104,6 +132,21 @@ def test_llamacpp_runtime_uses_multimodal_client_for_image_messages(monkeypatch,
     assert response.content == '{"description": "receipt"}'
     assert response.usage.input_tokens == 11
     assert response.usage.output_tokens == 7
+
+
+def test_multimodal_family_detects_qwen_vl(tmp_path):
+    model_path = tmp_path / "Qwen3VL-4B-Instruct-Q4_K_M.gguf"
+    model_path.write_text("weights")
+    runtime = LlamaCppRuntime(RuntimeConfig(runtime="llamacpp", model="qwen3-vl-4b"))
+
+    family = runtime._multimodal_family(
+        ModelLocation(
+            source="Qwen/Qwen3-VL-4B-Instruct-GGUF",
+            local_path=str(model_path),
+        )
+    )
+
+    assert family == "qwen-vl"
 
 
 def test_resolve_mmproj_path_uses_explicit_override(tmp_path):

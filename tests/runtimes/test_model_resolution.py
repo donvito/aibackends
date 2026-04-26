@@ -9,7 +9,13 @@ import aibackends.core.model_manager as model_manager_module
 from aibackends.core.model_manager import ModelManager
 from aibackends.core.model_registry import resolve_model_alias
 from aibackends.core.types import RuntimeConfig
-from aibackends.models import GEMMA3_270M_IT, GEMMA4_E4B, OPENAI_PRIVACY, available_models
+from aibackends.models import (
+    GEMMA3_270M_IT,
+    GEMMA4_E4B,
+    OPENAI_PRIVACY,
+    QWEN3_VL_4B,
+    available_models,
+)
 from aibackends.runtimes import LLAMACPP, TRANSFORMERS
 
 
@@ -19,6 +25,9 @@ def test_resolve_model_alias_uses_llamacpp_gemma_overrides():
     )
     assert resolve_model_alias("gemma4-e2b", runtime="llamacpp") == (
         "unsloth/gemma-4-E2B-it-GGUF"
+    )
+    assert resolve_model_alias("qwen3-vl-4b", runtime="llamacpp") == (
+        "Qwen/Qwen3-VL-4B-Instruct-GGUF"
     )
 
 
@@ -41,18 +50,23 @@ def test_available_models_can_filter_by_runtime():
 
     assert all_models["gemma4-e4b"] == GEMMA4_E4B
     assert all_models["openai-privacy"] == OPENAI_PRIVACY
+    assert all_models["qwen3-vl-4b"] == QWEN3_VL_4B
     assert transformers_models["openai-privacy"] == OPENAI_PRIVACY
     assert "gemma3-270m-it" not in llama_models
+    assert llama_models["qwen3-vl-4b"] == QWEN3_VL_4B
     assert transformers_models["gemma3-270m-it"] == GEMMA3_270M_IT
+    assert "qwen3-vl-4b" not in transformers_models
 
 
 def test_model_manager_resolve_model_name_uses_runtime_aliases(tmp_path):
     manager = ModelManager(cache_dir=str(tmp_path / "models"))
 
     llama_config = RuntimeConfig(runtime="llamacpp", model="gemma4-e4b")
+    qwen_config = RuntimeConfig(runtime="llamacpp", model="qwen3-vl-4b")
     transformers_config = RuntimeConfig(runtime="transformers", model="gemma4-e4b")
 
     assert manager.resolve_model_name(llama_config) == "unsloth/gemma-4-E4B-it-GGUF"
+    assert manager.resolve_model_name(qwen_config) == "Qwen/Qwen3-VL-4B-Instruct-GGUF"
     assert manager.resolve_model_name(transformers_config) == "google/gemma-4-E4B-it"
 
 

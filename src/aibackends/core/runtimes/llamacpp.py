@@ -42,9 +42,14 @@ def build_llamacpp_multimodal_messages(
     messages: list[Message],
     *,
     schema: type[BaseModel] | None = None,
+    merge_system_into_first_user: bool = False,
 ) -> list[Message]:
     prompt_messages = build_prompt_messages(messages, schema=schema)
-    merged_messages = _merge_system_into_first_user(prompt_messages)
+    merged_messages = (
+        _merge_system_into_first_user(prompt_messages)
+        if merge_system_into_first_user
+        else prompt_messages
+    )
     normalized: list[Message] = []
     for message in merged_messages:
         role = str(message.get("role", "user"))
@@ -203,10 +208,12 @@ class LlamaCppRuntime(BaseRuntime):
     def _load_multimodal_client(self) -> Any:
         if self._multimodal_client is not None:
             return self._multimodal_client
-        if "gemma" not in self.model_name.lower():
+        location = self.model_manager.ensure_model(self.config)
+        family = self._multimodal_family(location)
+        if family is None:
             raise RuntimeRequestError(
-                "Image inputs in the llama.cpp runtime are currently supported for Gemma "
-                "GGUF models only."
+                "Image inputs in the llama.cpp runtime are currently supported for "
+                "Gemma and Qwen VL GGUF models only."
             )
 
         try:
@@ -216,11 +223,10 @@ class LlamaCppRuntime(BaseRuntime):
                 "Install 'aibackends[llamacpp]' to use the llama.cpp runtime."
             ) from exc
 
-        location = self.model_manager.ensure_model(self.config)
         if not location.local_path:
             raise RuntimeRequestError("llama.cpp requires a local GGUF file.")
         mmproj_path = self._resolve_mmproj_path(location)
-        chat_handler = self._build_gemma_vision_chat_handler(mmproj_path)
+        chat_handler = self._build_multimodal_chat_handler(family, mmproj_path)
         self._multimodal_client = Llama(
             **self._build_client_kwargs(location),
             chat_handler=chat_handler,
@@ -246,6 +252,16 @@ class LlamaCppRuntime(BaseRuntime):
                 options[option] = self.config.extra_options[option]
         return options
 
+    def _multimodal_family(self, location: ModelLocation | None = None) -> str | None:
+        model_reference = f"{self.model_name} {self.config.model_path or ''}".lower()
+        if location is not None:
+            model_reference = f"{model_reference} {location.source}".lower()
+        if "gemma" in model_reference:
+            return "gemma"
+        if "qwen3-vl" in model_reference or "qwen2.5-vl" in model_reference:
+            return "qwen-vl"
+        return None
+
     def _resolve_mmproj_path(self, location: ModelLocation) -> str:
         mmproj_override = self.config.extra_options.get("mmproj_path")
         if mmproj_override is not None:
@@ -264,7 +280,7 @@ class LlamaCppRuntime(BaseRuntime):
             return str(self._download_mmproj(location.source))
 
         raise RuntimeRequestError(
-            "Gemma vision with llama.cpp requires a matching mmproj GGUF. "
+            "Multimodal llama.cpp inference requires a matching mmproj GGUF. "
             "Set `extra_options={'mmproj_path': '/path/to/mmproj.gguf'}` or place a "
             "`mmproj*.gguf` file beside the model."
         )
@@ -328,6 +344,13 @@ class LlamaCppRuntime(BaseRuntime):
             and not value.lower().endswith(".gguf")
         )
 
+    def _build_multimodal_chat_handler(self, family: str, mmproj_path: str) -> Any:
+        if family == "gemma":
+            return self._build_gemma_vision_chat_handler(mmproj_path)
+        if family == "qwen-vl":
+            return self._build_qwen_vl_chat_handler(mmproj_path)
+        raise RuntimeRequestError(f"Unsupported multimodal llama.cpp family: {family}")
+
     def _build_gemma_vision_chat_handler(self, mmproj_path: str) -> Any:
         try:
             from llama_cpp.llama_chat_format import Llava15ChatHandler
@@ -369,6 +392,16 @@ class LlamaCppRuntime(BaseRuntime):
 
         return GemmaVisionChatHandler(clip_model_path=mmproj_path, verbose=False)
 
+    def _build_qwen_vl_chat_handler(self, mmproj_path: str) -> Any:
+        try:
+            from llama_cpp.llama_chat_format import Qwen25VLChatHandler
+        except ImportError as exc:
+            raise RuntimeImportError(
+                "Install a recent 'llama-cpp-python' build with Qwen VL chat handler support."
+            ) from exc
+
+        return Qwen25VLChatHandler(clip_model_path=mmproj_path, verbose=False)
+
     def complete(
         self,
         messages: list[Message],
@@ -376,8 +409,13 @@ class LlamaCppRuntime(BaseRuntime):
         **kwargs: Any,
     ) -> RuntimeResponse:
         if has_image_inputs(messages):
+            family = self._multimodal_family()
             client = self._load_multimodal_client()
-            payload_messages = build_llamacpp_multimodal_messages(messages, schema=schema)
+            payload_messages = build_llamacpp_multimodal_messages(
+                messages,
+                schema=schema,
+                merge_system_into_first_user=family == "gemma",
+            )
         else:
             client = self._load_client()
             payload_messages = list(messages)
