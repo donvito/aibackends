@@ -30,7 +30,7 @@ pip install aibackends[pii]
 
 ## Quickstart
 
-Extract an invoice locally:
+**Extract an invoice locally**
 
 ```python
 from aibackends.models import GEMMA4_E2B
@@ -47,15 +47,11 @@ result = task.run("invoice.pdf")
 print(result.total)
 ```
 
-`redact_pii` uses a dedicated backend such as `gliner` or `openai-privacy`
-(the local `privacy-filter` model) rather than the general LLM runtime
-interface.
-
 ## Examples
 
 ### Single tasks
 
-Classify text locally and redact PII:
+**Classify text locally and redact PII**
 
 ```python
 from aibackends.models import GEMMA4_E2B
@@ -77,8 +73,11 @@ redactor = create_task(
 classification = classifier.run("invoice text")
 redacted = redactor.run("john@example.com called from +1 555 0100")
 ```
+`RedactPIITask` uses a dedicated backend such as `gliner` or `openai-privacy`
+(the local `privacy-filter` model) rather than the general LLM runtime
+interface.
 
-Generate local embeddings:
+**Generate local embeddings**
 
 ```python
 from aibackends.models import MINILM_L6
@@ -98,7 +97,7 @@ print(vector[:5])
 
 ### Workflows
 
-Batch-process sales calls locally:
+**Batch-process sales calls analysis locally**
 
 ```python
 from pathlib import Path
@@ -120,7 +119,7 @@ results = workflow.run_batch(
 )
 ```
 
-Run receipt OCR locally with a small custom pipeline:
+**Run OCR locally**
 
 ```python
 from pydantic import BaseModel, Field
