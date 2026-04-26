@@ -38,6 +38,18 @@ much larger first download and slower load time.
 `MINILM_L6`, a compact local embeddings profile that stays practical on
 CPU-only machines.
 
+`redact_text.py` and `redact_text_batch.py` use local PII backends rather than
+the general `llamacpp` or `transformers` runtimes.
+
+`workflows/image_ocr_gemma.py` and `workflows/image_ocr_qwen.py` are vision
+OCR examples that extract structured receipt JSON from the sample receipt
+images in `examples/data/images/` using the `llamacpp` runtime.
+
+`workflows/image_understanding_gemma.py` and
+`workflows/image_understanding_qwen.py` are lighter image-understanding demos
+that return a short description plus any visible text. The Qwen examples expect
+a recent vision-capable `llama-cpp-python` build with Qwen VL handler support.
+
 ## Runnable core examples
 
 These examples use the sample files in `examples/data/`.
@@ -51,6 +63,7 @@ python3 examples/tasks/embed_text_transformers.py
 python3 examples/tasks/summarize_text.py
 python3 examples/tasks/classify_text.py
 python3 examples/tasks/redact_text.py
+python3 examples/tasks/redact_text_batch.py
 python3 examples/tasks/extract_custom_schema.py
 python3 examples/tasks/task_interface.py
 python3 examples/tasks/sales_call_report.py

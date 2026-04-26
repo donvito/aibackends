@@ -8,7 +8,7 @@ in plain Python with `llamacpp` and `transformers`.
 - First-class `llamacpp` and `transformers` runtimes
 - Typed outputs for extraction and analysis tasks
 - Reusable tasks and workflows for scripts, apps, and batch jobs
-- Practical local examples for text, documents, audio, and video
+- Practical local examples for text, image OCR, documents, audio, and video
 
 ## Install
 
@@ -33,7 +33,7 @@ pip install aibackends[pii]
 Extract an invoice locally:
 
 ```python
-from aibackends.models import GEMMA4_E2B
+from aibackends.models import QWEN3_VL_4B
 from aibackends.runtimes import LLAMACPP
 from aibackends.tasks import ExtractInvoiceTask, create_task
 
@@ -120,6 +120,39 @@ results = workflow.run_batch(
 )
 ```
 
+Run receipt OCR locally with a small custom pipeline:
+
+```python
+from pydantic import BaseModel, Field
+
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import LLAMACPP
+from aibackends.schemas.common import LineItem
+from aibackends.steps.enrich import VisionExtractor
+from aibackends.steps.ingest import ImageIngestor
+from aibackends.workflows import Pipeline
+
+
+class Receipt(BaseModel):
+    merchant: str | None = None
+    total: float | None = None
+    line_items: list[LineItem] = Field(default_factory=list)
+
+
+class ReceiptOCR(Pipeline):
+    steps = [
+        ImageIngestor(),
+        VisionExtractor(
+            schema=Receipt,
+            prompt="Extract merchant, total, and line_items from this receipt.",
+        ),
+    ]
+
+
+result = ReceiptOCR(runtime=LLAMACPP, model=QWEN3_VL_4B).run("receipt.jpeg")
+print(result.model_dump_json(indent=2))
+```
+
 ## Included
 
 - Local runtimes: `llamacpp`, `transformers`
@@ -151,7 +184,7 @@ Full command reference: `docs/cli.md`.
 - `docs/concepts.md` for task, runtime, backend, model, and workflow terms
 - `docs/extending.md` for custom runtimes, backends, tasks, and workflows
 - `docs/api-reference/index.md` for the public API
-- `examples/README.md` for runnable examples
+- `examples/README.md` for runnable examples, including local image OCR
 
 ## Development
 
