@@ -1,15 +1,14 @@
 # AIBackends
 
-Framework-agnostic AI tasks and workflows with first-class local runtimes for
-Llama.cpp and Transformers.
+Run AI tasks and workflows locally.
 
-Use the same typed AI tasks and workflows in plain Python or as tools in
-LangGraph, pydantic-ai, OpenAI Agents SDK, CrewAI, Agno, and LlamaIndex.
+Build extraction, classification, embeddings, redaction, and analysis pipelines
+in plain Python with `llamacpp` and `transformers`.
 
-- One API across local and hosted runtimes
-- Built-in local support for `llamacpp` and `transformers`
-- Structured Pydantic outputs for extraction and analysis tasks
-- Optional workflows for batch jobs and pipelines
+- First-class `llamacpp` and `transformers` runtimes
+- Typed outputs for extraction and analysis tasks
+- Reusable tasks and workflows for scripts, apps, and batch jobs
+- Practical local examples for text, documents, audio, and video
 
 ## Install
 
@@ -31,7 +30,7 @@ pip install aibackends[pii]
 
 ## Quickstart
 
-Extract an invoice:
+Extract an invoice locally:
 
 ```python
 from aibackends.models import GEMMA4_E2B
@@ -55,7 +54,7 @@ rather than the general LLM runtime interface.
 
 ### Single tasks
 
-Classify text and redact PII:
+Classify text locally and redact PII:
 
 ```python
 from aibackends.models import GEMMA4_E2B
@@ -78,7 +77,7 @@ classification = classifier.run("invoice text")
 redacted = redactor.run("john@example.com called from +1 555 0100")
 ```
 
-Generate embeddings:
+Generate local embeddings:
 
 ```python
 from aibackends.models import MINILM_L6
@@ -98,7 +97,7 @@ print(vector[:5])
 
 ### Workflows
 
-Batch-process sales calls:
+Batch-process sales calls locally:
 
 ```python
 from pathlib import Path
@@ -122,14 +121,18 @@ results = workflow.run_batch(
 
 ## Included
 
+- Local runtimes: `llamacpp`, `transformers`
 - Tasks: `summarize`, `extract`, `classify`, `embed`, `extract_invoice`,
   `redact_pii`, `analyse_sales_call`, `analyse_video_ad`
 - Workflows: `InvoiceProcessor`, `PIIRedactor`, `SalesCallAnalyser`,
   `VideoAdIntelligence`
 - Outputs: `InvoiceOutput`, `SalesCallReport`, `VideoAdReport`,
   `RedactedText`, `Classification`
-- Runtimes: `llamacpp`, `transformers`, `ollama`, `lmstudio`, `anthropic`,
+- Additional supported runtimes: `ollama`, `lmstudio`, `anthropic`,
   `together`, `groq`
+
+Tool and agent integrations can be added later without changing the core task
+and workflow layer.
 
 ## CLI
 
@@ -145,7 +148,7 @@ Full command reference: `docs/cli.md`.
 
 ## Docs and Examples
 
-- `docs/usage.md` for install, configuration, tasks, workflows, and integrations
+- `docs/usage.md` for install, local runtimes, tasks, and workflows
 - `docs/concepts.md` for task, runtime, backend, model, and workflow terms
 - `docs/extending.md` for custom runtimes, backends, tasks, and workflows
 - `docs/api-reference/index.md` for the public API

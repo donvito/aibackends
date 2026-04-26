@@ -3,10 +3,9 @@
 AIBackends uses a few precise terms so new capabilities can be added without
 turning the project into a pile of special cases.
 
-The main design goal is framework independence: tasks and workflows are plain
-Python objects with stable interfaces. Agent integrations should wrap those
-objects, not own the business logic. That makes it easier to switch frameworks or
-use multiple frameworks in the same product.
+The main design goal is stable, reusable local workflows: tasks and workflows
+are plain Python objects with stable interfaces. That keeps business logic easy
+to reuse across scripts, apps, and batch jobs.
 
 ## Task
 
@@ -91,6 +90,6 @@ Workflow classes live in `src/aibackends/workflows` and can be registered with
 workflow class directly to build a configured workflow instance. For dynamic
 lookup by name, use `get_workflow(name)`.
 
-Workflows should stay independent of agent frameworks. If an agent needs a
-workflow, wrap `workflow.run(...)` as that framework's tool function instead of
-rewriting the workflow inside the agent framework.
+Workflows should stay independent of any external orchestration layer. Call
+`workflow.run(...)` from the surrounding application instead of rewriting the
+workflow logic elsewhere.

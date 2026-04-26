@@ -1,5 +1,9 @@
 # Usage
 
+AIBackends is designed first for local model workflows. Most projects start by
+configuring `llamacpp` or `transformers`, then reuse the same typed tasks and
+workflows across scripts, apps, and batch jobs.
+
 ## Install
 
 ```bash
@@ -21,9 +25,9 @@ pip install aibackends[pii]
 Downloaded local models for `llamacpp` and `aibackends pull` use the standard
 Hugging Face cache by default, usually `~/.cache/huggingface/hub`.
 
-## Configure A Runtime
+## Configure Local Runtimes
 
-Use `configure()` to set global LLM/embedding defaults:
+Use `configure()` to set global local LLM/embedding defaults:
 
 ```python
 from aibackends import configure
@@ -38,16 +42,6 @@ curated Python-facing catalog of supported runtime and model refs.
 
 In Python, pass typed refs such as `LLAMACPP` and `GEMMA4_E2B`. String names are
 kept for text boundaries like CLI flags and YAML config files.
-
-Override the runtime for one call:
-
-```python
-from aibackends.models import CLAUDE_SONNET_4_5
-from aibackends.runtimes import ANTHROPIC
-from aibackends.tasks import extract_invoice
-
-result = extract_invoice("invoice.pdf", runtime=ANTHROPIC, model=CLAUDE_SONNET_4_5)
-```
 
 You can also load YAML:
 
@@ -74,6 +68,16 @@ configure(
 
 `prompt_format="auto"` prefers a configured template override, then the
 tokenizer's own chat template, then plain text.
+
+If you need a different runtime for one call, override it explicitly:
+
+```python
+from aibackends.models import CLAUDE_SONNET_4_5
+from aibackends.runtimes import ANTHROPIC
+from aibackends.tasks import extract_invoice
+
+result = extract_invoice("invoice.pdf", runtime=ANTHROPIC, model=CLAUDE_SONNET_4_5)
+```
 
 ## Call Tasks
 
@@ -152,20 +156,3 @@ aibackends check transformers
 
 For full command reference (subcommands, flags, output formats, and what is
 not exposed via CLI), see the [CLI guide](cli.md).
-
-## Agent Frameworks
-
-AIBackends tasks and workflows are plain Python objects. Configure them once,
-then wrap `task.run(...)` or `workflow.run(...)` with the adapter required by
-your agent framework. This keeps pipelines independent of LangGraph,
-pydantic-ai, OpenAI Agents SDK, CrewAI, Agno, LlamaIndex, or any future framework
-you adopt.
-
-- LangGraph: wrap `task.run` or `workflow.run` with `@tool`
-- pydantic-ai: pass wrapper functions in `tools=[...]`
-- OpenAI Agents SDK: wrap with `@function_tool`
-- CrewAI: wrap with `@tool("Name")`
-- Agno: wrap with `@tool`
-- LlamaIndex: use `FunctionTool.from_defaults(fn=...)`
-
-See `examples/` for runnable framework examples.

@@ -16,9 +16,9 @@ For terminology such as task vs runtime vs backend, see
 - model profiles map supported model refs to runtime-specific model ids
 - capability backends handle focused non-runtime features such as PII detection
 
-The code architecture centers on those contracts rather than on any one agent
-framework. Framework integrations live outside the main package and call into
-these plain Python APIs.
+The code architecture centers on those contracts rather than on any one
+application layer. The main package exposes plain Python APIs built on those
+contracts.
 
 ```mermaid
 flowchart LR
@@ -165,7 +165,6 @@ The main extension seams match the package layout:
 
 ## What Is Outside The Core
 
-The `examples/` directory shows how to wrap tasks and workflows for LangGraph,
-CrewAI, pydantic-ai, OpenAI Agents SDK, Agno, and LlamaIndex. Those examples are
-important, but they are adapter code, not part of the core execution
-architecture described above.
+The `examples/` directory contains runnable task and workflow examples. Those
+examples are useful, but they are not part of the core execution architecture
+described above.

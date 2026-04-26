@@ -1,5 +1,5 @@
 site_name: AIBackends
-site_description: Pluggable AI tasks for any agent framework, powered by local models.
+site_description: Run AI tasks and workflows locally.
 theme:
   name: material
 

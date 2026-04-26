@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "aibackends"
 version = "0.1.0"
-description = "Pluggable AI tasks for any agent framework, powered by local models."
+description = "Run AI tasks and workflows locally."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
@@ -13,7 +13,6 @@ authors = [
   { name = "Melvin Vivas" },
 ]
 keywords = [
-  "agents",
   "ai",
   "llama-cpp-python",
   "local-models",
@@ -31,7 +30,6 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-  "agno>=2.6.1",
   "httpx",
   "pydantic",
   "pyyaml",

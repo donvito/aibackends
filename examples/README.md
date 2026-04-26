@@ -1,15 +1,12 @@
 # Examples
 
-This directory contains three kinds of examples:
+This directory is organized around local runtime examples. The examples run
+directly with `llamacpp` or `transformers` in plain Python.
+
+It contains two kinds of examples:
 
 - Task examples that create configured task objects with `create_task(TaskClass, ...)`
 - Workflow examples that create configured pipelines with `create_workflow(WorkflowClass, ...)` or explicit pipeline construction
-- Agent framework integrations that wrap configured task objects as tools
-
-The agent examples intentionally keep AIBackends tasks and workflows outside the
-agent framework. The framework layer only wraps `task.run(...)` or
-`workflow.run(...)`, so the same pipeline can be reused if you switch frameworks
-or run more than one framework in the same application.
 
 ## Setup
 
@@ -31,8 +28,7 @@ python3 -m pip install -e ".[transformers]"
 
 Task examples use `create_task(TaskClass, ...)` with supported runtime/model
 refs such as `LLAMACPP` and `GEMMA4_E2B`, so defaults are configured before
-`run(...)`. Agent examples follow the same pattern: create the task object once,
-then expose `task.run(...)` through the framework's tool wrapper.
+`run(...)`.
 
 `basic_task_transformers.py` uses the smaller `GEMMA3_270M_IT` profile so it
 stays practical on CPU-only machines. If you swap it to `GEMMA4_E2B`, expect a
@@ -44,7 +40,8 @@ CPU-only machines.
 
 ## Runnable core examples
 
-These examples use the sample files in `examples/data/` and do not require any agent framework package.
+These examples use the sample files in `examples/data/`.
+They are the best starting point if you want to run models locally.
 
 ```bash
 python3 examples/list_available.py
@@ -64,19 +61,6 @@ python3 examples/workflows/embedding_similarity.py
 python3 examples/workflows/resume_redact_summarize.py
 python3 examples/workflows/resume_role_match.py
 ```
-
-## Framework integration examples
-
-These examples require the corresponding framework packages to be installed separately:
-
-- `examples/agents/langgraph_agent.py`
-- `examples/agents/pydantic_ai_agent.py`
-- `examples/agents/openai_agents_sdk.py`
-- `examples/agents/crewai_agent.py`
-- `examples/agents/agno_agent.py`
-- `examples/agents/llamaindex_agent.py`
-
-They are intended to show how AIBackends tasks plug into agent frameworks as tools.
 
 `list_available.py` has no runtime dependency. It prints the supported runtime
 and model catalog plus the canonical task/workflow names returned by the public
