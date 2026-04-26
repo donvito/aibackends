@@ -33,7 +33,7 @@ pip install aibackends[pii]
 Extract an invoice locally:
 
 ```python
-from aibackends.models import QWEN3_VL_4B
+from aibackends.models import GEMMA4_E2B
 from aibackends.runtimes import LLAMACPP
 from aibackends.tasks import ExtractInvoiceTask, create_task
 
@@ -125,7 +125,7 @@ Run receipt OCR locally with a small custom pipeline:
 ```python
 from pydantic import BaseModel, Field
 
-from aibackends.models import GEMMA4_E2B
+from aibackends.models import QWEN3_VL_4B
 from aibackends.runtimes import LLAMACPP
 from aibackends.schemas.common import LineItem
 from aibackends.steps.enrich import VisionExtractor
