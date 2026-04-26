@@ -1,12 +1,21 @@
 from __future__ import annotations
 
+from typing import Any
+
+from pydantic import BaseModel
+
 import aibackends.steps.enrich as enrich_module
 from aibackends.core.registry import ModelRef
 from aibackends.runtimes import get_runtime_spec
 from aibackends.schemas.invoice import InvoiceOutput
 from aibackends.schemas.pii import RedactedText
-from aibackends.steps.enrich import LLMAnalyser, LLMTextGenerator, TaskRunner
-from aibackends.steps.ingest import FileIngestor
+from aibackends.steps.enrich import (
+    LLMAnalyser,
+    LLMTextGenerator,
+    TaskRunner,
+    VisionExtractor,
+)
+from aibackends.steps.ingest import FileIngestor, ImageIngestor
 from aibackends.steps.validate import PydanticValidator
 from aibackends.tasks import ClassifyTask
 from aibackends.workflows import InvoiceProcessor, SalesCallAnalyser
@@ -147,3 +156,39 @@ def test_task_runner_executes_registered_task_with_output_key(tmp_path):
 
     assert result["text"] == "Invoice from Acme Corp for consulting services"
     assert result["classification"].label == "invoice"
+
+
+def test_vision_extractor_builds_multimodal_messages_for_image_input(tmp_path, monkeypatch):
+    class ImageSummary(BaseModel):
+        description: str
+
+    captured_messages: list[dict[str, Any]] = []
+
+    def fake_run_structured_task(**kwargs: Any) -> ImageSummary:
+        captured_messages[:] = kwargs["messages"]
+        return ImageSummary(description="receipt")
+
+    monkeypatch.setattr(enrich_module, "run_structured_task", fake_run_structured_task)
+
+    class ImagePipeline(Pipeline):
+        steps = [
+            ImageIngestor(),
+            VisionExtractor(schema=ImageSummary, prompt="Describe the image."),
+        ]
+
+    image = tmp_path / "receipt.png"
+    image.write_bytes(b"\x89PNG\r\n\x1a\nreceipt")
+
+    result = ImagePipeline(
+        runtime=get_runtime_spec("stub"),
+        model=ModelRef(name="stub-model"),
+    ).run(image)
+
+    assert result.description == "receipt"
+    messages = captured_messages
+    assert messages[1]["role"] == "user"
+    content = messages[1]["content"]
+    assert isinstance(content, list)
+    assert content[0]["type"] == "text"
+    assert content[0]["text"] == "Describe the image."
+    assert content[1] == {"type": "image_url", "image_url": {"url": str(image)}}

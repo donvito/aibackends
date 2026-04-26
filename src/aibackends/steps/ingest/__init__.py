@@ -6,6 +6,17 @@ from typing import Any
 from aibackends.steps._base import BaseStep, StepContext
 from aibackends.tasks._utils import TEXT_SUFFIXES, load_text_input
 
+IMAGE_SUFFIXES = {
+    ".bmp",
+    ".gif",
+    ".jpeg",
+    ".jpg",
+    ".png",
+    ".tif",
+    ".tiff",
+    ".webp",
+}
+
 
 def _coerce_payload(payload: Any) -> dict[str, Any]:
     return payload.copy() if isinstance(payload, dict) else {"input": payload}
@@ -33,6 +44,19 @@ class FileIngestor(BaseStep):
 
 class PDFIngestor(FileIngestor):
     name = "pdf_ingest"
+
+
+class ImageIngestor(BaseStep):
+    name = "image_ingest"
+
+    def run(self, payload: Any, context: StepContext) -> dict[str, Any]:
+        del context
+        data = _coerce_payload(payload)
+        source = _resolve_source(data)
+        data["path"] = str(source)
+        if source.suffix.lower() in IMAGE_SUFFIXES:
+            data["image"] = str(source)
+        return data
 
 
 class AudioIngestor(BaseStep):

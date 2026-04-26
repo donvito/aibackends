@@ -59,6 +59,8 @@ python3 examples/workflows/audio_transcribe.py
 python3 examples/workflows/batch_processing.py
 python3 examples/workflows/custom_pipeline.py
 python3 examples/workflows/embedding_similarity.py
+python3 examples/workflows/image_ocr_gemma.py
+python3 examples/workflows/image_understanding_gemma.py
 python3 examples/workflows/invoice_redact_extract.py
 python3 examples/workflows/resume_redact_summarize.py
 python3 examples/workflows/resume_role_match.py
