@@ -27,7 +27,7 @@ Hugging Face cache by default, usually `~/.cache/huggingface/hub`.
 
 ## Configure Local Runtimes
 
-Use `configure()` to set global local LLM/embedding defaults:
+Use `configure()` to set global local runtime defaults:
 
 ```python
 from aibackends import configure
@@ -72,11 +72,11 @@ tokenizer's own chat template, then plain text.
 If you need a different runtime for one call, override it explicitly:
 
 ```python
-from aibackends.models import CLAUDE_SONNET_4_5
-from aibackends.runtimes import ANTHROPIC
+from aibackends.models import GEMMA4_E2B
+from aibackends.runtimes import TRANSFORMERS
 from aibackends.tasks import extract_invoice
 
-result = extract_invoice("invoice.pdf", runtime=ANTHROPIC, model=CLAUDE_SONNET_4_5)
+result = extract_invoice("invoice.pdf", runtime=TRANSFORMERS, model=GEMMA4_E2B)
 ```
 
 ## Call Tasks
@@ -94,7 +94,7 @@ redacted = redact_pii(
 ```
 
 `redact_pii` uses a PII backend, not the configured runtime. Use `backend="gliner"`
-or `backend="openai-privacy"`.
+or `backend="openai-privacy"` for the local `privacy-filter` model.
 
 Every task also exposes an async variant with the `_async` suffix.
 

@@ -48,7 +48,8 @@ print(result.total)
 ```
 
 `redact_pii` uses a dedicated backend such as `gliner` or `openai-privacy`
-rather than the general LLM runtime interface.
+(the local `privacy-filter` model) rather than the general LLM runtime
+interface.
 
 ## Examples
 
@@ -128,8 +129,6 @@ results = workflow.run_batch(
   `VideoAdIntelligence`
 - Outputs: `InvoiceOutput`, `SalesCallReport`, `VideoAdReport`,
   `RedactedText`, `Classification`
-- Additional supported runtimes: `ollama`, `lmstudio`, `anthropic`,
-  `together`, `groq`
 
 Tool and agent integrations can be added later without changing the core task
 and workflow layer.

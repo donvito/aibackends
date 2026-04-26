@@ -8,7 +8,6 @@ from aibackends.core.model_registry import available_models, get_model_ref
 from aibackends.core.registry import ModelRef
 
 BGE_SMALL = ModelRef(name="bge-small")
-CLAUDE_SONNET_4_5 = ModelRef(name="claude-sonnet-4-5")
 GEMMA3_270M_IT = ModelRef(name="gemma3-270m-it")
 GEMMA3_4B = ModelRef(name="gemma3-4b")
 GEMMA3_12B = ModelRef(name="gemma3-12b")
@@ -25,7 +24,6 @@ QWEN3_VL_8B = ModelRef(name="qwen3-vl-8b")
 __all__ = [
     "available_models",
     "BGE_SMALL",
-    "CLAUDE_SONNET_4_5",
     "GEMMA3_270M_IT",
     "GEMMA3_4B",
     "GEMMA3_12B",

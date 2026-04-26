@@ -11,7 +11,7 @@ from aibackends.core.registry import ModelRef, TransformerModelProfile
 from aibackends.core.runtimes.transformers import TransformersRuntime
 from aibackends.core.types import RuntimeConfig
 from aibackends.models import GEMMA4_E2B, available_models, get_model_ref
-from aibackends.runtimes import OLLAMA, available_runtimes, get_runtime_spec
+from aibackends.runtimes import LLAMACPP, TRANSFORMERS, available_runtimes, get_runtime_spec
 from aibackends.tasks import (
     BaseTask,
     ClassifyTask,
@@ -32,9 +32,9 @@ from aibackends.workflows.registry import get_workflow
 
 
 def test_builtin_runtime_is_discovered_from_runtime_spec():
-    client = get_runtime(RuntimeConfig(runtime="ollama", model="demo"))
+    client = get_runtime(RuntimeConfig(runtime="transformers", model="demo"))
 
-    assert client.__class__.__name__ == "OllamaRuntime"
+    assert isinstance(client, TransformersRuntime)
 
 
 def test_transformer_model_profile_can_supply_chat_template():
@@ -85,8 +85,12 @@ def test_runtime_and_model_catalogs_are_discoverable():
     runtimes = available_runtimes()
     models = available_models()
 
-    assert runtimes["ollama"] is OLLAMA
-    assert get_runtime_spec("ollama") is OLLAMA
+    assert set(runtimes) <= {"llamacpp", "transformers", "stub"}
+    assert {"llamacpp", "transformers"} <= set(runtimes)
+    assert runtimes["llamacpp"] is LLAMACPP
+    assert runtimes["transformers"] is TRANSFORMERS
+    assert get_runtime_spec("llamacpp") is LLAMACPP
+    assert get_runtime_spec("transformers") is TRANSFORMERS
     assert models["gemma4-e2b"] == GEMMA4_E2B
     assert get_model_ref("gemma4-e2b") == GEMMA4_E2B
 

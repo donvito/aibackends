@@ -100,6 +100,7 @@ aibackends task redact-pii \
   --input "Call me at 555-1234, john@example.com" \
   --backend gliner
 
+# redact-pii with the local privacy-filter backend
 aibackends task redact-pii \
   --input "Call me at 555-1234, john@example.com" \
   --backend openai-privacy
@@ -114,7 +115,7 @@ aibackends task extract \
 Notes:
 
 - `redact-pii` does not use the `--runtime` / `--model` flags. It dispatches to
-a PII backend such as `gliner` or `openai-privacy`.
+  a PII backend such as `gliner` or `openai-privacy` (`privacy-filter`).
 - `classify` requires `--labels`. `redact-pii` accepts `--labels` only when used
 with the `gliner` backend (custom entity types).
 - `extract` requires `--schema` pointing to a Pydantic model class via dotted
@@ -137,8 +138,6 @@ location. By default models go into the standard Hugging Face cache, usually
 
 ```bash
 aibackends check llamacpp --model gemma4-e2b
-aibackends check ollama --model llama3
-aibackends check anthropic --model claude-3-5-sonnet-latest
 aibackends check transformers
 ```
 

@@ -9,8 +9,8 @@ import aibackends.core.model_manager as model_manager_module
 from aibackends.core.model_manager import ModelManager
 from aibackends.core.model_registry import resolve_model_alias
 from aibackends.core.types import RuntimeConfig
-from aibackends.models import GEMMA3_270M_IT, GEMMA4_E4B, available_models
-from aibackends.runtimes import ANTHROPIC, LLAMACPP, TRANSFORMERS
+from aibackends.models import GEMMA3_270M_IT, GEMMA4_E4B, OPENAI_PRIVACY, available_models
+from aibackends.runtimes import LLAMACPP, TRANSFORMERS
 
 
 def test_resolve_model_alias_uses_llamacpp_gemma_overrides():
@@ -36,13 +36,12 @@ def test_resolve_model_alias_accepts_typed_refs():
 
 def test_available_models_can_filter_by_runtime():
     all_models = available_models()
-    anthropic_models = available_models(runtime=ANTHROPIC)
     llama_models = available_models(runtime=LLAMACPP)
     transformers_models = available_models(runtime=TRANSFORMERS)
 
     assert all_models["gemma4-e4b"] == GEMMA4_E4B
-    assert "claude-sonnet-4-5" in anthropic_models
-    assert "gemma4-e4b" not in anthropic_models
+    assert all_models["openai-privacy"] == OPENAI_PRIVACY
+    assert transformers_models["openai-privacy"] == OPENAI_PRIVACY
     assert "gemma3-270m-it" not in llama_models
     assert transformers_models["gemma3-270m-it"] == GEMMA3_270M_IT
 

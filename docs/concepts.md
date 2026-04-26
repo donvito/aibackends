@@ -32,16 +32,11 @@ complete(messages, schema=...)
 embed(text)
 ```
 
-Use the word runtime for providers that can power normal LLM calls across many
-tasks. Examples:
+Use the word runtime for the built-in local executors that can power normal LLM
+calls across many tasks. In AIBackends, the runtimes are:
 
 - `transformers`
 - `llamacpp`
-- `ollama`
-- `lmstudio`
-- `anthropic`
-- `together`
-- `groq`
 
 Runtime modules live in `src/aibackends/core/runtimes` and export
 `RUNTIME_SPEC`. The supported Python-facing runtime refs are exported from
@@ -55,8 +50,8 @@ but it does not implement the general `complete()` / `embed()` runtime contract.
 PII detection is the current example:
 
 - `gliner` uses the `nvidia/gliner-pii` model and returns detected PII spans.
-- `openai-privacy` uses the `openai/privacy-filter` model through a token
-classification pipeline.
+- `openai-privacy` uses the local `privacy-filter` model
+  (`openai/privacy-filter`) through a token classification pipeline.
 
 These are model-backed PII backends, not runtimes. They solve a specific
 capability and return domain objects such as `PIIEntity`.

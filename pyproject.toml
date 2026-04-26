@@ -30,7 +30,6 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-  "httpx",
   "pydantic",
   "pyyaml",
   "tenacity",

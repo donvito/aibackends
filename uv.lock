@@ -29,7 +29,6 @@ name = "aibackends"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "httpx" },
     { name = "pydantic" },
     { name = "pyyaml" },
     { name = "tenacity" },
@@ -145,7 +144,6 @@ requires-dist = [
     { name = "gliner", marker = "extra == 'all'" },
     { name = "gliner", marker = "extra == 'pii'" },
     { name = "gliner", marker = "extra == 'pipelines'" },
-    { name = "httpx" },
     { name = "huggingface-hub", marker = "extra == 'all'" },
     { name = "huggingface-hub", marker = "extra == 'llamacpp'" },
     { name = "huggingface-hub", marker = "extra == 'llamacpp-cuda'" },
