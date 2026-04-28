@@ -27,7 +27,7 @@ from aibackends.tasks import (
     summarize_async,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "analyse_sales_call",
