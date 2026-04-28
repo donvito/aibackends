@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-04-29
+
+### Changed
+- Trim source distribution: future sdists no longer ship `.vscode/`,
+  `.pre-commit-config.yaml`, `uv.lock`, `markdown-preview.css`, or the
+  binary example assets under `examples/data/{audio,images,pdf}/`.
+  Drops the sdist from ~3 MB to ~77 KB. The wheel is unchanged.
+
 ## [0.2.0] - 2026-04-29
 
 ### Added
