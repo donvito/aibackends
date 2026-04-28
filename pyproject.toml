@@ -139,6 +139,17 @@ Issues = "https://github.com/donvito/aibackends/issues"
 [tool.hatch.build.targets.wheel]
 packages = ["src/aibackends"]
 
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "/.vscode",
+  "/.pre-commit-config.yaml",
+  "/uv.lock",
+  "/markdown-preview.css",
+  "/examples/data/audio",
+  "/examples/data/images",
+  "/examples/data/pdf",
+]
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
