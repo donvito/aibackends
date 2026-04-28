@@ -25,6 +25,7 @@ def run_task(
         None, help="Comma-separated labels for classify or GLiNER redact-pii."
     ),
     backend: str = typer.Option("gliner", help="PII backend to use."),
+    device: str | None = typer.Option(None, help="Optional device override, e.g. cuda."),
     schema: str | None = typer.Option(None, help="Dotted import path for generic extract schema."),
     runtime: str | None = typer.Option(None, help="Runtime override."),
     model: str | None = typer.Option(None, help="Model override."),
@@ -38,6 +39,8 @@ def run_task(
         kwargs["labels"] = parsed_labels
     if task.accepts_backend:
         kwargs["backend"] = backend
+    if device is not None:
+        kwargs["device"] = device
     if task.requires_schema:
         if not schema:
             raise typer.BadParameter(f"--schema is required for {task.name}")

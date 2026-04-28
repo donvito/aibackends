@@ -19,14 +19,13 @@ def redact_pii(
     labels: list[str] | None = None,
     **overrides: Any,
 ) -> RedactedText:
-    del overrides
     content = load_text_input(text)
     backend_spec = get_pii_backend(backend)
     if labels is not None and not backend_spec.supports_custom_labels:
         raise TaskExecutionError(
             f"Custom labels are not supported for the {backend_spec.name} PII backend."
         )
-    entities = backend_spec.detect(backend_spec, content, labels)
+    entities = backend_spec.detect(backend_spec, content, labels, overrides)
 
     redacted_text, redaction_map, normalized_entities = _apply_redactions(content, entities)
     return RedactedText(

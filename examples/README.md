@@ -41,6 +41,18 @@ CPU-only machines.
 `redact_text.py` and `redact_text_batch.py` use local PII backends rather than
 the general `llamacpp` or `transformers` runtimes.
 
+`redact_text_gliner_cache_benchmark.py` demonstrates the difference between the
+first cold GLiNER load and repeated warm calls in the same Python process using
+a larger repeated contract sample.
+
+`redact_text_gliner_cuda_benchmark.py` runs the same repeated-call benchmark
+with `device="cuda"` so you can compare CPU and CUDA timings on that larger
+input.
+
+`redact_text_gliner_100_call_benchmark.py` runs the larger CPU benchmark 100
+times and compares the total time against the committed `main` baseline to make
+the long-run trade-off easier to judge.
+
 `workflows/image_ocr_gemma.py` and `workflows/image_ocr_qwen.py` are vision
 OCR examples that extract structured receipt JSON from the sample receipt
 images in `examples/data/images/` using the `llamacpp` runtime.
@@ -63,6 +75,9 @@ python3 examples/tasks/embed_text_transformers.py
 python3 examples/tasks/summarize_text.py
 python3 examples/tasks/classify_text.py
 python3 examples/tasks/redact_text.py
+python3 examples/tasks/redact_text_gliner_cache_benchmark.py
+python3 examples/tasks/redact_text_gliner_cuda_benchmark.py
+python3 examples/tasks/redact_text_gliner_100_call_benchmark.py
 python3 examples/tasks/redact_text_batch.py
 python3 examples/tasks/extract_custom_schema.py
 python3 examples/tasks/task_interface.py

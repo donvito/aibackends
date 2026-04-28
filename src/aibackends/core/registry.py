@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 RuntimeFactory = Callable[["RuntimeConfig"], "BaseRuntime"]
 TaskFactory = Callable[..., "BaseTask"]
 WorkflowFactory = type["Pipeline"]
-PIIDetector = Callable[["PIIBackendSpec", str, list[str] | None], list["PIIEntity"]]
+PIIDetector = Callable[..., list["PIIEntity"]]
 ModelSupportHandler = Callable[
     ["ModelManager", "RuntimeConfig", str],
     "ModelLocation",
