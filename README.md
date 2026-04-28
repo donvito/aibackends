@@ -168,11 +168,15 @@ and workflow layer.
 ## CLI
 
 ```bash
-aibackends task extract-invoice --input invoice.pdf
+# Install the runtime or backend extra first
+pip install 'aibackends[llamacpp]'
+pip install 'aibackends[pii]'
+
+aibackends task extract-invoice --input invoice.pdf --runtime llamacpp --model gemma4-e2b
+aibackends task classify --input doc.txt --labels invoice,contract,receipt --runtime llamacpp --model gemma4-e2b
 aibackends task redact-pii --input transcript.txt --backend gliner --labels email,phone_number
-aibackends task classify --input doc.txt --labels invoice,contract,receipt
 aibackends pull gemma4-e2b --runtime llamacpp
-aibackends check transformers
+aibackends check llamacpp --model gemma4-e2b
 ```
 
 Full command reference: `docs/cli.md`.

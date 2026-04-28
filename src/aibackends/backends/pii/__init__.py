@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from aibackends.core.exceptions import TaskExecutionError
 from aibackends.core.registry import PIIBackendSpec, discover_specs, normalize_name, register_spec
+from aibackends.schemas.pii import PIIEntity, RedactedText
 
 _PII_BACKENDS: dict[str, PIIBackendSpec] = {}
 _BUILTINS_REGISTERED = False
@@ -24,6 +25,37 @@ def list_pii_backends() -> list[str]:
     return sorted({spec.name for spec in _PII_BACKENDS.values()})
 
 
+def apply_redactions(
+    text: str,
+    entities: list[PIIEntity],
+    *,
+    backend_name: str,
+) -> RedactedText:
+    parts: list[str] = []
+    cursor = 0
+    redaction_map: dict[str, str] = {}
+    normalized: list[PIIEntity] = []
+
+    for index, entity in enumerate(sorted(entities, key=lambda item: item.start), start=1):
+        if entity.start < cursor:
+            continue
+        replacement = f"[{entity.entity_type}_{index}]"
+        parts.append(text[cursor : entity.start])
+        parts.append(replacement)
+        cursor = entity.end
+        redaction_map[entity.text] = replacement
+        normalized.append(entity.model_copy(update={"replacement": replacement}))
+
+    parts.append(text[cursor:])
+    return RedactedText(
+        original_text=text,
+        redacted_text="".join(parts),
+        entities_found=normalized,
+        redaction_map=redaction_map,
+        backend_used=backend_name,
+    )
+
+
 def _ensure_builtin_pii_backends_registered() -> None:
     global _BUILTINS_REGISTERED
     if _BUILTINS_REGISTERED:
@@ -36,6 +68,7 @@ def _ensure_builtin_pii_backends_registered() -> None:
 
 
 __all__ = [
+    "apply_redactions",
     "get_pii_backend",
     "list_pii_backends",
     "register_pii_backend",

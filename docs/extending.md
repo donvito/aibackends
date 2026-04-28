@@ -49,16 +49,18 @@ precedence over profile defaults.
 Use this for a swappable implementation behind one capability, not for a general
 LLM runtime.
 
-PII backends currently live under `src/aibackends/backends/pii`. The GLiNER
-backend is a package because it owns an implementation helper:
+PII backends currently live under `src/aibackends/backends/pii`. Single-file
+backends like `openai_privacy.py` sit at the top of that package; backends with
+extra helpers (such as GLiNER) live in their own subpackage:
 
 ```text
 src/aibackends/backends/pii/gliner/
   __init__.py
-  worker.py
 ```
 
-The backend package exports `PII_BACKEND_SPEC`.
+The backend module/package exports `PII_BACKEND_SPEC`. Specs that set
+`load_model` get a free `backend.load()` to pre-warm any in-process model and
+`backend.redact(text, labels=...)` to run detection plus redaction in one call.
 
 ## Add A Task
 

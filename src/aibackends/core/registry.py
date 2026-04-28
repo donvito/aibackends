@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from aibackends.core.model_manager import ModelLocation, ModelManager
     from aibackends.core.runtimes.base import BaseRuntime
     from aibackends.core.types import RuntimeConfig
-    from aibackends.schemas.pii import PIIEntity
+    from aibackends.schemas.pii import PIIEntity, RedactedText
     from aibackends.tasks._base import BaseTask
     from aibackends.workflows._base import Pipeline
 
@@ -19,6 +19,7 @@ RuntimeFactory = Callable[["RuntimeConfig"], "BaseRuntime"]
 TaskFactory = Callable[..., "BaseTask"]
 WorkflowFactory = type["Pipeline"]
 PIIDetector = Callable[["PIIBackendSpec", str, list[str] | None], list["PIIEntity"]]
+PIIModelLoader = Callable[["PIIBackendSpec"], Any]
 ModelSupportHandler = Callable[
     ["ModelManager", "RuntimeConfig", str],
     "ModelLocation",
@@ -69,10 +70,27 @@ class PIIBackendSpec:
     threshold: float | None = None
     supports_custom_labels: bool = False
     metadata: dict[str, Any] = field(default_factory=dict)
+    load_model: PIIModelLoader | None = None
 
     @property
     def names(self) -> tuple[str, ...]:
         return (self.name, *self.aliases)
+
+    def load(self) -> Any:
+        if self.load_model is None:
+            return None
+        return self.load_model(self)
+
+    def redact(self, text: str, *, labels: list[str] | None = None) -> RedactedText:
+        from aibackends.backends.pii import apply_redactions
+        from aibackends.core.exceptions import TaskExecutionError
+
+        if labels is not None and not self.supports_custom_labels:
+            raise TaskExecutionError(
+                f"Custom labels are not supported for the {self.name} PII backend."
+            )
+        entities = self.detect(self, text, labels)
+        return apply_redactions(text, entities, backend_name=self.name)
 
 
 @dataclass(frozen=True, slots=True)
