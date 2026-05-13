@@ -19,3 +19,13 @@ This repo uses Ruff and Mypy settings from `pyproject.toml`. When editing Python
 2. Run `python -m ruff check` on edited Python files when the change is non-trivial.
 3. If `src/` or `tests/` changed, run `python -m mypy`.
 4. For edited runnable examples, use `python -m compileall` or run the example directly when practical.
+
+## Cursor Cloud specific instructions
+
+- **No external services required.** This is a pure-Python library with no databases, Docker, or API servers to start. All tests use a built-in `StubRuntime` (see `tests/conftest.py`).
+- **Dev commands** (see `README.md § Development` and `CONTRIBUTING.md`):
+  - Lint: `python3 -m ruff check .`
+  - Type-check: `python3 -m mypy src tests`
+  - Tests: `python3 -m pytest tests`
+- **CLI entry point** is installed to `~/.local/bin/aibackends`. Ensure `$HOME/.local/bin` is on `PATH` before invoking `aibackends` directly, or use `python3 -m aibackends.cli` instead.
+- **Mypy known caveat:** `python3 -m mypy src tests` may report one pre-existing error in `src/aibackends/core/runtimes/llamacpp.py` about the optional `llama_cpp.llama_chat_format` sub-module. This is expected when `llama-cpp-python` is not installed (it is an optional extra) and does not indicate a code defect.
