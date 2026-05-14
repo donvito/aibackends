@@ -184,6 +184,7 @@ module = [
   "gliner",
   "huggingface_hub",
   "llama_cpp",
+  "llama_cpp.llama_chat_format",
   "peft",
   "torch",
   "transformers",

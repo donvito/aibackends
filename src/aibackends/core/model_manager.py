@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import platform
+import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -9,6 +10,9 @@ from aibackends.core.exceptions import ModelResolutionError, RuntimeImportError
 from aibackends.core.model_registry import resolve_model_alias
 from aibackends.core.types import RuntimeConfig
 from aibackends.model_support import get_model_support
+
+_MANAGER_INSTANCES: dict[str | None, ModelManager] = {}
+_MANAGER_LOCK = threading.Lock()
 
 
 @dataclass(slots=True)
@@ -23,11 +27,27 @@ class ModelLocation:
     local_path: str | None = None
 
 
+def get_model_manager(cache_dir: str | None = None) -> ModelManager:
+    """Return a shared ``ModelManager`` for *cache_dir*, creating one if needed."""
+    normalized = str(Path(cache_dir).expanduser()) if cache_dir else None
+    cached = _MANAGER_INSTANCES.get(normalized)
+    if cached is not None:
+        return cached
+    with _MANAGER_LOCK:
+        cached = _MANAGER_INSTANCES.get(normalized)
+        if cached is not None:
+            return cached
+        manager = ModelManager(cache_dir)
+        _MANAGER_INSTANCES[normalized] = manager
+        return manager
+
+
 class ModelManager:
     def __init__(self, cache_dir: str | None = None) -> None:
         self.cache_dir = Path(cache_dir).expanduser() if cache_dir else None
         if self.cache_dir is not None:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self._gguf_selection_cache: dict[str, PurePosixPath] = {}
 
     def detect_hardware(self) -> HardwareProfile:
         machine = platform.machine().lower()
@@ -86,7 +106,11 @@ class ModelManager:
         local_dir = snapshot_download(repo_id=resolved, cache_dir=self._hf_cache_dir())
         return ModelLocation(source=resolved, local_path=local_dir)
 
-    def _download_gguf_repo(self, repo_id: str) -> Path:
+    def _download_gguf_repo(
+        self,
+        repo_id: str,
+        preferred_quantization: str | None = None,
+    ) -> Path:
         try:
             from huggingface_hub import hf_hub_download, list_repo_files
         except ImportError as exc:
@@ -94,15 +118,26 @@ class ModelManager:
                 "Install 'aibackends[llamacpp]' to enable GGUF model download and caching."
             ) from exc
 
-        candidates = self._list_gguf_files(repo_id, list_repo_files)
-        if not candidates:
-            raise ModelResolutionError(
-                f"No GGUF files found in repository: {repo_id}. "
-                "For llama.cpp, use a GGUF repo ID or a local GGUF file."
+        cache_key = f"{repo_id}::{preferred_quantization or ''}"
+        selected = self._gguf_selection_cache.get(cache_key)
+        if selected is None:
+            candidates = self._list_gguf_files(repo_id, list_repo_files)
+            if not candidates:
+                raise ModelResolutionError(
+                    f"No GGUF files found in repository: {repo_id}. "
+                    "For llama.cpp, use a GGUF repo ID or a local GGUF file."
+                )
+            selected = self._select_gguf_file(
+                candidates,
+                preferred_quantization=preferred_quantization,
             )
+            self._gguf_selection_cache[cache_key] = selected
 
-        selected = self._select_gguf_file(candidates)
-        subfolder = None if selected.parent == PurePosixPath(".") else selected.parent.as_posix()
+        subfolder = (
+            None
+            if selected.parent == PurePosixPath(".")
+            else selected.parent.as_posix()
+        )
         local_path = hf_hub_download(
             repo_id=repo_id,
             filename=selected.name,
@@ -128,8 +163,13 @@ class ModelManager:
         ]
         return sorted(candidates, key=lambda item: item.as_posix().lower())
 
-    def _select_gguf_file(self, candidates: list[PurePosixPath]) -> PurePosixPath:
+    def _select_gguf_file(
+        self,
+        candidates: list[PurePosixPath],
+        preferred_quantization: str | None = None,
+    ) -> PurePosixPath:
         preferred_order = [
+            *([] if preferred_quantization is None else [preferred_quantization]),
             self.default_quantization(),
             "Q4_K_M",
             "Q5_K_M",

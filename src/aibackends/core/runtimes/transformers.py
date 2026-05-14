@@ -5,7 +5,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from aibackends.core.exceptions import RuntimeImportError
-from aibackends.core.model_manager import ModelManager
+from aibackends.core.model_manager import get_model_manager
 from aibackends.core.model_registry import apply_transformer_model_profile
 from aibackends.core.prompting import PromptRenderer
 from aibackends.core.registry import RuntimeSpec
@@ -17,17 +17,21 @@ class TransformersRuntime(BaseRuntime):
     def __init__(self, config: RuntimeConfig) -> None:
         effective_config = apply_transformer_model_profile(config)
         super().__init__(effective_config)
-        self.model_manager = ModelManager(cache_dir=effective_config.cache_dir)
+        self.model_manager = get_model_manager(effective_config.cache_dir)
         self.prompt_renderer = PromptRenderer(effective_config)
         self._tokenizer: Any | None = None
         self._generator: Any | None = None
         self._embed_model: Any | None = None
         self._embed_tokenizer: Any | None = None
         self._torch: Any | None = None
+        self._resolved_model_id: str | None = None
 
     def _model_id(self) -> str:
+        if self._resolved_model_id is not None:
+            return self._resolved_model_id
         location = self.model_manager.ensure_model(self.config)
-        return location.local_path or location.source
+        self._resolved_model_id = location.local_path or location.source
+        return self._resolved_model_id
 
     def _load_generator(self):
         if self._generator is not None and self._tokenizer is not None:

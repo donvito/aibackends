@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 from pydantic import BaseModel
 
 from aibackends.core.exceptions import RuntimeImportError, RuntimeRequestError
-from aibackends.core.model_manager import ModelLocation, ModelManager
+from aibackends.core.model_manager import ModelLocation, get_model_manager
 from aibackends.core.prompting import (
     build_prompt_messages,
     normalise_message_content,
@@ -185,7 +185,7 @@ def image_path_to_data_uri(path: str | Path) -> str:
 class LlamaCppRuntime(BaseRuntime):
     def __init__(self, config: RuntimeConfig) -> None:
         super().__init__(config)
-        self.model_manager = ModelManager(cache_dir=config.cache_dir)
+        self.model_manager = get_model_manager(config.cache_dir)
         self._client: Any | None = None
         self._multimodal_client: Any | None = None
 

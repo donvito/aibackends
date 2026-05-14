@@ -54,6 +54,7 @@ class TransformerModelProfile:
     chat_template: str | None = None
     chat_template_path: str | None = None
     generation_defaults: dict[str, Any] = field(default_factory=dict)
+    preferred_quantization: str | None = None
 
     @property
     def names(self) -> tuple[str, ...]:

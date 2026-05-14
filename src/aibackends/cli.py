@@ -10,7 +10,7 @@ import typer
 from pydantic import BaseModel
 
 from aibackends.core.config import get_runtime, parse_model_text, parse_runtime_text
-from aibackends.core.model_manager import ModelManager
+from aibackends.core.model_manager import get_model_manager
 from aibackends.core.types import RuntimeConfig
 from aibackends.tasks.registry import create_task, get_task
 
@@ -61,7 +61,7 @@ def pull_model(
         None, "--cache-dir", help="Optional Hugging Face cache directory override."
     ),
 ) -> None:
-    manager = ModelManager(cache_dir=cache_dir)
+    manager = get_model_manager(cache_dir)
     location = manager.pull_model(
         RuntimeConfig.model_validate(
             {
