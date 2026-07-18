@@ -28,6 +28,9 @@ pip install aibackends[video]
 pip install aibackends[pii]
 ```
 
+For GPU clouds (RunPod, Modal, ...), a CUDA-enabled `Dockerfile` is included;
+see `docs/docker.md`.
+
 ## Quickstart
 
 **Extract an invoice locally**
