@@ -22,6 +22,21 @@ class MyRuntime(OpenAICompatibleRuntime):
 RUNTIME_SPEC = RuntimeSpec(name="my-runtime", factory=MyRuntime)
 ```
 
+### Runtime Reuse And Preloading
+
+`get_runtime(...)` caches runtime instances process-wide, so the model loaded
+on the first call stays warm for subsequent task calls with the same
+load-affecting config (runtime, model, device, and so on). Set
+`reuse_runtime=False` in config to build a fresh instance per call instead.
+
+Runtimes can override `BaseRuntime.preload()` (a no-op by default) to load
+their model eagerly; `aibackends.preload(...)` resolves the configured runtime
+and calls it, so startup code can pay the load cost before the first request.
+Cached models stay resident in RAM/VRAM until `aibackends.clear_runtime_cache()`
+(or `reset_config()`) drops them. Reused instances may be shared across
+threads, so guard model access with a lock the way the built-in runtimes do
+with `self._inference_lock`.
+
 ## Add A Transformer Model Profile
 
 Use this when model support needs model-specific configuration such as aliases or

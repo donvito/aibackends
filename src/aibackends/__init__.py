@@ -1,9 +1,11 @@
 from aibackends.core.config import (
     available_runtimes,
+    clear_runtime_cache,
     configure,
     get_runtime,
     get_settings,
     load_config,
+    preload,
     register_runtime,
     reset_config,
 )
@@ -38,6 +40,7 @@ __all__ = [
     "available_runtimes",
     "classify",
     "classify_async",
+    "clear_runtime_cache",
     "configure",
     "embed",
     "embed_async",
@@ -48,6 +51,7 @@ __all__ = [
     "get_runtime",
     "get_settings",
     "load_config",
+    "preload",
     "redact_pii",
     "redact_pii_async",
     "register_runtime",

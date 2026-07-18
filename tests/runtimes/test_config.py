@@ -2,8 +2,13 @@ from __future__ import annotations
 
 import pytest
 
-from aibackends import configure, load_config
-from aibackends.core.config import get_runtime, resolve_runtime_config
+from aibackends import configure, load_config, reset_config
+from aibackends.core.config import (
+    clear_runtime_cache,
+    get_runtime,
+    preload,
+    resolve_runtime_config,
+)
 from aibackends.core.registry import ModelRef
 from aibackends.core.types import RuntimeConfig
 from aibackends.models import GEMMA4_E2B
@@ -38,6 +43,61 @@ def test_get_runtime_returns_registered_runtime():
     client = get_runtime()
     assert client.__class__.__name__ == "StubRuntime"
     assert client.model_name == "stub-model"
+
+
+def test_get_runtime_reuses_cached_instance():
+    first = get_runtime()
+    second = get_runtime()
+
+    assert first is second
+
+
+def test_get_runtime_builds_new_instance_for_different_model():
+    first = get_runtime()
+    second = get_runtime({"model": "other-model"})
+
+    assert first is not second
+
+
+def test_get_runtime_opt_out_returns_fresh_instances():
+    cached = get_runtime()
+    first = get_runtime({"reuse_runtime": False})
+    second = get_runtime({"reuse_runtime": False})
+
+    assert first is not second
+    assert first is not cached
+    # Opting out must not overwrite the cached instance either.
+    assert get_runtime() is cached
+
+
+def test_get_runtime_cache_hit_refreshes_per_call_params():
+    first = get_runtime({"temperature": 0.2})
+    second = get_runtime({"temperature": 0.9, "max_tokens": 42})
+
+    assert first is second
+    assert second.config.temperature == 0.9
+    assert second.config.max_tokens == 42
+
+
+def test_clear_runtime_cache_forces_rebuild():
+    first = get_runtime()
+    clear_runtime_cache()
+
+    assert get_runtime() is not first
+
+
+def test_reset_config_clears_runtime_cache():
+    first = get_runtime()
+    reset_config()
+    configure(runtime=get_runtime_spec("stub"), model=ModelRef(name="stub-model"))
+
+    assert get_runtime() is not first
+
+
+def test_preload_returns_cached_runtime():
+    runtime = preload()
+
+    assert runtime is get_runtime()
 
 
 def test_runtime_config_supports_prompt_format_and_template_path(tmp_path):

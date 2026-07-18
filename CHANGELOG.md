@@ -5,6 +5,31 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Runtime reuse: `get_runtime(...)` now caches runtime instances process-wide
+  (keyed by the load-affecting config fields), so the model loaded on the
+  first task call stays warm and subsequent calls skip the load entirely.
+  Controlled by the new `reuse_runtime` config flag (default `true`); set
+  `configure(reuse_runtime=False)` or pass `reuse_runtime=False` per call to
+  restore the previous build-per-call behavior.
+- `aibackends.preload(...)` and `BaseRuntime.preload()` to load a runtime's
+  model ahead of the first request, mirroring the PII `backend.load()`
+  pre-warm API.
+- `aibackends.clear_runtime_cache()` to drop cached runtime instances and
+  release the RAM/VRAM held by loaded models. `reset_config()` clears the
+  cache as well.
+- The `openai-privacy` PII backend now builds its token-classification
+  pipeline once per process and caches it under a thread-safe lock (mirroring
+  the GLiNER cache), and sets `load_model` so `backend.load()` pre-warms it.
+  Exposes `load_privacy_pipeline` and `clear_pipeline_cache`.
+
+### Changed
+- `LlamaCppRuntime` and `TransformersRuntime` serialize model loading and
+  inference behind a per-instance lock, since reused instances can now be
+  shared across threads.
+
 ## [0.2.1] - 2026-04-29
 
 ### Changed

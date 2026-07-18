@@ -83,6 +83,7 @@ class RuntimeConfig(AIBackendsModel):
     max_retries: int = 2
     load_in_4bit: bool = False
     cache_dir: str | None = None
+    reuse_runtime: bool = True
     on_step_complete: StepCallback | None = None
     extra_options: JSONDict = Field(default_factory=dict)
 

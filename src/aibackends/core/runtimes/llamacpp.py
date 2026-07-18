@@ -189,6 +189,10 @@ class LlamaCppRuntime(BaseRuntime):
         self._client: Any | None = None
         self._multimodal_client: Any | None = None
 
+    def preload(self) -> None:
+        with self._inference_lock:
+            self._load_client()
+
     def _load_client(self) -> Any:
         if self._client is not None:
             return self._client
@@ -408,29 +412,32 @@ class LlamaCppRuntime(BaseRuntime):
         schema: type[BaseModel] | None = None,
         **kwargs: Any,
     ) -> RuntimeResponse:
-        if has_image_inputs(messages):
-            family = self._multimodal_family()
-            client = self._load_multimodal_client()
-            payload_messages = build_llamacpp_multimodal_messages(
-                messages,
-                schema=schema,
-                merge_system_into_first_user=family == "gemma",
-            )
-        else:
-            client = self._load_client()
-            payload_messages = list(messages)
-            if schema is not None:
-                payload_messages = [
-                    {"role": "system", "content": schema_prompt(schema)},
-                    *payload_messages,
-                ]
+        # A shared Llama instance is not thread-safe, so loading and inference
+        # are serialized when the runtime is reused across task calls.
+        with self._inference_lock:
+            if has_image_inputs(messages):
+                family = self._multimodal_family()
+                client = self._load_multimodal_client()
+                payload_messages = build_llamacpp_multimodal_messages(
+                    messages,
+                    schema=schema,
+                    merge_system_into_first_user=family == "gemma",
+                )
+            else:
+                client = self._load_client()
+                payload_messages = list(messages)
+                if schema is not None:
+                    payload_messages = [
+                        {"role": "system", "content": schema_prompt(schema)},
+                        *payload_messages,
+                    ]
 
-        response = client.create_chat_completion(
-            messages=payload_messages,
-            temperature=kwargs.get("temperature", self.config.temperature),
-            max_tokens=kwargs.get("max_tokens", self.config.max_tokens),
-            response_format={"type": "json_object"} if schema is not None else None,
-        )
+            response = client.create_chat_completion(
+                messages=payload_messages,
+                temperature=kwargs.get("temperature", self.config.temperature),
+                max_tokens=kwargs.get("max_tokens", self.config.max_tokens),
+                response_format={"type": "json_object"} if schema is not None else None,
+            )
         choice = response["choices"][0]["message"]
         usage = response.get("usage", {})
         return RuntimeResponse(
@@ -444,10 +451,11 @@ class LlamaCppRuntime(BaseRuntime):
         )
 
     def embed(self, text: str, **kwargs: Any) -> list[float]:
-        client = self._load_client()
-        if not hasattr(client, "create_embedding"):
-            raise RuntimeRequestError("This llama.cpp build does not support embeddings.")
-        data = client.create_embedding(text)
+        with self._inference_lock:
+            client = self._load_client()
+            if not hasattr(client, "create_embedding"):
+                raise RuntimeRequestError("This llama.cpp build does not support embeddings.")
+            data = client.create_embedding(text)
         embedding = data["data"][0]["embedding"]
         return [float(value) for value in embedding]
 

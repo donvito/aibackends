@@ -11,6 +11,7 @@ import pytest
 from aibackends.core.exceptions import TaskExecutionError
 
 gliner_module = importlib.import_module("aibackends.backends.pii.gliner")
+openai_privacy_module = importlib.import_module("aibackends.backends.pii.openai_privacy")
 redact_pii_module = importlib.import_module("aibackends.tasks.redact_pii")
 
 
@@ -33,8 +34,10 @@ class _FakeGLinerModel:
 @pytest.fixture(autouse=True)
 def _reset_gliner_cache() -> Iterator[None]:
     gliner_module.clear_model_cache()
+    openai_privacy_module.clear_pipeline_cache()
     yield
     gliner_module.clear_model_cache()
+    openai_privacy_module.clear_pipeline_cache()
 
 
 def _install_fake_model(
@@ -182,6 +185,31 @@ def test_load_gliner_model_caches_across_calls(monkeypatch: pytest.MonkeyPatch) 
 
     assert first is second
     assert load_count["value"] == 1
+
+
+@pytest.mark.skipif(
+    sys.version_info >= (3, 13),
+    reason="The openai/privacy-filter backend does not support Python 3.13+.",
+)
+def test_load_privacy_pipeline_caches_across_calls(monkeypatch: pytest.MonkeyPatch) -> None:
+    load_count = {"value": 0}
+
+    def _fake_pipeline(task: str, *, model: str, aggregation_strategy: str) -> Any:
+        del task, model, aggregation_strategy
+        load_count["value"] += 1
+        return lambda text: []
+
+    fake_module = ModuleType("transformers")
+    fake_module.pipeline = _fake_pipeline  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "transformers", fake_module)
+
+    spec = openai_privacy_module.PII_BACKEND_SPEC
+    first = openai_privacy_module.load_privacy_pipeline(spec)
+    second = openai_privacy_module.load_privacy_pipeline(spec)
+
+    assert first is second
+    assert load_count["value"] == 1
+    assert spec.load() is first
 
 
 def test_redact_pii_rejects_unknown_backend() -> None:
