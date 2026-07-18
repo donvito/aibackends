@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] - 2026-07-18
 
 ### Added
 - Runtime reuse: `get_runtime(...)` now caches runtime instances process-wide
@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   pipeline once per process and caches it under a thread-safe lock (mirroring
   the GLiNER cache), and sets `load_model` so `backend.load()` pre-warms it.
   Exposes `load_privacy_pipeline` and `clear_pipeline_cache`.
+- Benchmark suite under `benchmarks/` (runtime reuse, per-model task latency
+  including VL image tasks, PII backends) with dated markdown reports
+  committed to `benchmarks/reports/`, consistency/drift statistics, a
+  sequential `run_all.py` driver, and a lock file so benchmarks never run
+  concurrently on a single GPU.
 
 ### Changed
 - `LlamaCppRuntime` and `TransformersRuntime` serialize model loading and
