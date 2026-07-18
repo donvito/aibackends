@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -18,6 +19,14 @@ RuntimeFactory = Callable[[RuntimeConfig], "BaseRuntime"]
 _GLOBAL_CONFIG = RuntimeConfig()
 _RUNTIME_FACTORIES: dict[str, RuntimeFactory] = {}
 _RUNTIME_SPECS: dict[str, RuntimeSpec] = {}
+_RUNTIME_CACHE: dict[tuple[Any, ...], BaseRuntime] = {}
+_PER_CALL_CONFIG_FIELDS = (
+    "temperature",
+    "max_tokens",
+    "timeout",
+    "max_retries",
+    "on_step_complete",
+)
 _BUILTINS_REGISTERED = False
 
 
@@ -148,6 +157,12 @@ def get_settings() -> RuntimeConfig:
 def reset_config() -> None:
     global _GLOBAL_CONFIG
     _GLOBAL_CONFIG = RuntimeConfig()
+    clear_runtime_cache()
+
+
+def clear_runtime_cache() -> None:
+    """Drop all cached runtime instances, releasing any loaded models."""
+    _RUNTIME_CACHE.clear()
 
 
 def resolve_runtime_config(
@@ -166,6 +181,27 @@ def resolve_runtime_config(
     return RuntimeConfig.model_validate(merged)
 
 
+def _runtime_cache_key(config: RuntimeConfig) -> tuple[Any, ...]:
+    # Only fields that affect what gets loaded into memory. Per-call generation
+    # parameters (temperature, max_tokens, ...) are deliberately excluded so a
+    # tweak does not force a full model reload.
+    return (
+        normalize_name(config.runtime or ""),
+        config.model,
+        config.model_path,
+        config.adapter,
+        config.device,
+        config.load_in_4bit,
+        config.cache_dir,
+        config.prompt_format,
+        config.chat_template,
+        config.chat_template_path,
+        config.base_url,
+        config.api_key,
+        json.dumps(config.extra_options, sort_keys=True, default=str),
+    )
+
+
 def get_runtime(overrides: dict[str, Any] | RuntimeConfig | None = None) -> BaseRuntime:
     _ensure_builtin_runtimes_registered()
     config = resolve_runtime_config(overrides)
@@ -177,4 +213,26 @@ def get_runtime(overrides: dict[str, Any] | RuntimeConfig | None = None) -> Base
         factory = _RUNTIME_FACTORIES[normalize_name(config.runtime)]
     except KeyError as exc:
         raise ConfigurationError(f"Unknown runtime: {config.runtime}") from exc
-    return factory(config)
+    if not config.reuse_runtime:
+        return factory(config)
+    key = _runtime_cache_key(config)
+    cached = _RUNTIME_CACHE.get(key)
+    if cached is not None:
+        # Refresh per-call parameters while keeping the already-loaded model
+        # client. Only fields excluded from the cache key are copied over, so
+        # runtime-applied config transforms (e.g. transformers model profiles)
+        # are preserved.
+        cached.config = cached.config.model_copy(
+            update={field: getattr(config, field) for field in _PER_CALL_CONFIG_FIELDS}
+        )
+        return cached
+    runtime = factory(config)
+    _RUNTIME_CACHE[key] = runtime
+    return runtime
+
+
+def preload(overrides: dict[str, Any] | RuntimeConfig | None = None) -> BaseRuntime:
+    """Resolve the runtime and load its model ahead of the first request."""
+    runtime = get_runtime(overrides)
+    runtime.preload()
+    return runtime
