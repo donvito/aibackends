@@ -68,6 +68,10 @@ def load_text_input(value: str | Path) -> str:
 
 def parse_json_content(content: str) -> Any:
     text = content.strip()
+    # Reasoning models (e.g. LFM2.5) may draft JSON inside their think block;
+    # only the text after the final `</think>` is the actual answer.
+    if "</think>" in text:
+        text = text.rsplit("</think>", 1)[1].strip()
     if not text:
         raise TaskExecutionError("Runtime returned empty content.")
 
