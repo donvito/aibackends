@@ -38,6 +38,16 @@ much larger first download and slower load time.
 `MINILM_L6`, a compact local embeddings profile that stays practical on
 CPU-only machines.
 
+`tool_calling_lfm.py` demos native tool calling with `LFM25_2_6B`
+(LiquidAI LFM2.5-2.6B). It works on both runtimes and exposes CPU/GPU and
+GGUF quantization toggles:
+
+```bash
+python3 examples/tasks/tool_calling_lfm.py --runtime llamacpp --device cpu
+python3 examples/tasks/tool_calling_lfm.py --runtime transformers --device cpu
+python3 examples/tasks/tool_calling_lfm.py --runtime llamacpp --quantization Q8_0
+```
+
 `redact_text.py` and `redact_text_batch.py` use local PII backends rather than
 the general `llamacpp` or `transformers` runtimes.
 
@@ -66,6 +76,7 @@ python3 examples/tasks/redact_text.py
 python3 examples/tasks/redact_text_batch.py
 python3 examples/tasks/extract_custom_schema.py
 python3 examples/tasks/task_interface.py
+python3 examples/tasks/tool_calling_lfm.py
 python3 examples/tasks/sales_call_report.py
 python3 examples/tasks/video_ad_report.py
 python3 examples/workflows/audio_transcribe.py

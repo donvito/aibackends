@@ -105,10 +105,12 @@ def extract_tool_calls(content: str) -> list[tuple[str, dict]]:
     if marker_match:
         call_text = marker_match.group(1).strip()
     else:
-        bare_match = PYTHONIC_CALL_PATTERN.search(text)
-        if bare_match is None:
+        # Some runtimes strip special tokens during detokenization. The call
+        # after the reasoning is the actual one, so take the last match.
+        bare_matches = PYTHONIC_CALL_PATTERN.findall(text)
+        if not bare_matches:
             return []
-        call_text = bare_match.group(0)
+        call_text = bare_matches[-1]
 
     try:
         parsed = ast.parse(call_text, mode="eval")
@@ -223,10 +225,11 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    print(
-        f"runtime={args.runtime} device={args.device} "
-        f"quantization={args.quantization or 'default (Q4_K_M)'}"
-    )
+    if args.runtime == "llamacpp":
+        quantization_note = args.quantization or "default (Q4_K_M)"
+    else:
+        quantization_note = "n/a (GGUF only)"
+    print(f"runtime={args.runtime} device={args.device} quantization={quantization_note}")
     try:
         runtime = get_runtime(build_runtime_overrides(args))
         run_tool_loop(runtime, args.question)
