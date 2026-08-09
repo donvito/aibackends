@@ -208,3 +208,5 @@ __marimo__/
 
 .idea/
 .DS_Store
+# Benchmark run lock
+benchmarks/.benchmark.lock

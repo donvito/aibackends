@@ -26,6 +26,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tool-calling example `examples/tasks/tool_calling_lfm.py` demoing LFM2.5's
   native Pythonic tool-call format on either runtime with CPU/GPU and
   quantization flags.
+- `aibackends.core.tool_calls` with `ToolCall`, `extract_tool_calls`,
+  `strip_reasoning`, and `clean_answer` for parsing Pythonic tool calls from
+  model responses (with or without `<|tool_call_start|>` markers).
+- Tool-call accuracy eval `evals/eval_tool_calls.py` scoring tool selection,
+  argument accuracy, and exact match over a labeled case set (single-tool,
+  multi-tool, and no-tool questions), with dated reports in `evals/reports/`.
+- CPU benchmark reports for LFM2.5-2.6B (runtime reuse and task latency on
+  `llamacpp` and `transformers`) in `benchmarks/reports/`.
+
+### Fixed
+- `parse_json_content` now ignores JSON drafted inside a reasoning
+  (`<think>...</think>`) block, so structured tasks work with reasoning
+  models such as LFM2.5 on runtimes without grammar-constrained output.
 
 ## [0.3.0] - 2026-07-18
 
