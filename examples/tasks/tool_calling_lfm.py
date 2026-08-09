@@ -14,13 +14,12 @@ Usage:
 """
 
 import argparse
-import ast
 import json
-import re
 import sys
 
 from aibackends import get_runtime
 from aibackends.core.exceptions import AIBackendsError
+from aibackends.core.tool_calls import clean_answer, extract_tool_calls
 from aibackends.models import LFM25_2_6B
 from aibackends.runtimes import LLAMACPP, TRANSFORMERS
 
@@ -80,69 +79,6 @@ TOOL_FUNCTIONS = {
     "convert_currency": convert_currency,
 }
 
-SPECIAL_TOKEN_PATTERN = re.compile(r"<\|[a-z_]+\|>")
-TOOL_CALL_MARKERS_PATTERN = re.compile(
-    r"<\|tool_call_start\|>(.*?)<\|tool_call_end\|>", re.DOTALL
-)
-PYTHONIC_CALL_PATTERN = re.compile(r"\[\s*[A-Za-z_]\w*\(.*?\)\s*\]", re.DOTALL)
-
-
-def strip_reasoning(content: str) -> str:
-    """Drop the `<think>...</think>` reasoning block LFM2.5 always emits."""
-    if "</think>" in content:
-        return content.split("</think>", 1)[1]
-    return content
-
-
-def extract_tool_calls(content: str) -> list[tuple[str, dict]]:
-    """Parse Pythonic tool calls from a model response.
-
-    Handles both raw output (with `<|tool_call_start|>` markers) and output
-    where special tokens were stripped during detokenization.
-    """
-    text = strip_reasoning(content)
-    marker_match = TOOL_CALL_MARKERS_PATTERN.search(text)
-    if marker_match:
-        call_text = marker_match.group(1).strip()
-    else:
-        # Some runtimes strip special tokens during detokenization. The call
-        # after the reasoning is the actual one, so take the last match.
-        bare_matches = PYTHONIC_CALL_PATTERN.findall(text)
-        if not bare_matches:
-            return []
-        call_text = bare_matches[-1]
-
-    try:
-        parsed = ast.parse(call_text, mode="eval")
-    except SyntaxError:
-        return []
-    if not isinstance(parsed.body, ast.List):
-        return []
-
-    calls = []
-    for node in parsed.body.elts:
-        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name):
-            continue
-        kwargs = {}
-        for keyword in node.keywords:
-            if keyword.arg is None:
-                continue
-            try:
-                kwargs[keyword.arg] = ast.literal_eval(keyword.value)
-            except ValueError:
-                kwargs[keyword.arg] = None
-        calls.append((node.func.id, kwargs))
-    return calls
-
-
-def clean_answer(content: str) -> str:
-    """Return the readable answer text without reasoning or special tokens."""
-    text = strip_reasoning(content)
-    text = TOOL_CALL_MARKERS_PATTERN.sub("", text)
-    text = SPECIAL_TOKEN_PATTERN.sub("", text)
-    return text.strip()
-
-
 def build_runtime_overrides(args: argparse.Namespace) -> dict:
     overrides = {
         "runtime": TRANSFORMERS if args.runtime == "transformers" else LLAMACPP,
@@ -174,14 +110,16 @@ def run_tool_loop(runtime, question: str) -> None:
         return
 
     results = []
-    for name, kwargs in tool_calls:
-        rendered_args = ", ".join(f"{key}={value!r}" for key, value in kwargs.items())
-        print(f"[tool call] {name}({rendered_args})")
-        function = TOOL_FUNCTIONS.get(name)
+    for call in tool_calls:
+        rendered_args = ", ".join(
+            f"{key}={value!r}" for key, value in call.arguments.items()
+        )
+        print(f"[tool call] {call.name}({rendered_args})")
+        function = TOOL_FUNCTIONS.get(call.name)
         if function is None:
-            results.append({"error": f"Unknown tool: {name}"})
+            results.append({"error": f"Unknown tool: {call.name}"})
             continue
-        result = function(**kwargs)
+        result = function(**call.arguments)
         print(f"[tool result] {json.dumps(result)}")
         results.append(result)
 
