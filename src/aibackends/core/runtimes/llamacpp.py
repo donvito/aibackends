@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from aibackends.core.exceptions import RuntimeImportError, RuntimeRequestError
 from aibackends.core.model_manager import ModelLocation, ModelManager
+from aibackends.core.model_registry import apply_generation_defaults
 from aibackends.core.prompting import (
     build_prompt_messages,
     normalise_message_content,
@@ -184,8 +185,9 @@ def image_path_to_data_uri(path: str | Path) -> str:
 
 class LlamaCppRuntime(BaseRuntime):
     def __init__(self, config: RuntimeConfig) -> None:
-        super().__init__(config)
-        self.model_manager = ModelManager(cache_dir=config.cache_dir)
+        effective_config = apply_generation_defaults(config, runtime="llamacpp")
+        super().__init__(effective_config)
+        self.model_manager = ModelManager(cache_dir=effective_config.cache_dir)
         self._client: Any | None = None
         self._multimodal_client: Any | None = None
 
@@ -241,12 +243,10 @@ class LlamaCppRuntime(BaseRuntime):
         if not location.local_path:
             raise RuntimeRequestError("llama.cpp requires a local GGUF file.")
 
-        accelerator = self.model_manager.detect_hardware().accelerator
-        n_gpu_layers = -1 if accelerator in {"cuda", "metal"} else 0
         options: dict[str, Any] = {
             "model_path": location.local_path,
             "n_ctx": self.config.extra_options.get("n_ctx", 8192),
-            "n_gpu_layers": self.config.extra_options.get("n_gpu_layers", n_gpu_layers),
+            "n_gpu_layers": self._resolve_n_gpu_layers(),
             "verbose": False,
         }
         if "gemma" in self.model_name.lower():
@@ -255,6 +255,19 @@ class LlamaCppRuntime(BaseRuntime):
             if option in self.config.extra_options:
                 options[option] = self.config.extra_options[option]
         return options
+
+    def _resolve_n_gpu_layers(self) -> int:
+        """Toggle GPU offload: explicit option, then `device`, then hardware detection."""
+        override = self.config.extra_options.get("n_gpu_layers")
+        if override is not None:
+            return int(override)
+        device = (self.config.device or "auto").lower()
+        if device == "cpu":
+            return 0
+        if device in {"gpu", "cuda", "metal"}:
+            return -1
+        accelerator = self.model_manager.detect_hardware().accelerator
+        return -1 if accelerator in {"cuda", "metal"} else 0
 
     def _multimodal_family(self, location: ModelLocation | None = None) -> str | None:
         model_reference = f"{self.model_name} {self.config.model_path or ''}".lower()
@@ -434,9 +447,8 @@ class LlamaCppRuntime(BaseRuntime):
 
             response = client.create_chat_completion(
                 messages=payload_messages,
-                temperature=kwargs.get("temperature", self.config.temperature),
-                max_tokens=kwargs.get("max_tokens", self.config.max_tokens),
                 response_format={"type": "json_object"} if schema is not None else None,
+                **self._sampling_options(kwargs),
             )
         choice = response["choices"][0]["message"]
         usage = response.get("usage", {})
@@ -449,6 +461,27 @@ class LlamaCppRuntime(BaseRuntime):
                 output_tokens=usage.get("completion_tokens"),
             ),
         )
+
+    def _sampling_options(self, kwargs: dict[str, Any]) -> dict[str, Any]:
+        extra = self.config.extra_options
+        options: dict[str, Any] = {
+            "temperature": kwargs.get(
+                "temperature", extra.get("temperature", self.config.temperature)
+            ),
+            "max_tokens": kwargs.get("max_tokens", extra.get("max_tokens", self.config.max_tokens)),
+        }
+        aliases = (
+            ("top_k", "top_k"),
+            ("top_p", "top_p"),
+            ("min_p", "min_p"),
+            ("repetition_penalty", "repeat_penalty"),
+            ("repeat_penalty", "repeat_penalty"),
+        )
+        for source_key, target_key in aliases:
+            value = kwargs.get(source_key, extra.get(source_key))
+            if value is not None:
+                options[target_key] = value
+        return options
 
     def embed(self, text: str, **kwargs: Any) -> list[float]:
         with self._inference_lock:

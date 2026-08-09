@@ -10,8 +10,8 @@ def ensure_model(
     config: RuntimeConfig,
     resolved: str,
 ) -> ModelLocation:
-    del config
-    local_path = manager._download_gguf_repo(resolved)
+    quantization = manager.resolve_quantization(config)
+    local_path = manager._download_gguf_repo(resolved, quantization=quantization)
     return ModelLocation(source=resolved, local_path=str(local_path))
 
 

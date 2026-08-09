@@ -40,6 +40,72 @@ class FakeMultimodalClient:
         }
 
 
+class FakeTextClient:
+    def __init__(self) -> None:
+        self.last_kwargs: dict[str, Any] | None = None
+
+    def create_chat_completion(self, **kwargs: Any) -> dict[str, Any]:
+        self.last_kwargs = kwargs
+        return {
+            "choices": [{"message": {"role": "assistant", "content": "Hello!"}}],
+            "model": "lfm2.5-2.6b",
+            "usage": {"prompt_tokens": 5, "completion_tokens": 2},
+        }
+
+
+def test_resolve_n_gpu_layers_honours_device_toggle():
+    cpu_runtime = LlamaCppRuntime(
+        RuntimeConfig(runtime="llamacpp", model="lfm2.5-2.6b", device="cpu")
+    )
+    gpu_runtime = LlamaCppRuntime(
+        RuntimeConfig(runtime="llamacpp", model="lfm2.5-2.6b", device="gpu")
+    )
+    override_runtime = LlamaCppRuntime(
+        RuntimeConfig(
+            runtime="llamacpp",
+            model="lfm2.5-2.6b",
+            device="cpu",
+            extra_options={"n_gpu_layers": 12},
+        )
+    )
+
+    assert cpu_runtime._resolve_n_gpu_layers() == 0
+    assert gpu_runtime._resolve_n_gpu_layers() == -1
+    assert override_runtime._resolve_n_gpu_layers() == 12
+
+
+def test_llamacpp_complete_applies_lfm_generation_defaults(monkeypatch):
+    runtime = LlamaCppRuntime(RuntimeConfig(runtime="llamacpp", model="lfm2.5-2.6b"))
+    client = FakeTextClient()
+    monkeypatch.setattr(runtime, "_load_client", lambda: client)
+
+    response = runtime.complete([{"role": "user", "content": "Hi"}])
+
+    assert client.last_kwargs is not None
+    assert client.last_kwargs["temperature"] == 0.1
+    assert client.last_kwargs["top_k"] == 50
+    assert client.last_kwargs["repeat_penalty"] == 1.1
+    assert response.content == "Hello!"
+
+
+def test_llamacpp_complete_sampling_overrides_win(monkeypatch):
+    runtime = LlamaCppRuntime(
+        RuntimeConfig(
+            runtime="llamacpp",
+            model="lfm2.5-2.6b",
+            extra_options={"top_k": 20},
+        )
+    )
+    client = FakeTextClient()
+    monkeypatch.setattr(runtime, "_load_client", lambda: client)
+
+    runtime.complete([{"role": "user", "content": "Hi"}], temperature=0.7, top_k=10)
+
+    assert client.last_kwargs is not None
+    assert client.last_kwargs["temperature"] == 0.7
+    assert client.last_kwargs["top_k"] == 10
+
+
 def test_build_llamacpp_multimodal_messages_inlines_system_prompt_and_image(tmp_path):
     image_path = tmp_path / "receipt.png"
     image_path.write_bytes(b"\x89PNG\r\n\x1a\nreceipt")

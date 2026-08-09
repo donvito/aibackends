@@ -110,6 +110,21 @@ def resolve_model_profile(
     return None
 
 
+def apply_generation_defaults(config: RuntimeConfig, *, runtime: str) -> RuntimeConfig:
+    """Merge profile generation defaults into `extra_options` without overriding user values."""
+    profile = resolve_model_profile(config.model, runtime=runtime)
+    if profile is None or not profile.generation_defaults:
+        return config
+    return config.model_copy(
+        update={
+            "extra_options": {
+                **profile.generation_defaults,
+                **config.extra_options,
+            }
+        }
+    )
+
+
 def apply_transformer_model_profile(config: RuntimeConfig) -> RuntimeConfig:
     profile = resolve_model_profile(config.model, runtime="transformers")
     if profile is None:

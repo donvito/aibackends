@@ -77,6 +77,7 @@ class RuntimeConfig(AIBackendsModel):
     prompt_format: Literal["auto", "chat_template", "text"] = "auto"
     chat_template: str | None = None
     chat_template_path: str | None = None
+    quantization: str | None = None
     temperature: float = 0.1
     max_tokens: int = 1024
     timeout: float = 60.0

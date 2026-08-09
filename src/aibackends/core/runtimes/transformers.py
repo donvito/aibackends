@@ -47,9 +47,15 @@ class TransformersRuntime(BaseRuntime):
         model_kwargs: dict[str, Any] = {"trust_remote_code": True}
         if self.config.load_in_4bit:
             model_kwargs["load_in_4bit"] = True
+        dtype = self.config.extra_options.get("dtype")
+        if dtype is not None:
+            model_kwargs["dtype"] = dtype
+        device_map = self.config.device or "auto"
+        if device_map.lower() == "gpu":
+            device_map = "cuda"
         model: Any = AutoModelForCausalLM.from_pretrained(
             self._model_id(),
-            device_map=self.config.device or "auto",
+            device_map=device_map,
             **model_kwargs,
         )
         if self.config.adapter:
@@ -122,6 +128,10 @@ class TransformersRuntime(BaseRuntime):
                 "temperature": temperature,
                 "do_sample": float(temperature) > 0,
             }
+            for option in ("top_k", "top_p", "repetition_penalty"):
+                value = kwargs.get(option, self.config.extra_options.get(option))
+                if value is not None:
+                    generate_kwargs[option] = value
             if tokenizer.pad_token_id is not None:
                 generate_kwargs["pad_token_id"] = tokenizer.pad_token_id
             eos_token_id = getattr(tokenizer, "eos_token_id", None)
@@ -130,7 +140,15 @@ class TransformersRuntime(BaseRuntime):
             output = model.generate(**generate_kwargs)
             input_length = inputs["input_ids"].shape[-1]
             generated_tokens = output[0][input_length:]
-            content = tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
+            skip_special_tokens = bool(
+                kwargs.get(
+                    "skip_special_tokens",
+                    self.config.extra_options.get("skip_special_tokens", True),
+                )
+            )
+            content = tokenizer.decode(
+                generated_tokens, skip_special_tokens=skip_special_tokens
+            ).strip()
         return RuntimeResponse(
             content=content,
             model=self.model_name,
