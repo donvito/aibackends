@@ -7,11 +7,15 @@ from types import SimpleNamespace
 
 import aibackends.core.model_manager as model_manager_module
 from aibackends.core.model_manager import ModelManager
-from aibackends.core.model_registry import resolve_model_alias
+from aibackends.core.model_registry import (
+    apply_transformer_model_profile,
+    resolve_model_alias,
+)
 from aibackends.core.types import RuntimeConfig
 from aibackends.models import (
     GEMMA3_270M_IT,
     GEMMA4_E4B,
+    LFM25_2_6B,
     OPENAI_PRIVACY,
     QWEN3_VL_4B,
     available_models,
@@ -41,6 +45,39 @@ def test_resolve_model_alias_falls_back_to_shared_registry():
 def test_resolve_model_alias_accepts_typed_refs():
     assert resolve_model_alias(GEMMA4_E4B, runtime=LLAMACPP) == "unsloth/gemma-4-E4B-it-GGUF"
     assert resolve_model_alias(GEMMA4_E4B, runtime=TRANSFORMERS) == "google/gemma-4-E4B-it"
+
+
+def test_resolve_model_alias_maps_lfm25_per_runtime():
+    assert resolve_model_alias(LFM25_2_6B, runtime=LLAMACPP) == "LiquidAI/LFM2.5-2.6B-GGUF"
+    assert resolve_model_alias(LFM25_2_6B, runtime=TRANSFORMERS) == "LiquidAI/LFM2.5-2.6B"
+    assert resolve_model_alias("lfm25-2.6b", runtime="llamacpp") == "LiquidAI/LFM2.5-2.6B-GGUF"
+
+
+def test_lfm25_transformers_profile_sets_generation_defaults():
+    config = apply_transformer_model_profile(
+        RuntimeConfig(runtime="transformers", model="lfm2.5-2.6b")
+    )
+
+    assert config.model == "LiquidAI/LFM2.5-2.6B"
+    assert config.extra_options["dtype"] == "bfloat16"
+    assert config.extra_options["temperature"] == 0.1
+    assert config.extra_options["top_k"] == 50
+    assert config.extra_options["repetition_penalty"] == 1.1
+
+
+def test_resolve_quantization_prefers_config_then_profile(monkeypatch):
+    manager = ModelManager()
+    monkeypatch.setattr(manager, "default_quantization", lambda: "Q5_K_M")
+
+    override_config = RuntimeConfig(
+        runtime="llamacpp", model="lfm2.5-2.6b", quantization="Q8_0"
+    )
+    profile_config = RuntimeConfig(runtime="llamacpp", model="lfm2.5-2.6b")
+    fallback_config = RuntimeConfig(runtime="llamacpp", model="gemma4-e4b")
+
+    assert manager.resolve_quantization(override_config) == "Q8_0"
+    assert manager.resolve_quantization(profile_config) == "Q4_K_M"
+    assert manager.resolve_quantization(fallback_config) == "Q5_K_M"
 
 
 def test_available_models_can_filter_by_runtime():
@@ -147,6 +184,49 @@ def test_download_gguf_repo_downloads_only_selected_quant(monkeypatch, tmp_path)
             "cache_dir": str(tmp_path / "models"),
         }
     ]
+
+
+def test_download_gguf_repo_honours_requested_quantization(monkeypatch, tmp_path):
+    calls: list[str] = []
+
+    def fake_list_repo_files(repo_id: str) -> list[str]:
+        return [
+            "LFM2.5-2.6B-Q4_K_M.gguf",
+            "LFM2.5-2.6B-Q5_K_M.gguf",
+            "LFM2.5-2.6B-Q8_0.gguf",
+        ]
+
+    def fake_hf_hub_download(
+        repo_id: str,
+        filename: str,
+        *,
+        subfolder: str | None = None,
+        cache_dir: str | None = None,
+    ) -> str:
+        calls.append(filename)
+        target = Path(cache_dir or tmp_path) / filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("weights")
+        return str(target)
+
+    monkeypatch.setitem(
+        sys.modules,
+        "huggingface_hub",
+        SimpleNamespace(
+            list_repo_files=fake_list_repo_files,
+            hf_hub_download=fake_hf_hub_download,
+        ),
+    )
+
+    manager = ModelManager(cache_dir=str(tmp_path / "models"))
+    monkeypatch.setattr(manager, "default_quantization", lambda: "Q4_K_M")
+
+    local_path = manager._download_gguf_repo(
+        "LiquidAI/LFM2.5-2.6B-GGUF", quantization="Q8_0"
+    )
+
+    assert local_path.name == "LFM2.5-2.6B-Q8_0.gguf"
+    assert calls == ["LFM2.5-2.6B-Q8_0.gguf"]
 
 
 def test_download_gguf_repo_passes_subfolder_for_nested_files(monkeypatch, tmp_path):

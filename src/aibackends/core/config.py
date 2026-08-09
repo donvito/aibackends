@@ -191,6 +191,7 @@ def _runtime_cache_key(config: RuntimeConfig) -> tuple[Any, ...]:
         config.model_path,
         config.adapter,
         config.device,
+        config.quantization,
         config.load_in_4bit,
         config.cache_dir,
         config.prompt_format,

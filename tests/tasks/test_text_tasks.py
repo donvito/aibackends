@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from aibackends.core.registry import ModelRef
 from aibackends.runtimes import get_runtime_spec
 from aibackends.tasks import classify, embed, extract, summarize
-from aibackends.tasks._utils import load_text_input
+from aibackends.tasks._utils import load_text_input, parse_json_content
 
 classify_module = importlib.import_module("aibackends.tasks.classify")
 
@@ -22,6 +22,23 @@ class Person(BaseModel):
 def test_summarize_returns_text():
     result = summarize("This is a long meeting transcript.")
     assert result == "Stub summary"
+
+
+def test_parse_json_content_ignores_json_drafted_in_reasoning_block():
+    content = (
+        "Let me draft the JSON first:\n"
+        '{\n  "name": "Draft Name",\n  "email": "draft@example.com"\n}\n'
+        "This draft matches the template.</think>"
+        '{"name": "Alice Johnson", "email": "alice@example.com"}'
+    )
+
+    payload = parse_json_content(content)
+
+    assert payload == {"name": "Alice Johnson", "email": "alice@example.com"}
+
+
+def test_parse_json_content_still_parses_plain_json():
+    assert parse_json_content(' {"label": "invoice"} ') == {"label": "invoice"}
 
 
 def test_classify_returns_typed_output():

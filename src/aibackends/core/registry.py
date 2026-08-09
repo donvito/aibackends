@@ -53,6 +53,7 @@ class TransformerModelProfile:
     prompt_format: str | None = None
     chat_template: str | None = None
     chat_template_path: str | None = None
+    quantization: str | None = None
     generation_defaults: dict[str, Any] = field(default_factory=dict)
 
     @property

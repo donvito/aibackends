@@ -5,6 +5,41 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- LiquidAI LFM2.5-2.6B support via the new `LFM25_2_6B` model ref:
+  `LiquidAI/LFM2.5-2.6B` on `transformers` and `LiquidAI/LFM2.5-2.6B-GGUF`
+  on `llamacpp`, with Liquid AI's recommended generation defaults
+  (`temperature=0.1`, `top_k=50`, `repetition_penalty=1.1`, `bfloat16` on
+  `transformers`).
+- Configurable GGUF quantization: new `quantization` config field and
+  per-model profile default (LFM2.5 defaults to `Q4_K_M`); falls back to the
+  hardware default when unset.
+- CPU/GPU toggle via the `device` config field on both local runtimes:
+  `llamacpp` maps `"cpu"`/`"gpu"` to GPU layer offload and `transformers`
+  maps it to `device_map` (including `"gpu"` -> `"cuda"`).
+- Both runtimes now forward `top_k`, `top_p`, `repetition_penalty` (and
+  `min_p` for `llamacpp`) from per-call kwargs, `extra_options`, or model
+  profile generation defaults. `transformers` also honours a `dtype` load
+  option and a `skip_special_tokens` decode option.
+- Tool-calling example `examples/tasks/tool_calling_lfm.py` demoing LFM2.5's
+  native Pythonic tool-call format on either runtime with CPU/GPU and
+  quantization flags.
+- `aibackends.core.tool_calls` with `ToolCall`, `extract_tool_calls`,
+  `strip_reasoning`, and `clean_answer` for parsing Pythonic tool calls from
+  model responses (with or without `<|tool_call_start|>` markers).
+- Tool-call accuracy eval `evals/eval_tool_calls.py` scoring tool selection,
+  argument accuracy, and exact match over a labeled case set (single-tool,
+  multi-tool, and no-tool questions), with dated reports in `evals/reports/`.
+- CPU benchmark reports for LFM2.5-2.6B (runtime reuse and task latency on
+  `llamacpp` and `transformers`) in `benchmarks/reports/`.
+
+### Fixed
+- `parse_json_content` now ignores JSON drafted inside a reasoning
+  (`<think>...</think>`) block, so structured tasks work with reasoning
+  models such as LFM2.5 on runtimes without grammar-constrained output.
+
 ## [0.3.0] - 2026-07-18
 
 ### Added

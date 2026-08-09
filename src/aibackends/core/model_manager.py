@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 from aibackends.core.exceptions import ModelResolutionError, RuntimeImportError
-from aibackends.core.model_registry import resolve_model_alias
+from aibackends.core.model_registry import resolve_model_alias, resolve_model_profile
 from aibackends.core.types import RuntimeConfig
 from aibackends.model_support import get_model_support
 
@@ -47,6 +47,15 @@ class ModelManager:
     def default_quantization(self) -> str:
         return "Q5_K_M" if self.detect_hardware().accelerator in {"cuda", "metal"} else "Q4_K_M"
 
+    def resolve_quantization(self, config: RuntimeConfig) -> str:
+        """Pick the GGUF quantization: explicit config, model profile, then hardware default."""
+        if config.quantization:
+            return config.quantization
+        profile = resolve_model_profile(config.model, runtime=config.runtime)
+        if profile is not None and profile.quantization:
+            return profile.quantization
+        return self.default_quantization()
+
     def resolve_model_name(self, config: RuntimeConfig) -> str:
         if config.model_path:
             path = Path(config.model_path).expanduser()
@@ -86,7 +95,7 @@ class ModelManager:
         local_dir = snapshot_download(repo_id=resolved, cache_dir=self._hf_cache_dir())
         return ModelLocation(source=resolved, local_path=local_dir)
 
-    def _download_gguf_repo(self, repo_id: str) -> Path:
+    def _download_gguf_repo(self, repo_id: str, quantization: str | None = None) -> Path:
         try:
             from huggingface_hub import hf_hub_download, list_repo_files
         except ImportError as exc:
@@ -101,7 +110,7 @@ class ModelManager:
                 "For llama.cpp, use a GGUF repo ID or a local GGUF file."
             )
 
-        selected = self._select_gguf_file(candidates)
+        selected = self._select_gguf_file(candidates, quantization=quantization)
         subfolder = None if selected.parent == PurePosixPath(".") else selected.parent.as_posix()
         local_path = hf_hub_download(
             repo_id=repo_id,
@@ -128,8 +137,13 @@ class ModelManager:
         ]
         return sorted(candidates, key=lambda item: item.as_posix().lower())
 
-    def _select_gguf_file(self, candidates: list[PurePosixPath]) -> PurePosixPath:
+    def _select_gguf_file(
+        self,
+        candidates: list[PurePosixPath],
+        quantization: str | None = None,
+    ) -> PurePosixPath:
         preferred_order = [
+            *((quantization,) if quantization else ()),
             self.default_quantization(),
             "Q4_K_M",
             "Q5_K_M",

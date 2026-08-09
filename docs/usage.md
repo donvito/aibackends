@@ -69,6 +69,49 @@ configure(
 `prompt_format="auto"` prefers a configured template override, then the
 tokenizer's own chat template, then plain text.
 
+### Device and quantization
+
+Both local runtimes accept a `device` toggle. `llamacpp` maps it to GPU layer
+offload and `transformers` maps it to `device_map`:
+
+```python
+from aibackends import configure
+from aibackends.models import LFM25_2_6B
+from aibackends.runtimes import LLAMACPP
+
+configure(
+    runtime=LLAMACPP,
+    model=LFM25_2_6B,
+    device="cpu",  # "cpu" | "gpu" | None for auto-detect
+)
+```
+
+For GGUF models on `llamacpp`, the quantization is configurable. Model
+profiles can define their own default (for example `LFM25_2_6B` defaults to
+`Q4_K_M`), and machines with more capacity can pick a larger file:
+
+```python
+configure(
+    runtime=LLAMACPP,
+    model=LFM25_2_6B,
+    quantization="Q8_0",  # any quant published in the GGUF repo
+)
+```
+
+When neither the config nor the model profile sets a quantization, the
+hardware default is used (`Q5_K_M` with CUDA/Metal, `Q4_K_M` on CPU).
+
+### LiquidAI LFM2.5-2.6B
+
+`LFM25_2_6B` targets `LiquidAI/LFM2.5-2.6B` on `transformers` and
+`LiquidAI/LFM2.5-2.6B-GGUF` on `llamacpp`. The profile applies the
+generation defaults recommended by Liquid AI (`temperature=0.1`, `top_k=50`,
+`repetition_penalty=1.1`, and `bfloat16` on `transformers`).
+
+LFM2.5 is a reasoning model with native tool calling. See
+`examples/tasks/tool_calling_lfm.py` for a runnable tool-calling demo on
+either runtime.
+
 If you need a different runtime for one call, override it explicitly:
 
 ```python

@@ -155,6 +155,31 @@ result = ReceiptOCR(runtime=LLAMACPP, model=QWEN3_VL_4B).run("receipt.jpeg")
 print(result.model_dump_json(indent=2))
 ```
 
+### Tool calling
+
+**Run a local agent loop with LiquidAI LFM2.5-2.6B**
+
+```python
+from aibackends import get_runtime
+from aibackends.models import LFM25_2_6B
+from aibackends.runtimes import LLAMACPP
+
+runtime = get_runtime(
+    {
+        "runtime": LLAMACPP,
+        "model": LFM25_2_6B,
+        "device": "cpu",          # "cpu" | "gpu" | None for auto-detect
+        "quantization": "Q4_K_M",  # default; use Q8_0 etc. for higher capacity
+    }
+)
+response = runtime.complete(
+    [{"role": "user", "content": "What is the weather in Paris right now?"}]
+)
+```
+
+See `examples/tasks/tool_calling_lfm.py` for the full tool-calling loop with
+LFM2.5's native Pythonic tool-call format.
+
 ## Included
 
 - Local runtimes: `llamacpp`, `transformers`
@@ -191,6 +216,8 @@ Full command reference: `docs/cli.md`.
 - `docs/extending.md` for custom runtimes, backends, tasks, and workflows
 - `docs/api-reference/index.md` for the public API
 - `examples/README.md` for runnable examples, including local image OCR
+- `benchmarks/README.md` for latency benchmarks, `evals/README.md` for
+  accuracy evals (e.g. tool-call accuracy)
 
 ## Development
 
