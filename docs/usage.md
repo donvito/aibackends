@@ -150,9 +150,10 @@ result = ReceiptOCR(runtime=LLAMACPP, model=LFM25_VL_3B, device="cpu").run(
 ```
 
 The model is small enough for CPU inference with the default `Q4_K_M` GGUF;
-see the committed CPU report in `benchmarks/reports/` (task benchmark,
-`llamacpp`, device `cpu`) for latency numbers. A runnable receipt-extraction
-demo lives at `examples/workflows/image_ocr_lfm.py`.
+see the committed CPU report at
+`benchmarks/reports/2026-08-15_tasks-llamacpp-cpu.md` for latency numbers.
+A runnable receipt-extraction demo lives at
+`examples/workflows/image_ocr_lfm.py`.
 
 If you need a different runtime for one call, override it explicitly:
 
