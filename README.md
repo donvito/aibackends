@@ -155,6 +155,11 @@ result = ReceiptOCR(runtime=LLAMACPP, model=QWEN3_VL_4B).run("receipt.jpeg")
 print(result.model_dump_json(indent=2))
 ```
 
+Swap `QWEN3_VL_4B` for `LFM25_VL_3B` (LiquidAI LFM2.5-VL-3B) for a smaller
+vision model that runs on CPU with the default `Q4_K_M` GGUF; add
+`device="cpu"` to force CPU inference. CPU latency numbers are committed in
+`benchmarks/reports/`.
+
 ### Tool calling
 
 **Run a local agent loop with LiquidAI LFM2.5-2.6B**

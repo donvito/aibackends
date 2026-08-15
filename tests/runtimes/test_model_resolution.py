@@ -16,6 +16,7 @@ from aibackends.models import (
     GEMMA3_270M_IT,
     GEMMA4_E4B,
     LFM25_2_6B,
+    LFM25_VL_3B,
     OPENAI_PRIVACY,
     QWEN3_VL_4B,
     available_models,
@@ -51,6 +52,25 @@ def test_resolve_model_alias_maps_lfm25_per_runtime():
     assert resolve_model_alias(LFM25_2_6B, runtime=LLAMACPP) == "LiquidAI/LFM2.5-2.6B-GGUF"
     assert resolve_model_alias(LFM25_2_6B, runtime=TRANSFORMERS) == "LiquidAI/LFM2.5-2.6B"
     assert resolve_model_alias("lfm25-2.6b", runtime="llamacpp") == "LiquidAI/LFM2.5-2.6B-GGUF"
+
+
+def test_resolve_model_alias_maps_lfm25_vl_to_gguf_repo():
+    assert resolve_model_alias(LFM25_VL_3B, runtime=LLAMACPP) == "LiquidAI/LFM2.5-VL-3B-GGUF"
+    assert resolve_model_alias("lfm2.5-vl-3b", runtime="llamacpp") == (
+        "LiquidAI/LFM2.5-VL-3B-GGUF"
+    )
+    assert resolve_model_alias("lfm25-vl-3b", runtime="llamacpp") == (
+        "LiquidAI/LFM2.5-VL-3B-GGUF"
+    )
+
+
+def test_lfm25_vl_profile_defaults_to_q4_k_m(monkeypatch):
+    manager = ModelManager()
+    monkeypatch.setattr(manager, "default_quantization", lambda: "Q5_K_M")
+
+    config = RuntimeConfig(runtime="llamacpp", model="lfm2.5-vl-3b")
+
+    assert manager.resolve_quantization(config) == "Q4_K_M"
 
 
 def test_lfm25_transformers_profile_sets_generation_defaults():
@@ -91,8 +111,10 @@ def test_available_models_can_filter_by_runtime():
     assert transformers_models["openai-privacy"] == OPENAI_PRIVACY
     assert "gemma3-270m-it" not in llama_models
     assert llama_models["qwen3-vl-4b"] == QWEN3_VL_4B
+    assert llama_models["lfm2.5-vl-3b"] == LFM25_VL_3B
     assert transformers_models["gemma3-270m-it"] == GEMMA3_270M_IT
     assert "qwen3-vl-4b" not in transformers_models
+    assert "lfm2.5-vl-3b" not in transformers_models
 
 
 def test_model_manager_resolve_model_name_uses_runtime_aliases(tmp_path):

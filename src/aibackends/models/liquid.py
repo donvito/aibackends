@@ -27,4 +27,14 @@ MODEL_PROFILES = [
         quantization="Q4_K_M",
         generation_defaults=_LFM25_GENERATION_DEFAULTS,
     ),
+    # Vision-language model; image inputs run through the llama.cpp multimodal
+    # path (main GGUF + mmproj projector downloaded from the same repo).
+    TransformerModelProfile(
+        name="lfm2.5-vl-3b",
+        aliases=("lfm25-vl-3b",),
+        model_id="LiquidAI/LFM2.5-VL-3B-GGUF",
+        runtime="llamacpp",
+        quantization="Q4_K_M",
+        generation_defaults=_LFM25_GENERATION_DEFAULTS,
+    ),
 ]

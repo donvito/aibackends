@@ -14,6 +14,7 @@ GEMMA3_12B = ModelRef(name="gemma3-12b")
 GEMMA4_E2B = ModelRef(name="gemma4-e2b")
 GEMMA4_E4B = ModelRef(name="gemma4-e4b")
 LFM25_2_6B = ModelRef(name="lfm2.5-2.6b")
+LFM25_VL_3B = ModelRef(name="lfm2.5-vl-3b")
 LLAMA3_8B = ModelRef(name="llama3-8b")
 MINILM_L6 = ModelRef(name="minilm-l6")
 MISTRAL_7B = ModelRef(name="mistral-7b")
@@ -32,6 +33,7 @@ __all__ = [
     "GEMMA4_E4B",
     "get_model_ref",
     "LFM25_2_6B",
+    "LFM25_VL_3B",
     "LLAMA3_8B",
     "MINILM_L6",
     "MISTRAL_7B",

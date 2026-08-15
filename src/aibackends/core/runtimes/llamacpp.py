@@ -219,7 +219,7 @@ class LlamaCppRuntime(BaseRuntime):
         if family is None:
             raise RuntimeRequestError(
                 "Image inputs in the llama.cpp runtime are currently supported for "
-                "Gemma and Qwen VL GGUF models only."
+                "Gemma, Qwen VL, and LiquidAI LFM VL GGUF models only."
             )
 
         try:
@@ -277,6 +277,8 @@ class LlamaCppRuntime(BaseRuntime):
             return "gemma"
         if "qwen3-vl" in model_reference or "qwen2.5-vl" in model_reference:
             return "qwen-vl"
+        if "lfm2.5-vl" in model_reference or "lfm2-vl" in model_reference:
+            return "lfm2-vl"
         return None
 
     def _resolve_mmproj_path(self, location: ModelLocation) -> str:
@@ -366,6 +368,8 @@ class LlamaCppRuntime(BaseRuntime):
             return self._build_gemma_vision_chat_handler(mmproj_path)
         if family == "qwen-vl":
             return self._build_qwen_vl_chat_handler(mmproj_path)
+        if family == "lfm2-vl":
+            return self._build_lfm2_vl_chat_handler(mmproj_path)
         raise RuntimeRequestError(f"Unsupported multimodal llama.cpp family: {family}")
 
     def _build_gemma_vision_chat_handler(self, mmproj_path: str) -> Any:
@@ -418,6 +422,47 @@ class LlamaCppRuntime(BaseRuntime):
             ) from exc
 
         return Qwen25VLChatHandler(clip_model_path=mmproj_path, verbose=False)
+
+    def _build_lfm2_vl_chat_handler(self, mmproj_path: str) -> Any:
+        try:
+            from llama_cpp.llama_chat_format import Llava15ChatHandler
+        except ImportError as exc:
+            raise RuntimeImportError(
+                "Install a recent 'llama-cpp-python' build with multimodal chat handlers."
+            ) from exc
+
+        # LFM2/LFM2.5 VL models use a ChatML-style template with native system
+        # message support; image parts are emitted inline so the handler can
+        # splice the projector embeddings at the right position.
+        class Lfm2VLChatHandler(Llava15ChatHandler):
+            DEFAULT_SYSTEM_MESSAGE = None
+            CHAT_FORMAT = (
+                "{% for message in messages %}"
+                "{% if message.content is not none %}"
+                "<|im_start|>{{ message.role }}\n"
+                "{% if message.content is string %}"
+                "{{ message.content }}"
+                "{% endif %}"
+                "{% if message.content is iterable and message.content is not string %}"
+                "{% for content in message.content %}"
+                "{% if content.type == 'image_url' and content.image_url is string %}"
+                "{{ content.image_url }}"
+                "{% endif %}"
+                "{% if content.type == 'image_url' and content.image_url is mapping %}"
+                "{{ content.image_url.url }}"
+                "{% endif %}"
+                "{% if content.type == 'text' %}"
+                "{{ content.text }}"
+                "{% endif %}"
+                "{% endfor %}"
+                "{% endif %}"
+                "<|im_end|>\n"
+                "{% endif %}"
+                "{% endfor %}"
+                "{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}"
+            )
+
+        return Lfm2VLChatHandler(clip_model_path=mmproj_path, verbose=False)
 
     def complete(
         self,

@@ -34,6 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   multi-tool, and no-tool questions), with dated reports in `evals/reports/`.
 - CPU benchmark reports for LFM2.5-2.6B (runtime reuse and task latency on
   `llamacpp` and `transformers`) in `benchmarks/reports/`.
+- LiquidAI LFM2.5-VL-3B vision support via the new `LFM25_VL_3B` model ref:
+  `LiquidAI/LFM2.5-VL-3B-GGUF` on `llamacpp` (default `Q4_K_M`), with a
+  ChatML multimodal chat handler and automatic `mmproj` projector download.
+  Receipt-extraction demo in `examples/workflows/image_ocr_lfm.py`.
+- `--device` flag on `benchmarks/benchmark_tasks.py` to force CPU or GPU
+  inference, plus a committed Q4_K_M CPU report for the LFM2.5-VL-3B VL task
+  in `benchmarks/reports/`.
 
 ### Fixed
 - `parse_json_content` now ignores JSON drafted inside a reasoning

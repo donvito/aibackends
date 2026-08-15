@@ -15,12 +15,20 @@ With 10+ warm samples the report includes consistency statistics (stdev, CV,
 p50/p95, drift) and per-segment trends that reveal inference degradation over
 a sustained run; raise ``--warm-calls`` for a longer soak.
 
+``--device cpu`` (or ``gpu``) forces the device instead of auto-detecting the
+hardware; the device is recorded in the report name and header so CPU and GPU
+runs can be committed side by side.
+
 Usage:
     python benchmarks/benchmark_tasks.py --runtime transformers \
         --models gemma3-270m-it --warm-calls 10
 
     python benchmarks/benchmark_tasks.py --runtime llamacpp \
         --models all --embed-models all --vl-models all
+
+    # LFM2.5-VL-3B image latency on CPU (Q4_K_M profile default)
+    python benchmarks/benchmark_tasks.py --runtime llamacpp --device cpu \
+        --tasks vl --vl-models lfm2.5-vl-3b
 
 Requires:
     pip install 'aibackends[transformers]'  # or [llamacpp]
@@ -92,10 +100,11 @@ ALL_TASKS = (*CHAT_TASKS, "embed", "vl")
 DEFAULT_CHAT_MODEL = {"transformers": "gemma3-270m-it", "llamacpp": "gemma4-e2b"}
 
 # Recommended catalog models per category. Embedding and PII-only models are
-# excluded from chat; VL needs the llama.cpp multimodal path (Gemma / Qwen VL).
+# excluded from chat; VL needs the llama.cpp multimodal path (Gemma, Qwen VL,
+# or LiquidAI LFM VL).
 EMBED_MODELS = ("bge-small", "minilm-l6")
 NON_CHAT_MODELS = (*EMBED_MODELS, "openai-privacy")
-VL_MODELS = ("gemma4-e2b", "gemma4-e4b", "qwen3-vl-4b", "qwen3-vl-8b")
+VL_MODELS = ("gemma4-e2b", "gemma4-e4b", "lfm2.5-vl-3b", "qwen3-vl-4b", "qwen3-vl-8b")
 
 
 def _resolve_catalog_model(name: str, runtime: str) -> str:
@@ -120,12 +129,18 @@ def _expand_models(names: list[str], runtime: str, category: str) -> list[str]:
     return [name for name in catalog if name in VL_MODELS]
 
 
-def _task_overrides(runtime: str, model: str, max_tokens: int) -> dict[str, Any]:
+def _task_overrides(
+    runtime: str,
+    model: str,
+    max_tokens: int,
+    device: str | None,
+) -> dict[str, Any]:
     # Task functions take typed refs; get_runtime accepts plain strings.
     return {
         "runtime": get_runtime_spec(runtime),
         "model": get_model_ref(model),
         "max_tokens": max_tokens,
+        "device": device,
     }
 
 
@@ -136,14 +151,15 @@ def _benchmark_chat_model(
     tasks: list[str],
     warm_calls: int,
     max_tokens: int,
+    device: str | None,
 ) -> list[str]:
     clear_runtime_cache()
-    overrides = _task_overrides(runtime, model, max_tokens)
+    overrides = _task_overrides(runtime, model, max_tokens, device)
 
     load_stats = TimingStats("Model load (`preload()`)")
     started = time.perf_counter()
     try:
-        get_runtime({"runtime": runtime, "model": model}).preload()
+        get_runtime({"runtime": runtime, "model": model, "device": device}).preload()
     except Exception as exc:  # keep an `all` sweep alive when one model fails
         print(f"  load failed: {exc}", flush=True)
         return [f"### `{model}`", "", f"Model load failed: {exc}", ""]
@@ -186,11 +202,16 @@ def _benchmark_embed_model(
     runtime: str,
     model: str,
     warm_calls: int,
+    device: str | None,
 ) -> list[str]:
     # preload() warms the generator, not the embedder, so for embeddings the
     # first call is timed separately as the load-including cold call.
     clear_runtime_cache()
-    overrides = {"runtime": get_runtime_spec(runtime), "model": get_model_ref(model)}
+    overrides = {
+        "runtime": get_runtime_spec(runtime),
+        "model": get_model_ref(model),
+        "device": device,
+    }
 
     first_stats = TimingStats("First `embed` (includes model load)")
     warm_stats = TimingStats("`embed` (warm)")
@@ -223,6 +244,7 @@ def _benchmark_vl_model(
     model: str,
     warm_calls: int,
     max_tokens: int,
+    device: str | None,
 ) -> list[str]:
     # Image inputs go through the runtime's multimodal client, which loads
     # separately from the text client, so the first call is timed as cold.
@@ -240,6 +262,7 @@ def _benchmark_vl_model(
         "runtime": runtime,
         "model": model,
         "max_tokens": max_tokens,
+        "device": device,
     }
 
     first_stats = TimingStats("First VL call (includes model load)")
@@ -284,7 +307,8 @@ def run_benchmark(args: argparse.Namespace) -> list[str]:
     lines = [
         "# Task Benchmark",
         "",
-        f"Runtime `{args.runtime}`, {args.warm_calls} warm calls per task, "
+        f"Runtime `{args.runtime}` (device: {args.device or 'auto'}), "
+        f"{args.warm_calls} warm calls per task, "
         f"max_tokens {args.max_tokens}. Model load is paid once per model via "
         "`preload()`; task calls below run against the warm runtime.",
         "",
@@ -306,6 +330,7 @@ def run_benchmark(args: argparse.Namespace) -> list[str]:
                     tasks=chat_tasks,
                     warm_calls=args.warm_calls,
                     max_tokens=args.max_tokens,
+                    device=args.device,
                 )
             )
 
@@ -317,6 +342,7 @@ def run_benchmark(args: argparse.Namespace) -> list[str]:
                     runtime=args.runtime,
                     model=embed_model,
                     warm_calls=args.warm_calls,
+                    device=args.device,
                 )
             )
 
@@ -334,6 +360,7 @@ def run_benchmark(args: argparse.Namespace) -> list[str]:
                     model=vl_model,
                     warm_calls=args.warm_calls,
                     max_tokens=args.max_tokens,
+                    device=args.device,
                 )
             )
 
@@ -345,7 +372,7 @@ def run_benchmark(args: argparse.Namespace) -> list[str]:
             "  may retry on validation failures, so their timings can exceed a",
             "  single `complete()` call.",
             "- VL (image) inputs are supported by the llama.cpp runtime for",
-            "  Gemma and Qwen VL GGUF models only.",
+            "  Gemma, Qwen VL, and LiquidAI LFM VL GGUF models only.",
             "- Only models from the `aibackends.models` catalog are benchmarked.",
         ]
     )
@@ -369,6 +396,12 @@ def main() -> None:
         choices=sorted(ALL_TASKS),
     )
     parser.add_argument("--max-tokens", type=int, default=128)
+    parser.add_argument(
+        "--device",
+        default=None,
+        choices=["cpu", "gpu"],
+        help="Force CPU or GPU inference; default auto-detects the hardware.",
+    )
     parser.add_argument(
         "--embed-models",
         nargs="+",
@@ -398,8 +431,9 @@ def main() -> None:
         print(f"Benchmark failed: {exc}", file=sys.stderr)
         raise SystemExit(1) from exc
 
+    device_suffix = f"-{args.device}" if args.device else ""
     report_path = write_report(
-        name=f"tasks-{args.runtime}",
+        name=f"tasks-{args.runtime}{device_suffix}",
         lines=lines,
         output_dir=args.output_dir,
     )
