@@ -6,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+import pytest
 from pydantic import BaseModel
 
 from aibackends.core.model_manager import ModelLocation
@@ -213,6 +214,93 @@ def test_multimodal_family_detects_qwen_vl(tmp_path):
     )
 
     assert family == "qwen-vl"
+
+
+def test_multimodal_family_detects_lfm2_vl(tmp_path):
+    model_path = tmp_path / "LFM2.5-VL-3B-Q4_K_M.gguf"
+    model_path.write_text("weights")
+    runtime = LlamaCppRuntime(RuntimeConfig(runtime="llamacpp", model="lfm2.5-vl-3b"))
+
+    family = runtime._multimodal_family(
+        ModelLocation(
+            source="LiquidAI/LFM2.5-VL-3B-GGUF",
+            local_path=str(model_path),
+        )
+    )
+
+    assert family == "lfm2-vl"
+
+
+def test_llamacpp_lfm_vl_keeps_system_prompt_in_payload(monkeypatch, tmp_path):
+    image_path = tmp_path / "receipt.png"
+    image_path.write_bytes(b"\x89PNG\r\n\x1a\nreceipt")
+
+    runtime = LlamaCppRuntime(RuntimeConfig(runtime="llamacpp", model="lfm2.5-vl-3b"))
+    client = FakeMultimodalClient()
+    monkeypatch.setattr(runtime, "_load_multimodal_client", lambda: client)
+
+    runtime.complete(
+        [
+            {"role": "system", "content": "You extract receipt text."},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Describe this image."},
+                    {"type": "image_url", "image_url": {"url": str(image_path)}},
+                ],
+            },
+        ],
+        schema=VisionResult,
+    )
+
+    assert client.last_kwargs is not None
+    payload_messages = client.last_kwargs["messages"]
+    assert len(payload_messages) == 2
+    assert payload_messages[0]["role"] == "system"
+    assert "You extract receipt text." in payload_messages[0]["content"]
+    assert payload_messages[1]["role"] == "user"
+
+
+def test_lfm2_vl_chat_handler_renders_chatml(monkeypatch, tmp_path):
+    captured: dict[str, Any] = {}
+
+    class FakeLlava15ChatHandler:
+        def __init__(self, *, clip_model_path: str, verbose: bool = False) -> None:
+            captured["clip_model_path"] = clip_model_path
+            captured["verbose"] = verbose
+
+    monkeypatch.setitem(
+        sys.modules,
+        "llama_cpp.llama_chat_format",
+        SimpleNamespace(Llava15ChatHandler=FakeLlava15ChatHandler),
+    )
+
+    runtime = LlamaCppRuntime(RuntimeConfig(runtime="llamacpp", model="lfm2.5-vl-3b"))
+    mmproj_path = tmp_path / "mmproj-LFM2.5-VL-3B-F16.gguf"
+    handler = runtime._build_lfm2_vl_chat_handler(str(mmproj_path))
+
+    assert captured["clip_model_path"] == str(mmproj_path)
+
+    jinja2 = pytest.importorskip("jinja2")
+    rendered = jinja2.Template(handler.CHAT_FORMAT).render(
+        messages=[
+            {"role": "system", "content": "You extract receipt text."},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Describe this image."},
+                    {"type": "image_url", "image_url": {"url": "data:image/png;base64,AAAA"}},
+                ],
+            },
+        ],
+        add_generation_prompt=True,
+    )
+
+    assert rendered == (
+        "<|im_start|>system\nYou extract receipt text.<|im_end|>\n"
+        "<|im_start|>user\nDescribe this image.data:image/png;base64,AAAA<|im_end|>\n"
+        "<|im_start|>assistant\n"
+    )
 
 
 def test_resolve_mmproj_path_uses_explicit_override(tmp_path):

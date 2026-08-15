@@ -112,6 +112,48 @@ LFM2.5 is a reasoning model with native tool calling. See
 `examples/tasks/tool_calling_lfm.py` for a runnable tool-calling demo on
 either runtime.
 
+### LiquidAI LFM2.5-VL-3B (vision)
+
+`LFM25_VL_3B` targets `LiquidAI/LFM2.5-VL-3B-GGUF` on `llamacpp` (image
+inputs are llama.cpp-only). The profile defaults to the `Q4_K_M` quantization
+and applies the same generation defaults as LFM2.5-2.6B. The matching
+`mmproj` projector is downloaded from the same repository automatically.
+
+```python
+from pydantic import BaseModel
+
+from aibackends.models import LFM25_VL_3B
+from aibackends.runtimes import LLAMACPP
+from aibackends.steps.enrich import VisionExtractor
+from aibackends.steps.ingest import ImageIngestor
+from aibackends.workflows import Pipeline
+
+
+class Receipt(BaseModel):
+    merchant: str | None = None
+    total: float | None = None
+
+
+class ReceiptOCR(Pipeline):
+    steps = [
+        ImageIngestor(),
+        VisionExtractor(
+            schema=Receipt,
+            prompt="Extract the merchant and total from this receipt.",
+        ),
+    ]
+
+
+result = ReceiptOCR(runtime=LLAMACPP, model=LFM25_VL_3B, device="cpu").run(
+    "receipt.jpeg"
+)
+```
+
+The model is small enough for CPU inference with the default `Q4_K_M` GGUF;
+see the committed CPU report in `benchmarks/reports/` (task benchmark,
+`llamacpp`, device `cpu`) for latency numbers. A runnable receipt-extraction
+demo lives at `examples/workflows/image_ocr_lfm.py`.
+
 If you need a different runtime for one call, override it explicitly:
 
 ```python

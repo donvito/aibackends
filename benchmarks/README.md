@@ -59,7 +59,17 @@ python benchmarks/benchmark_tasks.py --runtime transformers \
 # Every recommended chat, embedding, and VL model on llama.cpp
 python benchmarks/benchmark_tasks.py --runtime llamacpp \
     --models all --embed-models all --vl-models all
+
+# LiquidAI LFM2.5-VL-3B image latency on CPU (Q4_K_M profile default)
+python benchmarks/benchmark_tasks.py --runtime llamacpp --device cpu \
+    --tasks vl --vl-models lfm2.5-vl-3b
 ```
+
+`--device cpu` (or `gpu`) forces the device instead of auto-detecting the
+hardware. Forced-device runs get their own report file
+(`tasks-<runtime>-<device>`), so CPU and GPU numbers can be committed side
+by side. GGUF quantization follows the model profile (for example both LFM2.5
+profiles default to `Q4_K_M`) unless overridden in the config.
 
 Requires `aibackends[transformers]` or `aibackends[llamacpp]`.
 
