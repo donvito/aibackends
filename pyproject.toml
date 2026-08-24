@@ -110,6 +110,7 @@ all = [
   "faster-whisper",
   "ffmpeg-python",
   "gliner",
+  "gliner2[local]>=2.0.0",
   "huggingface_hub",
   "llama-cpp-python",
   "mkdocs-material",
@@ -117,6 +118,7 @@ all = [
   "mypy",
   "peft",
   "pillow",
+  "protobuf>=7.36.0",
   "pymupdf",
   "pytest",
   "pytest-asyncio",
@@ -125,6 +127,10 @@ all = [
   "transformers",
   "types-PyYAML",
   "uvicorn",
+]
+guardrails = [
+  "gliner2[local]>=2.0.0",
+  "protobuf>=7.36.0",
 ]
 
 [project.scripts]
@@ -182,6 +188,7 @@ module = [
   "faster_whisper",
   "fitz",
   "gliner",
+  "gliner2",
   "huggingface_hub",
   "llama_cpp",
   "llama_cpp.*",

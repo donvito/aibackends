@@ -17,6 +17,18 @@ from aibackends.tasks.extract_invoice import (
     extract_invoice,
     extract_invoice_async,
 )
+from aibackends.tasks.moderation import (
+    ModeratePromptTask,
+    ModerateResponseTask,
+    moderate_prompt,
+    moderate_prompt_async,
+    moderate_prompts,
+    moderate_prompts_async,
+    moderate_response,
+    moderate_response_async,
+    moderate_responses,
+    moderate_responses_async,
+)
 from aibackends.tasks.redact_pii import RedactPIITask, redact_pii, redact_pii_async
 from aibackends.tasks.registry import (
     available_tasks,
@@ -51,6 +63,16 @@ __all__ = [
     "extract_invoice_async",
     "get_task",
     "list_tasks",
+    "ModeratePromptTask",
+    "ModerateResponseTask",
+    "moderate_prompt",
+    "moderate_prompt_async",
+    "moderate_prompts",
+    "moderate_prompts_async",
+    "moderate_response",
+    "moderate_response_async",
+    "moderate_responses",
+    "moderate_responses_async",
     "RedactPIITask",
     "redact_pii",
     "redact_pii_async",

@@ -110,6 +110,10 @@ class TaskSpec:
     accepts_model: bool = True
     accepts_backend: bool = False
     accepts_labels: bool = False
+    accepts_prompt: bool = False
+    accepts_device: bool = False
+    accepts_threshold: bool = False
+    accepts_category_threshold: bool = False
     requires_labels: bool = False
     requires_schema: bool = False
 

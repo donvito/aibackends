@@ -77,6 +77,11 @@ The backend module/package exports `PII_BACKEND_SPEC`. Specs that set
 `load_model` get a free `backend.load()` to pre-warm any in-process model and
 `backend.redact(text, labels=...)` to run detection plus redaction in one call.
 
+Moderation backends implement `BaseModerationBackend` under
+`src/aibackends/backends/moderation` and register an instance with
+`register_moderation_backend(...)`. They expose single and native-batch prompt
+and response methods because moderation schemas differ by side.
+
 ## Add A Task
 
 Create one task module under `src/aibackends/tasks`, implement `BaseTask`, and

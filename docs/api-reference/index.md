@@ -10,6 +10,11 @@ The public API is grouped into:
 - `aibackends.runtimes.get_runtime_spec(name)`
 - `aibackends.models.get_model_ref(name)`
 - `aibackends.tasks.*`
+- `aibackends.tasks.moderate_prompt(...)`
+- `aibackends.tasks.moderate_response(...)`
+- `aibackends.tasks.moderate_prompts(...)`
+- `aibackends.tasks.moderate_responses(...)`
+- `aibackends.backends.moderation.*`
 - `aibackends.tasks.BaseTask`
 - `aibackends.tasks.create_task(TaskClass, ...)`
 - `aibackends.workflows.*`

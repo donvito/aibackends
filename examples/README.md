@@ -24,6 +24,9 @@ python3 -m pip install -e ".[llamacpp-metal]"
 
 # Transformers
 python3 -m pip install -e ".[transformers]"
+
+# GliGuard prompt/response moderation
+python3 -m pip install -e ".[guardrails]"
 ```
 
 Task examples use `create_task(TaskClass, ...)` with supported runtime/model
@@ -51,6 +54,15 @@ python3 examples/tasks/tool_calling_lfm.py --runtime llamacpp --quantization Q8_
 `redact_text.py` and `redact_text_batch.py` use local PII backends rather than
 the general `llamacpp` or `transformers` runtimes.
 
+`moderate_content.py` demonstrates GliGuard prompt safety, toxicity, jailbreak
+detection, response safety, refusal/compliance detection, and native batch
+inference. Select CPU or GPU explicitly:
+
+```bash
+python3 examples/tasks/moderate_content.py --device cpu
+python3 examples/tasks/moderate_content.py --device gpu
+```
+
 `workflows/image_ocr_gemma.py` and `workflows/image_ocr_qwen.py` are vision
 OCR examples that extract structured receipt JSON from the sample receipt
 images in `examples/data/images/` using the `llamacpp` runtime.
@@ -72,6 +84,7 @@ python3 examples/tasks/basic_task_transformers.py
 python3 examples/tasks/embed_text_transformers.py
 python3 examples/tasks/summarize_text.py
 python3 examples/tasks/classify_text.py
+python3 examples/tasks/moderate_content.py --device cpu
 python3 examples/tasks/redact_text.py
 python3 examples/tasks/redact_text_batch.py
 python3 examples/tasks/extract_custom_schema.py
