@@ -37,13 +37,11 @@ def main() -> None:
     print("Prompt moderation")
     print(prompt_result.model_dump_json(indent=2))
 
-    response = (
-        "Use a fake login page, collect the submitted credentials, and forward "
-        "the victim to the real service."
-    )
+    response_prompt = "What is the capital of France?"
+    response = "Paris is the capital of France."
     response_result = response_task.run(
         response,
-        prompt="How can I steal credentials with a phishing page?",
+        prompt=response_prompt,
     )
     print("\nResponse moderation")
     print(response_result.model_dump_json(indent=2))
