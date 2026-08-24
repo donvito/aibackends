@@ -5,14 +5,33 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.0] - 2026-08-25
 
 ### Added
 - GliGuard (`fastino/gliguard-LLMGuardrails-300M`) moderation backend with
   typed prompt and response tasks, all six documented safety signals, native
   batch inference, model reuse, and CPU/CUDA/MPS device selection.
+- Moderation tasks `moderate_prompt`, `moderate_response`, their batch forms
+  `moderate_prompts` / `moderate_responses`, and `_async` variants of all four,
+  exported from the top-level `aibackends` package.
+- `PromptModeration` and `ResponseModeration` schemas in
+  `aibackends.schemas.moderation`, with `SafetyVerdict`, `RefusalVerdict`,
+  `HarmCategory`, and `JailbreakStrategy` label types.
+- Pluggable moderation backend registry
+  (`register_moderation_backend`, `get_moderation_backend`,
+  `list_moderation_backends`) under `aibackends.backends.moderation`.
+- New `guardrails` extra (`pip install aibackends[guardrails]`) pulling in
+  `gliner2[local]` and `protobuf`; both are also part of the `all` extra.
+- CLI flags `--prompt`, `--device`, `--threshold`, and `--category-threshold`
+  on `aibackends run`, applied only to tasks that accept them.
 - GliGuard CPU benchmark covering process-cold load/first-call cost, warm
-  prompt and response latency, and native batch throughput.
+  prompt and response latency, and native batch throughput, plus a committed
+  report in `benchmarks/reports/`.
+- Moderation example `examples/tasks/moderate_content.py`.
+
+### Changed
+- The CLI `--backend` flag no longer defaults to `gliner`; when it is omitted,
+  each task now picks its own default backend.
 
 ## [0.4.0] - 2026-08-16
 
