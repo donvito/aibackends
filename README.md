@@ -11,6 +11,16 @@ in plain Python with `llamacpp` and `transformers`.
 - Reusable tasks and workflows for scripts, apps, and batch jobs
 - Practical local examples for text, image OCR, documents, audio, and video
 
+## Try it in Colab
+
+Run local prompt and response moderation with GliGuard in the browser — no
+install, no API key, works on a free CPU runtime:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/gliguard_moderation_colab.ipynb)
+
+The notebook walks through all six moderation signals, native batch inference,
+threshold tuning, async variants, a guarded chat turn, and the CLI equivalents.
+
 ## Install
 
 ```bash

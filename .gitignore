@@ -210,3 +210,7 @@ __marimo__/
 .DS_Store
 # Benchmark run lock
 benchmarks/.benchmark.lock
+
+# R
+.Rhistory
+.RData
