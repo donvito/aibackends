@@ -1,7 +1,7 @@
 # Benchmarks
 
-Scripts that measure the effect of model caching (runtime reuse, PII backend
-caches) and task latency per model, writing markdown reports to
+Scripts that measure the effect of model caching (runtime reuse, PII and
+moderation backend caches) and task latency per model, writing markdown reports to
 `benchmarks/reports/`. Reports are dated and intended to be committed so
 results can be referenced on GitHub.
 
@@ -22,7 +22,7 @@ enforce this:
 
 ```bash
 python benchmarks/run_all.py --runtime transformers --warm-calls 10
-python benchmarks/run_all.py --skip pii --warm-calls 100
+python benchmarks/run_all.py --skip pii guardrails --warm-calls 100
 ```
 
 ## Scripts
@@ -82,6 +82,23 @@ python benchmarks/benchmark_pii_backends.py --backend gliner
 ```
 
 Requires `aibackends[pii]`.
+
+### `benchmark_gliguard_cpu.py`
+
+Forces GliGuard onto CPU and measures the first moderation call including
+model loading, explicit `backend.load()`, warm prompt/response moderation, and
+native prompt/response batch throughput.
+
+```bash
+python benchmarks/benchmark_gliguard_cpu.py \
+    --warm-calls 10 --batch-size 8
+```
+
+The report includes total batch latency, derived per-item latency, and
+items/second. The model must already be downloaded if you want the first-call
+number to exclude network transfer.
+
+Requires `aibackends[guardrails]`.
 
 ## Consistency And Degradation
 

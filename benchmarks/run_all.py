@@ -7,7 +7,7 @@ running concurrently.
 
 Usage:
     python benchmarks/run_all.py --runtime transformers --warm-calls 10
-    python benchmarks/run_all.py --skip pii --warm-calls 100
+    python benchmarks/run_all.py --skip pii guardrails --warm-calls 100
 """
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ BENCHMARKS: dict[str, str] = {
     "runtime-reuse": "benchmark_runtime_reuse.py",
     "tasks": "benchmark_tasks.py",
     "pii": "benchmark_pii_backends.py",
+    "guardrails": "benchmark_gliguard_cpu.py",
 }
 
 
