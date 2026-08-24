@@ -118,6 +118,7 @@ all = [
   "mypy",
   "peft",
   "pillow",
+  "protobuf>=7.36.0",
   "pymupdf",
   "pytest",
   "pytest-asyncio",
@@ -128,7 +129,8 @@ all = [
   "uvicorn",
 ]
 guardrails = [
-    "gliner2[local]>=2.0.0",
+  "gliner2[local]>=2.0.0",
+  "protobuf>=7.36.0",
 ]
 
 [project.scripts]
