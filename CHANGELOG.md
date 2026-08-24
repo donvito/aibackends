@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- GliGuard (`fastino/gliguard-LLMGuardrails-300M`) moderation backend with
+  typed prompt and response tasks, all six documented safety signals, native
+  batch inference, model reuse, and CPU/CUDA/MPS device selection.
+
 ## [0.4.0] - 2026-08-16
 
 ### Added

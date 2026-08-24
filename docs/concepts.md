@@ -47,16 +47,19 @@ Runtime modules live in `src/aibackends/core/runtimes` and export
 A backend is a swappable implementation for one capability. It may use a model,
 but it does not implement the general `complete()` / `embed()` runtime contract.
 
-PII detection is the current example:
+PII detection and content moderation are current examples:
 
 - `gliner` uses the `nvidia/gliner-pii` model and returns detected PII spans.
 - `openai-privacy` uses the local `privacy-filter` model
   (`openai/privacy-filter`) through a token classification pipeline.
+- `gliguard` uses `fastino/gliguard-LLMGuardrails-300M` for prompt safety,
+  toxicity, jailbreak detection, response safety, and refusal detection.
 
-These are model-backed PII backends, not runtimes. They solve a specific
-capability and return domain objects such as `PIIEntity`.
+These are model-backed capability backends, not runtimes. They solve a specific
+capability and return domain objects such as `PIIEntity`, `PromptModeration`,
+or `ResponseModeration`.
 
-Current PII backend files live under `src/aibackends/backends/pii`.
+Backend files are grouped by capability under `src/aibackends/backends`.
 
 ## Model
 
@@ -68,6 +71,7 @@ Examples:
 - `unsloth/gemma-4-E2B-it-GGUF`
 - `nvidia/gliner-pii`
 - `openai/privacy-filter`
+- `fastino/gliguard-LLMGuardrails-300M`
 
 Transformer model profiles live under `src/aibackends/models`. They can provide
 aliases, Hugging Face model ids, chat templates, and generation defaults. User

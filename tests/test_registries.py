@@ -4,6 +4,7 @@ from types import MethodType
 
 import pytest
 
+from aibackends.backends.moderation import get_moderation_backend
 from aibackends.backends.pii import get_pii_backend
 from aibackends.core.config import get_runtime
 from aibackends.core.model_registry import register_model_profile
@@ -16,6 +17,8 @@ from aibackends.tasks import (
     BaseTask,
     ClassifyTask,
     ExtractInvoiceTask,
+    ModeratePromptTask,
+    ModerateResponseTask,
     SummarizeTask,
     available_tasks,
     create_task,
@@ -81,6 +84,13 @@ def test_pii_backend_is_discovered_from_backend_spec():
     assert backend.model_id == "openai/privacy-filter"
 
 
+def test_gliguard_moderation_backend_is_discoverable() -> None:
+    backend = get_moderation_backend("gli-guard")
+
+    assert backend.name == "gliguard"
+    assert backend.model_id == "fastino/gliguard-LLMGuardrails-300M"
+
+
 def test_runtime_and_model_catalogs_are_discoverable():
     runtimes = available_runtimes()
     models = available_models()
@@ -109,6 +119,8 @@ def test_available_tasks_returns_canonical_names_mapped_to_task_classes():
 
     assert tasks["summarize"] is SummarizeTask
     assert tasks["extract-invoice"] is ExtractInvoiceTask
+    assert tasks["moderate-prompt"] is ModeratePromptTask
+    assert tasks["moderate-response"] is ModerateResponseTask
     assert "extract_invoice" not in tasks
 
 

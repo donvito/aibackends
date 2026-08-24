@@ -24,7 +24,24 @@ def run_task(
     labels: str | None = typer.Option(
         None, help="Comma-separated labels for classify or GLiNER redact-pii."
     ),
-    backend: str = typer.Option("gliner", help="PII backend to use."),
+    backend: str | None = typer.Option(None, help="Capability backend override."),
+    prompt: str | None = typer.Option(
+        None,
+        help="Optional original prompt for response moderation.",
+    ),
+    device: str | None = typer.Option(
+        None,
+        help="Device for supported tasks: cpu, gpu, cuda, cuda:<index>, or mps.",
+    ),
+    threshold: float | None = typer.Option(
+        None,
+        help="Overall classification threshold for supported tasks.",
+    ),
+    category_threshold: float | None = typer.Option(
+        None,
+        "--category-threshold",
+        help="Multi-label category threshold for supported tasks.",
+    ),
     schema: str | None = typer.Option(None, help="Dotted import path for generic extract schema."),
     runtime: str | None = typer.Option(None, help="Runtime override."),
     model: str | None = typer.Option(None, help="Model override."),
@@ -36,8 +53,16 @@ def run_task(
         raise typer.BadParameter(f"--labels is required for {task.name}")
     if task.accepts_labels and parsed_labels is not None:
         kwargs["labels"] = parsed_labels
-    if task.accepts_backend:
+    if task.accepts_backend and backend is not None:
         kwargs["backend"] = backend
+    if task.accepts_prompt and prompt is not None:
+        kwargs["prompt"] = prompt
+    if task.accepts_device and device is not None:
+        kwargs["device"] = device
+    if task.accepts_threshold and threshold is not None:
+        kwargs["threshold"] = threshold
+    if task.accepts_category_threshold and category_threshold is not None:
+        kwargs["category_threshold"] = category_threshold
     if task.requires_schema:
         if not schema:
             raise typer.BadParameter(f"--schema is required for {task.name}")
