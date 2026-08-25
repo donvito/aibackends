@@ -1,0 +1,102 @@
+MASTER SERVICES AGREEMENT
+
+This Master Services Agreement (the "Agreement") is entered into as of March 3, 2026 (the
+"Effective Date") by and between Northwind Analytics GmbH, a company organized under the laws
+of Germany with its registered office at Kaiserstrasse 112, 60313 Frankfurt am Main, Germany
+("Provider"), and Beacon Retail Group, Inc., a Delaware corporation with its principal place of
+business at 4800 Lakeside Commons Drive, Suite 1200, Atlanta, Georgia 30339, United States
+("Customer"). Provider and Customer are each a "Party" and together the "Parties".
+
+RECITALS
+
+WHEREAS, Provider is in the business of delivering data engineering, forecasting, and analytics
+services; and WHEREAS, Customer desires to engage Provider to deliver such services under the
+terms set out below; NOW, THEREFORE, in consideration of the mutual covenants contained herein,
+the Parties agree as follows.
+
+1. SERVICES
+
+1.1 Scope. Provider shall deliver the demand-forecasting platform described in Statement of
+Work No. 1, including data pipeline construction, model training, weekly forecast delivery, and
+quarterly accuracy reviews. Provider shall assign Dr. Elena Vasquez as engagement lead and
+Marcus Chen as technical architect for the duration of the engagement.
+
+1.2 Service Levels. Provider shall maintain platform availability of at least 99.5% measured
+monthly, excluding scheduled maintenance windows announced at least five business days in
+advance. Provider shall respond to severity-one incidents within thirty minutes and resolve
+them within four hours.
+
+1.3 Personnel Obligations. Provider shall ensure that all personnel assigned to the Customer
+account complete Customer's vendor security training within ten business days of assignment and
+shall not subcontract any portion of the services without Customer's prior written consent,
+which consent shall not be unreasonably withheld.
+
+2. FEES AND PAYMENT
+
+2.1 Fees. Customer shall pay Provider a fixed monthly fee of USD 84,500, invoiced monthly in
+arrears. Invoices are payable within forty-five days of receipt by wire transfer to the account
+designated by Provider in writing.
+
+2.2 Late Payment. Any amount not paid when due shall accrue interest at the lesser of one
+percent per month or the maximum rate permitted by applicable law.
+
+2.3 Expenses. Customer shall reimburse Provider for reasonable, pre-approved travel expenses
+incurred in connection with on-site work at Customer's Atlanta headquarters, provided that
+individual expense items exceeding USD 500 require written pre-approval from Customer's program
+manager, Danielle Okafor.
+
+3. TERM AND TERMINATION
+
+3.1 Term. This Agreement commences on the Effective Date and continues for an initial term of
+twenty-four months, after which it renews automatically for successive twelve-month periods
+unless either Party gives written notice of non-renewal at least ninety days before the end of
+the then-current term.
+
+3.2 Termination for Convenience. Customer may terminate this Agreement or any Statement of Work
+for convenience upon sixty days' prior written notice to Provider, in which case Customer shall
+pay all fees accrued through the effective date of termination plus a wind-down fee equal to
+one month of the then-current monthly fee.
+
+3.3 Termination for Cause. Either Party may terminate this Agreement immediately upon written
+notice if the other Party materially breaches this Agreement and fails to cure such breach
+within thirty days after receiving written notice describing the breach in reasonable detail.
+
+4. CONFIDENTIALITY AND DATA PROTECTION
+
+4.1 Confidential Information. Each Party shall protect the other Party's confidential
+information with at least the same degree of care it uses to protect its own confidential
+information, and in no event less than reasonable care, and shall use such information solely
+to perform its obligations under this Agreement.
+
+4.2 Data Protection. Provider shall process Customer personal data only on documented
+instructions from Customer, shall maintain the technical and organizational measures described
+in Annex 2, and shall notify Customer without undue delay and in any event within seventy-two
+hours after becoming aware of a personal data breach affecting Customer data.
+
+5. INDEMNIFICATION
+
+5.1 Provider Indemnity. Provider shall defend, indemnify, and hold harmless Customer and its
+officers, directors, and employees from and against any third-party claim alleging that the
+services or deliverables infringe any patent, copyright, or trade secret, and shall pay all
+damages finally awarded and reasonable attorneys' fees, provided that Customer promptly
+notifies Provider of the claim and gives Provider sole control of the defense and settlement.
+
+6. GENERAL
+
+6.1 Governing Law. This Agreement is governed by the laws of the State of New York, without
+regard to its conflict of laws principles, and the Parties consent to the exclusive
+jurisdiction of the state and federal courts located in New York County, New York.
+
+6.2 Notices. Notices under this Agreement must be in writing and delivered to Northwind
+Analytics GmbH, Attn: Legal Department, Kaiserstrasse 112, 60313 Frankfurt am Main, Germany, or
+to Beacon Retail Group, Inc., Attn: General Counsel, 4800 Lakeside Commons Drive, Suite 1200,
+Atlanta, Georgia 30339, United States, as applicable.
+
+6.3 Entire Agreement. This Agreement, together with its annexes and any executed Statements of
+Work, constitutes the entire agreement between the Parties regarding its subject matter and
+supersedes all prior agreements and understandings, whether written or oral.
+
+IN WITNESS WHEREOF, the Parties have executed this Agreement as of the Effective Date.
+
+Northwind Analytics GmbH                      Beacon Retail Group, Inc.
+By: Dr. Elena Vasquez, Managing Director      By: Danielle Okafor, Chief Operating Officer
