@@ -15,6 +15,13 @@ The public API is grouped into:
 - `aibackends.tasks.moderate_prompts(...)`
 - `aibackends.tasks.moderate_responses(...)`
 - `aibackends.backends.moderation.*`
+- `aibackends.tasks.extract_entities(...)`
+- `aibackends.tasks.extract_entities_batch(...)`
+- `aibackends.tasks.classify_text(...)`
+- `aibackends.tasks.classify_texts(...)`
+- `aibackends.tasks.extract_graph(...)`
+- `aibackends.backends.extraction.*`
+- `aibackends.schemas.extraction.*`
 - `aibackends.tasks.BaseTask`
 - `aibackends.tasks.create_task(TaskClass, ...)`
 - `aibackends.workflows.*`

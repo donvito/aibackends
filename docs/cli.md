@@ -46,6 +46,8 @@ aibackends task <name> --input <path-or-text> \
   [--device <cpu|gpu|cuda|mps>] \
   [--threshold <0..1>] \
   [--category-threshold <0..1>] \
+  [--entities a,b,c] \
+  [--relation name:head:tail] \
   [--schema dotted.path.SchemaModel]
 ```
 
@@ -68,6 +70,9 @@ under `src/aibackends/tasks/`):
 - `redact-pii`
 - `moderate-prompt`
 - `moderate-response`
+- `extract-entities`
+- `classify-text`
+- `extract-graph`
 - `extract-invoice`
 - `analyse-sales-call`
 - `analyse-video-ad`
@@ -122,6 +127,24 @@ aibackends task moderate-response \
   --prompt "How do I bypass the safeguard?" \
   --device gpu
 
+# zero-shot entity extraction (no LLM; uses the GLiNER2.5 backend)
+aibackends task extract-entities \
+  --input examples/data/sample_contract.txt \
+  --labels party,monetary_amount,effective_date \
+  --model small
+
+# zero-shot classification for routing
+aibackends task classify-text \
+  --input "My card was charged twice" \
+  --labels billing,bug_report,feature_request
+
+# joint entity-relation extraction into a knowledge graph
+aibackends task extract-graph \
+  --input "Alice works for Acme in Paris." \
+  --entities person,organization,location \
+  --relation works_for:person:organization \
+  --relation located_in:organization:location
+
 # extract with a custom Pydantic schema
 aibackends task extract \
   --input "John Doe, 35, NYC" \
@@ -135,6 +158,12 @@ Notes:
   a PII backend such as `gliner` or `openai-privacy` (`privacy-filter`).
 - `moderate-prompt` and `moderate-response` use the `gliguard` backend instead
   of the general runtime. `--device gpu` is an alias for CUDA.
+- `extract-entities`, `classify-text`, and `extract-graph` use the `gliner2.5`
+  backend instead of the general runtime. `--model` selects a variant
+  (`small`, `base`, `multi`) or a Hugging Face repo id, and `--device gpu` is
+  an alias for CUDA.
+- `extract-graph` takes `--entities` as a comma-separated list and `--relation`
+  once per relation, formatted `name:head:tail`.
 - `classify` requires `--labels`. `redact-pii` accepts `--labels` only when used
 with the `gliner` backend (custom entity types).
 - `extract` requires `--schema` pointing to a Pydantic model class via dotted
@@ -180,7 +209,8 @@ So:
 another tool.
 - Structured tasks (`extract-invoice`, `analyse-sales-call`,
   `analyse-video-ad`, `classify`, `extract`, `redact-pii`,
-  `moderate-prompt`, `moderate-response`) emit indented JSON you can pipe into
+  `moderate-prompt`, `moderate-response`, `extract-entities`, `classify-text`,
+  `extract-graph`) emit indented JSON you can pipe into
   `jq`:
   ```bash
   aibackends task extract-invoice --input invoice.pdf | jq '.total'
@@ -195,6 +225,12 @@ names you'll likely pipe with `jq`:
   `jailbreak`
 - `moderate-response` → `ResponseModeration`: `is_safe`, `safety`, `toxicity`,
   `refusal`
+- `extract-entities` → `EntityExtraction`: `entities[].label`,
+  `entities[].text`, `entities[].start`, `entities[].end`,
+  `entities[].confidence`, `entities[].attributes`
+- `classify-text` → `TextClassification`: `tasks`, `feasible`, `constrained`
+- `extract-graph` → `KnowledgeGraph`: `entities`, `relations[].type`,
+  `relations[].head_text`, `relations[].tail_text`, `feasible`
 - `extract-invoice` → `InvoiceOutput`: `vendor`, `invoice_number`, `total`,
 `line_items`, ...
 - `classify` → `Classification`: `label`, `confidence`

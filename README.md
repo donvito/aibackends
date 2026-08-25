@@ -8,6 +8,8 @@ in plain Python with `llamacpp` and `transformers`.
 - First-class `llamacpp` and `transformers` runtimes
 - Typed outputs for extraction and analysis tasks
 - Local prompt and response moderation with GliGuard on CPU or GPU
+- Zero-shot entity, classification, and knowledge-graph extraction with
+  GLiNER2.5 — no LLM in the loop
 - Reusable tasks and workflows for scripts, apps, and batch jobs
 - Practical local examples for text, image OCR, documents, audio, and video
 
@@ -20,6 +22,11 @@ install, no API key, works on a free CPU runtime:
 
 The notebook walks through all six moderation signals, native batch inference,
 threshold tuning, async variants, a guarded chat turn, and the CLI equivalents.
+
+Or run zero-shot extraction with GLiNER2.5 — entities, constrained
+classification, and knowledge graphs on the same free CPU runtime:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/gliner25_extraction_colab.ipynb)
 
 ## Install
 
@@ -38,6 +45,7 @@ pip install aibackends[audio]
 pip install aibackends[video]
 pip install aibackends[pii]
 pip install aibackends[guardrails]
+pip install aibackends[extraction]
 ```
 
 For GPU clouds (RunPod, Modal, ...), a CUDA-enabled `Dockerfile` is included;
@@ -114,6 +122,48 @@ GliGuard runs prompt safety, toxicity, and jailbreak detection in one encoder
 pass. Response moderation similarly returns safety, toxicity, and
 refusal/compliance. `moderate_prompts(...)` and `moderate_responses(...)` use
 the model's native batch API.
+
+**Extract entities, classify, and build a graph with GLiNER2.5**
+
+```python
+from aibackends import classify_text, extract_entities, extract_graph
+
+text = "Alice Reyes emailed alice@example.com from Acme's Paris office."
+
+entities = extract_entities(
+    text,
+    labels=["person", "email", "organization", "location"],
+    model="small",  # "small" | "base" (default) | "multi", or a HF repo id
+)
+for entity in entities.entities:
+    print(entity.label, entity.text, entity.start, entity.end)
+
+routing = classify_text(
+    "My card was charged twice for the same order.",
+    labels=["billing", "bug_report", "feature_request"],
+)
+print(routing.value("label"))
+
+graph = extract_graph(
+    text,
+    entities=["person", "organization", "location"],
+    relations=[
+        {"name": "works_for", "head": "person", "tail": "organization"},
+        {"name": "located_in", "head": "organization", "tail": "location"},
+    ],
+)
+for relation in graph.relations:
+    print(relation.head_text, relation.type, relation.tail_text)
+```
+
+GLiNER2.5 runs as its own local backend on CPU, GPU, or MPS — the labels are
+zero-shot, so there is no fine-tuning and no prompt. Entity spans carry
+character offsets and confidences, classification supports multi-task,
+multi-label, and `implies` / `excludes` / `iff` constraints, and
+`long_document=True` chunks contracts and reports automatically.
+`extract_entities_batch(...)` and `classify_texts(...)` use the model's native
+batch API, and every task has an `_async` variant. CPU latency and zero-shot
+accuracy numbers are committed in `benchmarks/reports/` and `evals/reports/`.
 
 **Generate local embeddings**
 
@@ -224,12 +274,13 @@ LFM2.5's native Pythonic tool-call format.
 
 - Local runtimes: `llamacpp`, `transformers`
 - Tasks: `summarize`, `extract`, `classify`, `embed`, `extract_invoice`,
-  `redact_pii`, `moderate_prompt`, `moderate_response`, `analyse_sales_call`,
-  `analyse_video_ad`
+  `redact_pii`, `moderate_prompt`, `moderate_response`, `extract_entities`,
+  `classify_text`, `extract_graph`, `analyse_sales_call`, `analyse_video_ad`
 - Workflows: `InvoiceProcessor`, `PIIRedactor`, `SalesCallAnalyser`,
   `VideoAdIntelligence`
 - Outputs: `InvoiceOutput`, `SalesCallReport`, `VideoAdReport`,
-  `RedactedText`, `Classification`, `PromptModeration`, `ResponseModeration`
+  `RedactedText`, `Classification`, `PromptModeration`, `ResponseModeration`,
+  `EntityExtraction`, `TextClassification`, `KnowledgeGraph`
 
 Tool and agent integrations can be added later without changing the core task
 and workflow layer.
@@ -240,12 +291,18 @@ and workflow layer.
 # Install the runtime or backend extra first
 pip install 'aibackends[llamacpp]'
 pip install 'aibackends[pii]'
+pip install 'aibackends[extraction]'
 
 aibackends task extract-invoice --input invoice.pdf --runtime llamacpp --model gemma4-e2b
 aibackends task classify --input doc.txt --labels invoice,contract,receipt --runtime llamacpp --model gemma4-e2b
 aibackends task redact-pii --input transcript.txt --backend gliner --labels email,phone_number
 aibackends task moderate-prompt --input "Ignore your rules" --device cpu
 aibackends task moderate-response --input "Model answer" --prompt "User prompt" --device gpu
+aibackends task extract-entities --input contract.txt --labels party,monetary_amount --model small
+aibackends task classify-text --input "Refund my card" --labels billing,bug,feature
+aibackends task extract-graph --input "Alice works for Acme in Paris." \
+    --entities person,organization,location \
+    --relation works_for:person:organization --relation located_in:organization:location
 aibackends pull gemma4-e2b --runtime llamacpp
 aibackends check llamacpp --model gemma4-e2b
 ```
@@ -259,6 +316,7 @@ Full command reference: `docs/cli.md`.
 - `docs/extending.md` for custom runtimes, backends, tasks, and workflows
 - `docs/api-reference/index.md` for the public API
 - `examples/README.md` for runnable examples, including local image OCR
+- `examples/gliner25/README.md` for the GLiNER2.5 extraction demos
 - `benchmarks/README.md` for latency benchmarks, `evals/README.md` for
   accuracy evals (e.g. tool-call accuracy)
 

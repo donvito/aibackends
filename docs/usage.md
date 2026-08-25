@@ -21,6 +21,7 @@ pip install aibackends[audio]
 pip install aibackends[video]
 pip install aibackends[pii]
 pip install aibackends[guardrails]
+pip install aibackends[extraction]
 ```
 
 Downloaded local models for `llamacpp` and `aibackends pull` use the standard
@@ -243,6 +244,92 @@ response_results = moderate_responses(
 
 The first call downloads and caches the model. Repeated calls on the same
 device reuse it; CPU and CUDA instances are cached separately.
+
+### Extract entities, classify, and build graphs with GLiNER2.5
+
+GLiNER2.5 is a dedicated extraction backend (`gliner2.5`) covering entity
+extraction, constrained classification, and joint entity-relation extraction.
+Like the moderation backend, it runs its own encoder rather than the
+configured generative runtime, so labels are zero-shot and there is no prompt.
+
+Three variants are selectable by name — `small` (74M, fastest on CPU), `base`
+(194M, default), and `multi` (287M, multilingual) — or pass any Hugging Face
+repo id.
+
+```python
+from aibackends.tasks import classify_text, extract_entities, extract_graph
+
+text = "Alice Reyes emailed alice@example.com from Acme's Paris office."
+
+entities = extract_entities(
+    text,
+    labels=["person", "email", "organization", "location"],
+    model="small",
+    device="cpu",  # "cpu" | "gpu" | "cuda" | "cuda:<index>" | "mps"
+    threshold=0.5,
+)
+for entity in entities.entities:
+    print(entity.label, entity.text, entity.start, entity.end, entity.confidence)
+```
+
+`EntityExtraction` carries the source `text`, the matched `entities` with
+character offsets and confidences, the `backend_used`, and the `model_id`.
+Pass `attributes=...` to qualify spans with extra labelled fields, and
+`long_document=True` (with `chunk_size` and `chunk_overlap`) to run over
+contracts and reports that exceed the model context.
+
+Classification supports multiple tasks in one pass, multi-label output, and
+logical constraints:
+
+```python
+routing = classify_text(
+    "My card was charged twice for the same order.",
+    tasks={
+        "intent": {"labels": ["billing", "bug_report", "feature_request"]},
+        "effects": {"labels": ["read_only", "modify", "refund"], "multi_label": True},
+    },
+    constraints=[
+        {"kind": "implies", "when": ["intent", "billing"], "then": ["effects", "refund"]},
+        {"kind": "excludes", "when": ["intent", "bug_report"], "then": ["effects", "refund"]},
+    ],
+)
+print(routing.value("intent"), routing.values("effects"))
+print(routing.feasible, routing.constrained)
+```
+
+Passing `labels=[...]` instead of `tasks=...` is shorthand for a single task
+named `label`. Each task accepts `multi_label`, `min_labels`, `max_labels`,
+`threshold`, `default`, and `instruction`. Constraint kinds are `implies`,
+`excludes`, and `iff`, and `when` / `then` are `[task, label]` pairs; when a
+constraint set cannot be satisfied, `feasible` is `False`. `value(task)`
+returns the single selected label and `values(task)` the full list.
+
+`extract_graph` decodes entities and typed relations together, so every
+relation endpoint exists in the result and endpoint types are enforced:
+
+```python
+graph = extract_graph(
+    text,
+    entities=["person", "organization", "location"],
+    relations=[
+        {"name": "works_for", "head": "person", "tail": "organization"},
+        {"name": "located_in", "head": "organization", "tail": "location"},
+    ],
+)
+for relation in graph.relations:
+    print(relation.head_text, relation.type, relation.tail_text)
+```
+
+`KnowledgeGraph.triples()` returns the same relations as
+`(head text, relation type, tail text)` tuples, and `entity(id)` looks up an
+endpoint. Relations accept extra schema options such as `unique_head`, and
+`no_self_loops=True` rejects self-referencing relations.
+
+For throughput, `extract_entities_batch(...)` and `classify_texts(...)` use
+the model's native batch API, and every extraction task has an `_async`
+variant. The model is loaded once per process and device and reused across
+calls. CPU latency numbers are in `benchmarks/reports/` and zero-shot accuracy
+numbers in `evals/reports/`.
 
 Tasks are also available as configured `BaseTask` objects through the factory:
 

@@ -5,6 +5,50 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-08-25
+
+### Added
+- GLiNER2.5 (`fastino/gliner2.5-*-v1`) extraction backend running as its own
+  local capability backend, not through the configured generative runtime.
+  Three variants are selectable by name: `small` (74M), `base` (194M,
+  default), and `multi` (287M, multilingual), or any Hugging Face repo id.
+- Entity extraction with `extract_entities` / `extract_entities_batch`:
+  zero-shot labels, character offsets and confidences, span attributes
+  (qualified spans), unlimited span lengths, and long-document mode with
+  configurable chunk size and overlap.
+- Constrained classification with `classify_text` / `classify_texts`:
+  multi-task label sets, multi-label mode, per-label probabilities, and
+  `implies` / `excludes` / `iff` constraints with a `feasible` flag.
+- Joint entity-relation extraction with `extract_graph`, returning a typed
+  `KnowledgeGraph` of entities and typed relations with optional
+  `no_self_loops`.
+- `_async` variants of every extraction task, plus `ExtractEntitiesTask`,
+  `ClassifyTextTask`, and `ExtractGraphTask` for the `create_task(...)` API.
+  All extraction tasks are also exported from the top-level `aibackends`
+  package.
+- `EntityExtraction`, `TextClassification`, and `KnowledgeGraph` schemas in
+  `aibackends.schemas.extraction`, with `ExtractedEntity`, `SpanAttribute`,
+  `TaskClassification`, `GraphEntity`, and `GraphRelation`.
+- Pluggable extraction backend registry (`register_extraction_backend`,
+  `get_extraction_backend`, `list_extraction_backends`) under
+  `aibackends.backends.extraction`.
+- New `extraction` extra (`pip install aibackends[extraction]`) pulling in
+  `gliner2[local]` and `protobuf`.
+- CLI tasks `extract-entities`, `classify-text`, and `extract-graph`, with new
+  `--entities` and repeatable `--relation name:head:tail` flags.
+- Seven runnable examples under `examples/gliner25/` (PII offsets, unlimited
+  spans, knowledge graph, constrained routing, span attributes, long
+  documents, multilingual NER) and an executed Colab notebook at
+  `examples/notebooks/gliner25_extraction_colab.ipynb`.
+- GLiNER2.5 CPU benchmark covering cold load, warm latency per task type,
+  native batch throughput, and long-document scaling across all three
+  variants, plus a committed report in `benchmarks/reports/`.
+- GLiNER2.5 zero-shot accuracy eval over ag_news, rotten_tomatoes, and
+  CrossNER politics, with a committed report in `evals/reports/`.
+- Capability backend architecture documented across the PII, moderation, and
+  extraction backends in `docs/architecture.md`, `docs/concepts.md`, and
+  `docs/extending.md`.
+
 ## [0.5.0] - 2026-08-25
 
 ### Added
