@@ -6,6 +6,7 @@ Measures:
 2. An explicit cold ``backend.load(device="cpu")``.
 3. Warm entity extraction, constrained classification, joint IE, and
    long-document extraction.
+4. Native batch entity extraction.
 
 Writes a markdown report to ``benchmarks/reports/`` for committing to the repo.
 
@@ -45,6 +46,12 @@ from aibackends.backends.extraction.gliner25 import clear_model_cache
 from aibackends.core.exceptions import AIBackendsError
 
 NER_TEXT = "Ada Lovelace wrote to Charles Babbage at Fastino Labs in London."
+NER_BATCH = (
+    NER_TEXT,
+    "Charles Babbage joined Fastino Labs in London last month.",
+    "Ada Lovelace leads Pioneer at Fastino Labs.",
+    "Fastino Labs is located in London.",
+)
 ROUTE_TEXT = "Delete the temporary cache files under /tmp/job-4821."
 GRAPH_TEXT = (
     "Ada Lovelace leads Pioneer at Fastino Labs. Charles Babbage joined "
@@ -88,6 +95,22 @@ def _clear_cache() -> None:
     gc.collect()
 
 
+def _repeat_to_size(items: tuple[str, ...], size: int) -> list[str]:
+    if size <= len(items):
+        return list(items[:size])
+    repeats, remainder = divmod(size, len(items))
+    return list(items) * repeats + list(items[:remainder])
+
+
+def _throughput_row(label: str, stats: TimingStats, batch_size: int) -> str:
+    per_item_ms = stats.mean_ms / batch_size
+    items_per_second = batch_size / (stats.mean_ms / 1000)
+    return (
+        f"| {label} | {batch_size} | {stats.mean_ms:,.1f} "
+        f"| {per_item_ms:,.1f} | {items_per_second:,.1f} |"
+    )
+
+
 def _torch_cpu_threads() -> str:
     try:
         import torch
@@ -105,6 +128,7 @@ def run_benchmark(args: argparse.Namespace) -> list[str]:
     warm_classify = TimingStats("Warm constrained classification")
     warm_graph = TimingStats("Warm joint IE")
     warm_long = TimingStats("Warm long-document extraction")
+    warm_batch = TimingStats(f"Native NER batch (size {args.batch_size})")
 
     print(f"Benchmarking GLiNER 2.5 `{model}` on CPU", flush=True)
 
@@ -201,7 +225,40 @@ def run_benchmark(args: argparse.Namespace) -> list[str]:
             )
         )
 
-    all_stats = [first_ner, cold_load, warm_ner, warm_classify, warm_graph, warm_long]
+    batch_texts = _repeat_to_size(NER_BATCH, args.batch_size)
+    print(
+        f"5/5 {args.warm_calls} native NER batches (size {args.batch_size})...",
+        flush=True,
+    )
+    backend.extract_entities_batch(
+        batch_texts,
+        ["person", "organization", "location"],
+        device="cpu",
+        model=model,
+        batch_size=args.batch_size,
+    )
+    for _ in range(args.warm_calls):
+        warm_batch.add(
+            _time_call(
+                lambda: backend.extract_entities_batch(
+                    batch_texts,
+                    ["person", "organization", "location"],
+                    device="cpu",
+                    model=model,
+                    batch_size=args.batch_size,
+                )
+            )
+        )
+
+    all_stats = [
+        first_ner,
+        cold_load,
+        warm_ner,
+        warm_classify,
+        warm_graph,
+        warm_long,
+        warm_batch,
+    ]
     speedup = first_ner.mean_ms / warm_ner.mean_ms if warm_ner.mean_ms else 0.0
     lines = [
         "# GLiNER 2.5 CPU Benchmark",
@@ -222,9 +279,17 @@ def run_benchmark(args: argparse.Namespace) -> list[str]:
         f"Warm entity extraction is **{speedup:,.1f}x** faster than the first "
         "call that includes model loading.",
         "",
+        "## Native batch throughput",
+        "",
+        "| Scenario | Batch size | Mean batch (ms) | Mean/item (ms) | Items/s |",
+        "|---|---|---|---|---|",
+        _throughput_row("Entity extraction", warm_batch, args.batch_size),
+        "",
         "## Consistency",
         "",
-        *consistency_table([warm_ner, warm_classify, warm_graph, warm_long]),
+        *consistency_table(
+            [warm_ner, warm_classify, warm_graph, warm_long, warm_batch]
+        ),
         "",
         *segment_trend_lines(warm_ner),
         "",
@@ -237,6 +302,8 @@ def run_benchmark(args: argparse.Namespace) -> list[str]:
         "- First-call timings include Python model construction from the local",
         "  Hugging Face cache; a first-ever network download is not measured.",
         "- Constrained classification and joint IE reuse the loaded extractor.",
+        "- Batch rows report total batch latency. The throughput table derives",
+        "  per-item latency and items/second from each mean batch latency.",
         "- These timings measure performance, not extraction accuracy.",
     ]
     return lines
@@ -255,10 +322,18 @@ def main() -> None:
         default="gliner25-small",
         help="Alias or Hub id to benchmark.",
     )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=8,
+        help="Number of texts in each native NER batch.",
+    )
     parser.add_argument("--output-dir", type=Path, default=None)
     args = parser.parse_args()
     if args.warm_calls < 1:
         parser.error("--warm-calls must be at least 1")
+    if args.batch_size < 1:
+        parser.error("--batch-size must be at least 1")
 
     try:
         with benchmark_lock():

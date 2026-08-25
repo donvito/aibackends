@@ -32,6 +32,14 @@ python3 -m pip install -e ".[guardrails]"
 python3 -m pip install -e ".[gliner25]"
 ```
 
+## Try it in Colab
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/gliguard_moderation_colab.ipynb)
+GliGuard prompt and response moderation
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/gliner25_extraction_colab.ipynb)
+GLiNER 2.5 span-free extraction
+
 Task examples use `create_task(TaskClass, ...)` with supported runtime/model
 refs such as `LLAMACPP` and `GEMMA4_E2B`, so defaults are configured before
 `run(...)`.

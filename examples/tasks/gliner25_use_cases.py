@@ -174,7 +174,11 @@ def main() -> None:
                 "labels": ["affirmed", "negated"],
                 "applies_to": ["symptom"],
                 "qualify_labels": True,
-            }
+            },
+            "dosage_form": {
+                "labels": ["tablet", "capsule", "liquid"],
+                "applies_to": ["medication"],
+            },
         },
         device=args.device,
         model=args.model,

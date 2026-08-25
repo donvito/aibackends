@@ -14,6 +14,7 @@ from aibackends.tasks import (
     ExtractGraphTask,
     classify_schema,
     extract_entities,
+    extract_entities_batch,
     extract_graph,
     extract_records,
     redact_pii,
@@ -79,6 +80,56 @@ class _FakeExtractor:
             }
         )
         return dict(self.entities)
+
+    def batch_extract_entities(
+        self, texts: list[str], labels: Any, **kwargs: Any
+    ) -> list[dict[str, Any]]:
+        self.calls.append(
+            {
+                "method": "batch_extract_entities",
+                "texts": list(texts),
+                "labels": labels,
+                **kwargs,
+            }
+        )
+        return [dict(self.entities) for _ in texts]
+
+    def batch_extract_entities_long(
+        self, texts: list[str], labels: Any, **kwargs: Any
+    ) -> list[dict[str, Any]]:
+        self.calls.append(
+            {
+                "method": "batch_extract_entities_long",
+                "texts": list(texts),
+                "labels": labels,
+                **kwargs,
+            }
+        )
+        return [dict(self.entities) for _ in texts]
+
+    def batch_extract(self, texts: list[str], schema: Any, **kwargs: Any) -> list[dict[str, Any]]:
+        self.calls.append(
+            {
+                "method": "batch_extract",
+                "texts": list(texts),
+                "schema": schema,
+                **kwargs,
+            }
+        )
+        return [dict(self.entities) for _ in texts]
+
+    def batch_extract_long(
+        self, texts: list[str], schema: Any, **kwargs: Any
+    ) -> list[dict[str, Any]]:
+        self.calls.append(
+            {
+                "method": "batch_extract_long",
+                "texts": list(texts),
+                "schema": schema,
+                **kwargs,
+            }
+        )
+        return [dict(self.entities) for _ in texts]
 
     def extract(self, text: str, schema: Any, **kwargs: Any) -> dict[str, Any]:
         self.calls.append({"method": "extract", "text": text, "schema": schema, **kwargs})
@@ -292,6 +343,53 @@ def test_extract_entities_long_uses_chunking_api() -> None:
 
     assert fake.calls[0]["method"] == "extract_entities_long"
     assert fake.calls[0]["chunk_size"] == 128
+
+
+def test_extract_entities_batch_uses_native_batch_api() -> None:
+    fake = _install_extractor(
+        _FakeExtractor(
+            entities={
+                "entities": {
+                    "person": [
+                        {"text": "Ada Lovelace", "start": 0, "end": 12, "confidence": 0.95}
+                    ]
+                }
+            }
+        )
+    )
+    texts = [
+        "Ada Lovelace wrote notes.",
+        "Ada Lovelace lives in London.",
+    ]
+    results = extract_entities_batch(texts, labels=["person"], batch_size=2)
+
+    assert fake.calls[0]["method"] == "batch_extract_entities"
+    assert fake.calls[0]["batch_size"] == 2
+    assert [item.text for item in results] == texts
+    assert results[0].entities[0].text == "Ada Lovelace"
+
+
+def test_extract_entities_batch_long_uses_chunking_api() -> None:
+    fake = _install_extractor(
+        _FakeExtractor(entities={"entities": {"person": [{"text": "Ada", "start": 0, "end": 3}]}})
+    )
+    extract_entities_batch(
+        ["Ada wrote notes."],
+        labels=["person"],
+        long=True,
+        chunk_size=128,
+        batch_size=4,
+    )
+
+    assert fake.calls[0]["method"] == "batch_extract_entities_long"
+    assert fake.calls[0]["chunk_size"] == 128
+    assert fake.calls[0]["batch_size"] == 4
+
+
+def test_extract_entities_batch_empty_returns_no_calls() -> None:
+    fake = _install_extractor(_FakeExtractor())
+    assert extract_entities_batch([], labels=["person"]) == []
+    assert fake.calls == []
 
 
 def test_extract_entities_with_attributes_uses_schema(

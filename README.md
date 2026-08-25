@@ -271,8 +271,8 @@ LFM2.5's native Pythonic tool-call format.
 - Local runtimes: `llamacpp`, `transformers`
 - Tasks: `summarize`, `extract`, `classify`, `embed`, `extract_invoice`,
   `redact_pii`, `moderate_prompt`, `moderate_response`, `extract_entities`,
-  `extract_records`, `classify_schema`, `extract_graph`,
-  `analyse_sales_call`, `analyse_video_ad`
+  `extract_entities_batch`, `extract_records`, `classify_schema`,
+  `extract_graph`, `analyse_sales_call`, `analyse_video_ad`
 - Workflows: `InvoiceProcessor`, `PIIRedactor`, `SalesCallAnalyser`,
   `VideoAdIntelligence`
 - Outputs: `InvoiceOutput`, `SalesCallReport`, `VideoAdReport`,

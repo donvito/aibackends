@@ -45,6 +45,23 @@ class BaseExtractionBackend(ABC):
         """Extract labeled entity spans, optionally over a long document."""
 
     @abstractmethod
+    def extract_entities_batch(
+        self,
+        texts: Sequence[str],
+        labels: Sequence[str] | Mapping[str, str],
+        *,
+        device: str = "cpu",
+        model: str | None = None,
+        threshold: float = 0.5,
+        long: bool = False,
+        chunk_size: int = 384,
+        chunk_overlap: int = 64,
+        attributes: Mapping[str, Any] | None = None,
+        batch_size: int = 8,
+    ) -> list[EntityExtraction]:
+        """Extract labeled entity spans from multiple texts in one model batch."""
+
+    @abstractmethod
     def extract_records(
         self,
         text: str,

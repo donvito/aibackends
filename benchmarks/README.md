@@ -104,11 +104,11 @@ Requires `aibackends[guardrails]`.
 
 Forces GLiNER 2.5 onto CPU and measures the first entity-extraction call
 including model loading, explicit `backend.load()`, warm NER, constrained
-classification, joint IE, and long-document extraction.
+classification, joint IE, long-document extraction, and native batch NER.
 
 ```bash
 python benchmarks/benchmark_gliner25_cpu.py \
-    --warm-calls 10 --model gliner25-small
+    --warm-calls 10 --model gliner25-small --batch-size 8
 ```
 
 Requires `aibackends[gliner25]`.

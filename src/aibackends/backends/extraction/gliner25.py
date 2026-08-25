@@ -23,6 +23,7 @@ DEFAULT_GLINER25_MODEL = "fastino/gliner2.5-small-v1"
 DEFAULT_THRESHOLD = 0.5
 DEFAULT_CHUNK_SIZE = 384
 DEFAULT_CHUNK_OVERLAP = 64
+DEFAULT_BATCH_SIZE = 8
 BACKEND_NAME = "gliner25"
 
 GLINER25_ALIASES: dict[str, str] = {
@@ -165,6 +166,11 @@ def _inference_lock(model_id: str, device: str) -> threading.Lock:
 def _validate_threshold(threshold: float) -> None:
     if not 0.0 <= threshold <= 1.0:
         raise ValueError("threshold must be between 0 and 1.")
+
+
+def _validate_batch_size(batch_size: int) -> None:
+    if batch_size < 1:
+        raise ValueError("batch_size must be at least 1.")
 
 
 def _as_list(value: Any) -> list[Any]:
@@ -663,6 +669,85 @@ class GLiNER25Backend(BaseExtractionBackend):
             backend_used=self.name,
             model_id=model_id,
         )
+
+    def extract_entities_batch(
+        self,
+        texts: Sequence[str],
+        labels: Sequence[str] | Mapping[str, str],
+        *,
+        device: str = "cpu",
+        model: str | None = None,
+        threshold: float = DEFAULT_THRESHOLD,
+        long: bool = False,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
+        attributes: Mapping[str, Any] | None = None,
+        batch_size: int = DEFAULT_BATCH_SIZE,
+    ) -> list[EntityExtraction]:
+        _validate_threshold(threshold)
+        _validate_batch_size(batch_size)
+        documents = list(texts)
+        if not documents:
+            return []
+        model_id = resolve_gliner25_model_id(model)
+        extractor = load_gliner25_extractor(model_id, device)
+        with _inference_lock(model_id, device):
+            if attributes:
+                schema = extractor.create_schema().entities(labels)
+                schema = schema.entity_attributes(_build_attribute_groups(attributes))
+                if long:
+                    raw_results = extractor.batch_extract_long(
+                        documents,
+                        schema,
+                        batch_size=batch_size,
+                        threshold=threshold,
+                        chunk_size=chunk_size,
+                        chunk_overlap=chunk_overlap,
+                        include_spans=True,
+                        include_confidence=True,
+                    )
+                else:
+                    raw_results = extractor.batch_extract(
+                        documents,
+                        schema,
+                        batch_size=batch_size,
+                        threshold=threshold,
+                        include_spans=True,
+                        include_confidence=True,
+                    )
+            elif long:
+                raw_results = extractor.batch_extract_entities_long(
+                    documents,
+                    labels,
+                    batch_size=batch_size,
+                    threshold=threshold,
+                    chunk_size=chunk_size,
+                    chunk_overlap=chunk_overlap,
+                    include_spans=True,
+                    include_confidence=True,
+                )
+            else:
+                raw_results = extractor.batch_extract_entities(
+                    documents,
+                    labels,
+                    batch_size=batch_size,
+                    threshold=threshold,
+                    include_spans=True,
+                    include_confidence=True,
+                )
+        if len(raw_results) != len(documents):
+            raise TaskExecutionError(
+                "GLiNER 2.5 batch extraction returned the wrong number of results."
+            )
+        return [
+            EntityExtraction(
+                text=text,
+                entities=parse_entities(raw, text),
+                backend_used=self.name,
+                model_id=model_id,
+            )
+            for text, raw in zip(documents, raw_results, strict=True)
+        ]
 
     def extract_records(
         self,

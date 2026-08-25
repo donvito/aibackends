@@ -56,8 +56,8 @@ PII detection and content moderation are current examples:
   (`openai/privacy-filter`) through a token classification pipeline.
 - `gliguard` uses `fastino/gliguard-LLMGuardrails-300M` for prompt safety,
   toxicity, jailbreak detection, response safety, and refusal detection.
-- `gliner25` (extraction) also powers entity extraction, JSON records,
-  constrained classification, and joint entity-relation graphs.
+- `gliner25` (extraction) also powers entity extraction, native batch NER,
+  JSON records, constrained classification, and joint entity-relation graphs.
 
 These are model-backed capability backends, not runtimes. They solve a specific
 capability and return domain objects such as `PIIEntity`, `PromptModeration`,

@@ -257,6 +257,7 @@ generative runtime. Default checkpoint is `gliner25-small`
 from aibackends.tasks import (
     classify_schema,
     extract_entities,
+    extract_entities_batch,
     extract_graph,
     extract_records,
 )
@@ -266,6 +267,15 @@ entities = extract_entities(
     labels=["person", "location"],
     device="cpu",
     long=True,  # overlapping word chunks with global offsets
+)
+
+batch = extract_entities_batch(
+    [
+        "Ada Lovelace wrote to Charles Babbage in London.",
+        "Charles Babbage joined Fastino Labs last month.",
+    ],
+    labels=["person", "organization", "location"],
+    batch_size=8,
 )
 
 route = classify_schema(

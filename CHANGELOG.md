@@ -15,9 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PII backend `gliner25` that reuses the same cached extractor so
   `redact_pii(..., backend="gliner25")` gets global character offsets without
   a second model load.
-- Public tasks `extract_entities`, `extract_entities_long`, `extract_records`,
-  `classify_schema`, and `extract_graph`, plus `_async` variants, exported from
-  the top-level `aibackends` package.
+- Public tasks `extract_entities`, `extract_entities_batch`,
+  `extract_entities_long`, `extract_records`, `classify_schema`, and
+  `extract_graph`, plus `_async` variants, exported from the top-level
+  `aibackends` package.
 - New `gliner25` extra (`pip install aibackends[gliner25]`) pulling in
   `gliner2[local]` and `protobuf`.
 - Example `examples/tasks/gliner25_use_cases.py` and Colab notebook

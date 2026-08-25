@@ -102,6 +102,65 @@ def extract_entities_long(
     )
 
 
+def extract_entities_batch(
+    texts: Sequence[str | Path],
+    *,
+    labels: Sequence[str] | Mapping[str, str],
+    backend: str = DEFAULT_BACKEND,
+    device: str = DEFAULT_DEVICE,
+    model: str = DEFAULT_MODEL,
+    threshold: float = 0.5,
+    long: bool = False,
+    chunk_size: int = 384,
+    chunk_overlap: int = 64,
+    attributes: Mapping[str, Any] | None = None,
+    batch_size: int = 8,
+) -> list[EntityExtraction]:
+    contents = [load_text_input(text) for text in texts]
+    return get_extraction_backend(backend).extract_entities_batch(
+        contents,
+        labels,
+        device=device,
+        model=model,
+        threshold=threshold,
+        long=long,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        attributes=attributes,
+        batch_size=batch_size,
+    )
+
+
+async def extract_entities_batch_async(
+    texts: Sequence[str | Path],
+    *,
+    labels: Sequence[str] | Mapping[str, str],
+    backend: str = DEFAULT_BACKEND,
+    device: str = DEFAULT_DEVICE,
+    model: str = DEFAULT_MODEL,
+    threshold: float = 0.5,
+    long: bool = False,
+    chunk_size: int = 384,
+    chunk_overlap: int = 64,
+    attributes: Mapping[str, Any] | None = None,
+    batch_size: int = 8,
+) -> list[EntityExtraction]:
+    return await asyncio.to_thread(
+        extract_entities_batch,
+        texts,
+        labels=labels,
+        backend=backend,
+        device=device,
+        model=model,
+        threshold=threshold,
+        long=long,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        attributes=attributes,
+        batch_size=batch_size,
+    )
+
+
 def extract_records(
     text: str | Path,
     *,
