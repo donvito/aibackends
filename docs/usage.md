@@ -230,6 +230,9 @@ Use `Classifier` when labels across tasks must obey implications or exclusions,
 and `AttributeGroup` for labels attached to individual spans. Runnable examples
 live in `examples/gliner25/`; the full browser tutorial is
 `examples/notebooks/gliner25_information_extraction_colab.ipynb`.
+The measured model comparison is committed in
+`evals/reports/2026-08-25_gliner25-applied-eval-cpu.md`, with latency and
+throughput in `benchmarks/reports/2026-08-25_gliner25-cpu.md`.
 
 ### Moderate prompts and responses with GliGuard
 

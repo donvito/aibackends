@@ -52,3 +52,5 @@ The fixture lives in `evals/data/gliner25_cases.json`, and the dated report
 contains each expected and predicted result. This is a targeted applied eval
 for the repository examples, not a reproduction of Fastino's 16-dataset
 research benchmark. Requires `aibackends[gliner2]`.
+The latest committed comparison is
+[`2026-08-25_gliner25-applied-eval-cpu.md`](reports/2026-08-25_gliner25-applied-eval-cpu.md).

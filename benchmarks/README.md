@@ -121,6 +121,8 @@ python3 evals/eval_gliner25.py --models small base multi --device cpu
 
 Requires `aibackends[gliner2]`. Pre-download the checkpoints if model load
 timings should exclude network transfer.
+The latest committed comparison is
+[`2026-08-25_gliner25-cpu.md`](reports/2026-08-25_gliner25-cpu.md).
 
 ## Consistency And Degradation
 

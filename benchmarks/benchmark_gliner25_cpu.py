@@ -35,6 +35,7 @@ from _reporting import (  # noqa: E402
     stats_table,
     write_report,
 )
+
 from examples.gliner25.common import (  # noqa: E402
     MODEL_IDS,
     assert_source_spans,
@@ -157,6 +158,7 @@ def run_model(
     from gliner2.classification import ClassificationConfig, Classifier
     from gliner2.joint_ie import JointIE, JointIEConfig
 
+    gc.collect()
     model_id = MODEL_IDS[alias]
     print(f"\nLoading {alias}: {model_id}", flush=True)
     load = TimingStats(f"{alias}: model load")
@@ -265,8 +267,6 @@ def run_model(
         batch=batch,
         batch_size=batch_size,
     )
-    del joint, classifier, model
-    gc.collect()
     return result
 
 

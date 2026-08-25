@@ -126,6 +126,10 @@ Use `small` for fast English CPU inference, `base` for stronger English
 multi-task extraction, and `multi` for multilingual documents. The runnable
 examples in `examples/gliner25/` also cover long documents, constrained
 classification, typed Joint IE graphs, span attributes, and combined schemas.
+See the committed
+[applied accuracy eval](evals/reports/2026-08-25_gliner25-applied-eval-cpu.md)
+and [CPU benchmark](benchmarks/reports/2026-08-25_gliner25-cpu.md) for measured
+small/base/multi results.
 
 **Moderate prompts and responses locally with GliGuard**
 

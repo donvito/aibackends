@@ -88,6 +88,9 @@ Model guidance:
 Every extraction example requests character spans and verifies that they slice
 back to the original source. The matching Colab tutorial is
 `examples/notebooks/gliner25_information_extraction_colab.ipynb`.
+Measured small/base/multi results are committed in
+`evals/reports/2026-08-25_gliner25-applied-eval-cpu.md` and
+`benchmarks/reports/2026-08-25_gliner25-cpu.md`.
 
 `workflows/image_ocr_gemma.py` and `workflows/image_ocr_qwen.py` are vision
 OCR examples that extract structured receipt JSON from the sample receipt

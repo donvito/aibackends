@@ -369,17 +369,17 @@ def run_model(alias: str, device: str, fixture: dict[str, Any]) -> ModelEval:
                 include_spans=True,
                 include_confidence=True,
             )
-        expected = expected_entity_set(case)
-        predicted = predicted_entity_set(result)
-        metrics.entity.add(expected, predicted)
+        entity_expected = expected_entity_set(case)
+        entity_predicted = predicted_entity_set(result)
+        metrics.entity.add(entity_expected, entity_predicted)
         offsets_valid = _offsets_valid(str(case["text"]), result, metrics)
         metrics.records.append(
             CaseRecord(
                 "entities",
                 str(case["id"]),
-                sorted(expected),
-                sorted(predicted),
-                expected == predicted,
+                sorted(entity_expected),
+                sorted(entity_predicted),
+                entity_expected == entity_predicted,
                 offsets_valid,
             )
         )
@@ -391,9 +391,13 @@ def run_model(alias: str, device: str, fixture: dict[str, Any]) -> ModelEval:
         print(f"  classification: {case['id']}", flush=True)
         schema = schemas[str(case["schema"])]
         result = classifier.classify(case["text"], schema, config=classification_config)
-        expected = {str(key): str(value) for key, value in case["expected"].items()}
-        predicted = {task: str(result.value(task)) for task in expected}
-        exact = expected == predicted
+        classification_expected = {
+            str(key): str(value) for key, value in case["expected"].items()
+        }
+        classification_predicted = {
+            task: str(result.value(task)) for task in classification_expected
+        }
+        exact = classification_expected == classification_predicted
         metrics.classification_total += 1
         metrics.classification_hits += int(exact)
         metrics.feasible_total += 1
@@ -402,8 +406,8 @@ def run_model(alias: str, device: str, fixture: dict[str, Any]) -> ModelEval:
             CaseRecord(
                 "classification",
                 str(case["id"]),
-                expected,
-                predicted,
+                classification_expected,
+                classification_predicted,
                 exact,
             )
         )
@@ -414,9 +418,9 @@ def run_model(alias: str, device: str, fixture: dict[str, Any]) -> ModelEval:
     for case in fixture["relation_cases"]:
         print(f"  relation: {case['id']}", flush=True)
         result = joint.extract(case["text"], joint_schema, config=joint_config)
-        expected = expected_relation_set(case)
-        predicted = predicted_relation_set(result)
-        metrics.relation.add(expected, predicted)
+        relation_expected = expected_relation_set(case)
+        relation_predicted = predicted_relation_set(result)
+        metrics.relation.add(relation_expected, relation_predicted)
         metrics.graph_valid_total += 1
         metrics.graph_valid_hits += int(graph_is_valid(result))
         offsets_valid = _offsets_valid(str(case["text"]), result, metrics)
@@ -424,9 +428,9 @@ def run_model(alias: str, device: str, fixture: dict[str, Any]) -> ModelEval:
             CaseRecord(
                 "relations",
                 str(case["id"]),
-                sorted(expected),
-                sorted(predicted),
-                expected == predicted,
+                sorted(relation_expected),
+                sorted(relation_predicted),
+                relation_expected == relation_predicted,
                 offsets_valid,
             )
         )
@@ -440,19 +444,19 @@ def run_model(alias: str, device: str, fixture: dict[str, Any]) -> ModelEval:
             include_spans=True,
             include_confidence=True,
         )
-        expected = expected_attribute_set(case)
-        attribute_names = {item[2] for item in expected}
-        predicted = predicted_attribute_set(result, attribute_names)
-        metrics.attribute_total += len(expected)
-        metrics.attribute_hits += len(expected & predicted)
+        attribute_expected = expected_attribute_set(case)
+        attribute_names = {item[2] for item in attribute_expected}
+        attribute_predicted = predicted_attribute_set(result, attribute_names)
+        metrics.attribute_total += len(attribute_expected)
+        metrics.attribute_hits += len(attribute_expected & attribute_predicted)
         offsets_valid = _offsets_valid(str(case["text"]), result, metrics)
         metrics.records.append(
             CaseRecord(
                 "attributes",
                 str(case["id"]),
-                sorted(expected),
-                sorted(predicted),
-                expected == predicted,
+                sorted(attribute_expected),
+                sorted(attribute_predicted),
+                attribute_expected == attribute_predicted,
                 offsets_valid,
             )
         )
@@ -540,8 +544,14 @@ def build_report(
             "- Entity and relation metrics use exact label, source text, and character spans.",
             "- Classification accuracy requires the complete constrained assignment to match.",
             "- Attribute accuracy counts exact expected entity, attribute, and value matches.",
-            "- Graph validity checks feasibility, typed endpoints, no self-loops, and unique heads.",
-            "- Offset integrity requires every returned span to slice back to identical source text.",
+            (
+                "- Graph validity checks feasibility, typed endpoints, no self-loops, "
+                "and unique heads."
+            ),
+            (
+                "- Offset integrity requires every returned span to slice back to "
+                "identical source text."
+            ),
             "- Quality numbers apply only to this compact fixture; tune schemas on domain data.",
         ]
     )
