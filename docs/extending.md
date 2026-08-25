@@ -82,6 +82,13 @@ Moderation backends implement `BaseModerationBackend` under
 `register_moderation_backend(...)`. They expose single and native-batch prompt
 and response methods because moderation schemas differ by side.
 
+Extraction backends implement `BaseExtractionBackend` under
+`src/aibackends/backends/extraction` and register an instance with
+`register_extraction_backend(...)`. They expose `extract_entities` (single and
+native-batch, with span attributes and long-document chunking),
+`classify_text` (single and native-batch, with declarative constraints), and
+`extract_graph` for joint entity-relation extraction.
+
 ## Add A Task
 
 Create one task module under `src/aibackends/tasks`, implement `BaseTask`, and
