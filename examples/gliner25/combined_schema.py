@@ -12,7 +12,9 @@ from __future__ import annotations
 import argparse
 import time
 
-from .common import add_model_arguments, assert_source_spans, load_extractor, print_result
+from aibackends.tasks import extract_schema
+
+from .common import add_model_arguments, assert_source_spans, load_backend, print_result
 
 TEXT = (
     "Apple CEO Tim Cook announced the iPhone 15 for $999 in Cupertino. "
@@ -29,10 +31,10 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     started = time.perf_counter()
-    extractor, model_id, device = load_extractor(args.model, args.device)
+    backend, model_id, device = load_backend(args.model, args.device)
 
     schema = (
-        extractor.create_schema()
+        backend.create_schema(model=args.model, device=device)
         .entities(["person", "company", "product", "location"])
         .classification("sentiment", ["positive", "negative", "neutral"])
         .classification("document_type", ["product_news", "review", "opinion"])
@@ -47,9 +49,12 @@ def main() -> None:
             choices=["phone", "computer", "software", "service"],
         )
     )
-    result = extractor.extract(
+    result = extract_schema(
         TEXT,
         schema,
+        backend=backend.name,
+        model=args.model,
+        device=device,
         include_spans=True,
         include_confidence=True,
     )

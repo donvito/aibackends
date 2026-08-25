@@ -36,7 +36,7 @@ benchmark is in flight.
 ## `eval_gliner25.py`
 
 Runs a compact labeled evaluation across the GLiNER2.5 small, base, and
-multilingual checkpoints:
+multilingual checkpoints through the aibackends `gliner25` backend:
 
 - exact entity span precision, recall, and F1
 - typed relation-triple precision, recall, and F1

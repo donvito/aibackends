@@ -36,13 +36,27 @@ from _reporting import (  # noqa: E402
     write_report,
 )
 
-from examples.gliner25.common import (  # noqa: E402
-    MODEL_IDS,
+from aibackends.backends.information_extraction import (  # noqa: E402
+    BaseInformationExtractionBackend,
+    get_information_extraction_backend,
+)
+from aibackends.backends.information_extraction.gliner25 import (  # noqa: E402
+    GLINER25_MODEL_IDS,
     assert_source_spans,
+    clear_gliner25_model_cache,
     normalize_device,
+)
+from aibackends.tasks import (  # noqa: E402
+    batch_extract_entities,
+    classify_schema,
+    extract_entities,
+    extract_entities_long,
+    extract_graph,
+    extract_schema,
 )
 
 CONTRACT_PATH = REPO_ROOT / "examples" / "data" / "contract.txt"
+MODEL_IDS = GLINER25_MODEL_IDS
 ENTITY_TEXT = "Apple CEO Tim Cook announced the iPhone 15 in Cupertino."
 ENTITY_LABELS = ["company", "person", "product", "location"]
 COMBINED_TEXT = (
@@ -107,25 +121,34 @@ def _repeat_to_size(values: Sequence[str], size: int) -> list[str]:
     return [values[index % len(values)] for index in range(size)]
 
 
-def _routing_schema() -> Any:
-    from gliner2.classification import ClassificationSchema
-    from gliner2.classification import constraints as C
-
+def _routing_schema(backend: BaseInformationExtractionBackend) -> Any:
+    constraints = backend.classification_constraints
     return (
-        ClassificationSchema()
+        backend.create_classification_schema()
         .single("task_type", ["summarization", "reasoning", "live_data"])
         .single("route", ["small_local_model", "large_reasoning_model", "tool_agent"])
         .constrain(
-            C.implies(("task_type", "summarization"), ("route", "small_local_model")),
-            C.implies(("task_type", "reasoning"), ("route", "large_reasoning_model")),
-            C.implies(("task_type", "live_data"), ("route", "tool_agent")),
+            constraints.implies(
+                ("task_type", "summarization"),
+                ("route", "small_local_model"),
+            ),
+            constraints.implies(
+                ("task_type", "reasoning"),
+                ("route", "large_reasoning_model"),
+            ),
+            constraints.implies(("task_type", "live_data"), ("route", "tool_agent")),
         )
     )
 
 
-def _joint_schema(joint: Any) -> Any:
+def _joint_schema(
+    backend: BaseInformationExtractionBackend,
+    *,
+    model: str,
+    device: str,
+) -> Any:
     return (
-        joint.create_schema()
+        backend.create_joint_schema(model=model, device=device)
         .entities(["person", "organization", "location"])
         .relation("works_for", "person", "organization", unique_head=True)
         .relation("located_in", "organization", "location", unique_head=True)
@@ -133,9 +156,14 @@ def _joint_schema(joint: Any) -> Any:
     )
 
 
-def _combined_schema(model: Any) -> Any:
+def _combined_schema(
+    backend: BaseInformationExtractionBackend,
+    *,
+    model: str,
+    device: str,
+) -> Any:
     return (
-        model.create_schema()
+        backend.create_schema(model=model, device=device)
         .entities(["person", "company", "product", "location"])
         .classification("sentiment", ["positive", "negative", "neutral"])
         .classification("document_type", ["product_news", "review", "opinion"])
@@ -154,39 +182,40 @@ def run_model(
     warm_calls: int,
     batch_size: int,
 ) -> ModelBenchmark:
-    from gliner2 import AutoExtractor
-    from gliner2.classification import ClassificationConfig, Classifier
-    from gliner2.joint_ie import JointIE, JointIEConfig
-
+    clear_gliner25_model_cache()
     gc.collect()
+    backend = get_information_extraction_backend("gliner25")
     model_id = MODEL_IDS[alias]
     print(f"\nLoading {alias}: {model_id}", flush=True)
     load = TimingStats(f"{alias}: model load")
     started = time.perf_counter()
-    model = AutoExtractor.from_pretrained(model_id, map_location=device)
-    model.eval()
+    backend.load(model=alias, device=device)
     load.add((time.perf_counter() - started) * 1000)
 
     contract = CONTRACT_PATH.read_text(encoding="utf-8")
-    classifier = Classifier(model, device=device).eval()
-    classification_schema = _routing_schema()
-    classification_config = ClassificationConfig(decoder="auto", on_infeasible="raise")
-    joint = JointIE(model, device=device).eval()
-    joint_schema = _joint_schema(joint)
-    joint_config = JointIEConfig(optimizer="beam", beam_size=32)
-    combined_schema = _combined_schema(model)
+    classification_schema = _routing_schema(backend)
+    classification_config = backend.create_classification_config(
+        decoder="auto",
+        on_infeasible="raise",
+    )
+    joint_schema = _joint_schema(backend, model=alias, device=device)
+    joint_config = backend.create_joint_config(optimizer="beam", beam_size=32)
+    combined_schema = _combined_schema(backend, model=alias, device=device)
     batch_texts = _repeat_to_size(BATCH_TEXTS, batch_size)
 
-    def extract_entities() -> object:
-        return model.extract_entities(
+    def entity_call() -> object:
+        return extract_entities(
             ENTITY_TEXT,
             ENTITY_LABELS,
+            backend=backend.name,
+            model=alias,
+            device=device,
             include_spans=True,
             include_confidence=True,
         )
 
-    def extract_long_document() -> object:
-        return model.extract_entities_long(
+    def long_document_call() -> object:
+        return extract_entities_long(
             contract,
             {
                 "person": "Names of contract parties",
@@ -195,45 +224,64 @@ def run_model(
                 "obligation": "Complete clauses describing a required action",
                 "termination_clause": "Complete clauses describing contract termination",
             },
+            backend=backend.name,
+            model=alias,
+            device=device,
             chunk_size=128,
             chunk_overlap=32,
             include_spans=True,
             include_confidence=True,
         )
 
-    def classify_route() -> object:
-        return classifier.classify(
+    def classification_call() -> object:
+        return classify_schema(
             "Look up the current weather in Singapore.",
             classification_schema,
+            backend=backend.name,
+            model=alias,
+            device=device,
             config=classification_config,
         )
 
-    def extract_graph() -> object:
-        return joint.extract(GRAPH_TEXT, joint_schema, config=joint_config)
+    def graph_call() -> object:
+        return extract_graph(
+            GRAPH_TEXT,
+            joint_schema,
+            backend=backend.name,
+            model=alias,
+            device=device,
+            config=joint_config,
+        )
 
-    def extract_combined() -> object:
-        return model.extract(
+    def combined_call() -> object:
+        return extract_schema(
             COMBINED_TEXT,
             combined_schema,
+            backend=backend.name,
+            model=alias,
+            device=device,
             include_spans=True,
             include_confidence=True,
         )
 
-    def extract_batch() -> object:
-        return model.batch_extract_entities(
+    def batch_call() -> object:
+        return batch_extract_entities(
             batch_texts,
             ENTITY_LABELS,
+            backend=backend.name,
+            model=alias,
+            device=device,
             batch_size=batch_size,
             include_spans=True,
             include_confidence=True,
         )
 
     print(f"  validating {alias} outputs...", flush=True)
-    assert_source_spans(ENTITY_TEXT, extract_entities())
-    assert_source_spans(contract, extract_long_document())
-    assert_source_spans(GRAPH_TEXT, extract_graph())
-    assert_source_spans(COMBINED_TEXT, extract_combined())
-    for text, result in zip(batch_texts, extract_batch(), strict=True):
+    assert_source_spans(ENTITY_TEXT, entity_call())
+    assert_source_spans(contract, long_document_call())
+    assert_source_spans(GRAPH_TEXT, graph_call())
+    assert_source_spans(COMBINED_TEXT, combined_call())
+    for text, result in zip(batch_texts, batch_call(), strict=True):
         assert_source_spans(text, result)
 
     entity = TimingStats(f"{alias}: entity extraction")
@@ -244,12 +292,12 @@ def run_model(
     batch = TimingStats(f"{alias}: entity batch (size {batch_size})")
 
     scenarios = (
-        ("entity extraction", entity, extract_entities),
-        ("long-document extraction", long_document, extract_long_document),
-        ("constrained classification", classification, classify_route),
-        ("Joint IE", joint_ie, extract_graph),
-        ("combined schema", combined, extract_combined),
-        (f"entity batch size {batch_size}", batch, extract_batch),
+        ("entity extraction", entity, entity_call),
+        ("long-document extraction", long_document, long_document_call),
+        ("constrained classification", classification, classification_call),
+        ("Joint IE", joint_ie, graph_call),
+        ("combined schema", combined, combined_call),
+        (f"entity batch size {batch_size}", batch, batch_call),
     )
     for name, stats, call in scenarios:
         print(f"  timing {name}: {warm_calls} calls", flush=True)
@@ -267,6 +315,8 @@ def run_model(
         batch=batch,
         batch_size=batch_size,
     )
+    clear_gliner25_model_cache()
+    gc.collect()
     return result
 
 
@@ -290,7 +340,8 @@ def build_report(
     lines = [
         "# GLiNER2.5 CPU Use-Case Benchmark",
         "",
-        f"Models run sequentially on `{device}` with {warm_calls} timed warm calls per scenario.",
+        f"Models run sequentially through the aibackends `gliner25` backend on `{device}` "
+        f"with {warm_calls} timed warm calls per scenario.",
         "",
         "## Environment",
         "",

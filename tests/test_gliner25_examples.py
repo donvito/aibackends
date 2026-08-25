@@ -5,6 +5,13 @@ from typing import Any
 
 import pytest
 
+from aibackends.backends.information_extraction.gliner25 import (
+    GLINER25_MODEL_IDS,
+    assert_source_spans,
+    normalize_device,
+    resolve_model_id,
+    result_to_dict,
+)
 from evals.eval_gliner25 import (
     ModelEval,
     PRFCounts,
@@ -13,13 +20,8 @@ from evals.eval_gliner25 import (
     graph_is_valid,
     predicted_entity_set,
 )
-from examples.gliner25.common import (
-    MODEL_IDS,
-    assert_source_spans,
-    normalize_device,
-    resolve_model_id,
-    result_to_dict,
-)
+
+MODEL_IDS = GLINER25_MODEL_IDS
 
 
 class _TypedResult:

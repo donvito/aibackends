@@ -193,6 +193,7 @@ module = [
   "fitz",
   "gliner",
   "gliner2",
+  "gliner2.*",
   "huggingface_hub",
   "llama_cpp",
   "llama_cpp.*",

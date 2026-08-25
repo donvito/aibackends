@@ -23,16 +23,29 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from benchmarks._reporting import environment_lines, slugify, write_report  # noqa: E402
-from examples.gliner25.common import (  # noqa: E402
-    MODEL_IDS,
+from aibackends.backends.information_extraction import (  # noqa: E402
+    BaseInformationExtractionBackend,
+    get_information_extraction_backend,
+)
+from aibackends.backends.information_extraction.gliner25 import (  # noqa: E402
+    GLINER25_MODEL_IDS,
     assert_source_spans,
+    clear_gliner25_model_cache,
     normalize_device,
     result_to_dict,
 )
+from aibackends.tasks import (  # noqa: E402
+    classify_schema,
+    extract_entities,
+    extract_entities_long,
+    extract_graph,
+    extract_schema,
+)
+from benchmarks._reporting import environment_lines, slugify, write_report  # noqa: E402
 
 FIXTURE_PATH = Path(__file__).parent / "data" / "gliner25_cases.json"
 REPORTS_DIR = Path(__file__).parent / "reports"
+MODEL_IDS = GLINER25_MODEL_IDS
 
 
 @dataclass
@@ -265,42 +278,55 @@ def _offsets_valid(text: str, result: object, metrics: ModelEval) -> bool:
     return True
 
 
-def _routing_schema() -> Any:
-    from gliner2.classification import ClassificationSchema
-    from gliner2.classification import constraints as C
-
+def _routing_schema(backend: BaseInformationExtractionBackend) -> Any:
+    constraints = backend.classification_constraints
     return (
-        ClassificationSchema()
+        backend.create_classification_schema()
         .single("task_type", ["summarization", "reasoning", "live_data"])
         .single("route", ["small_local_model", "large_reasoning_model", "tool_agent"])
         .constrain(
-            C.implies(("task_type", "summarization"), ("route", "small_local_model")),
-            C.implies(("task_type", "reasoning"), ("route", "large_reasoning_model")),
-            C.implies(("task_type", "live_data"), ("route", "tool_agent")),
+            constraints.implies(
+                ("task_type", "summarization"),
+                ("route", "small_local_model"),
+            ),
+            constraints.implies(
+                ("task_type", "reasoning"),
+                ("route", "large_reasoning_model"),
+            ),
+            constraints.implies(("task_type", "live_data"), ("route", "tool_agent")),
         )
     )
 
 
-def _guardrail_schema() -> Any:
-    from gliner2.classification import ClassificationSchema
-    from gliner2.classification import constraints as C
-
+def _guardrail_schema(backend: BaseInformationExtractionBackend) -> Any:
+    constraints = backend.classification_constraints
     return (
-        ClassificationSchema()
+        backend.create_classification_schema()
         .single("safety", ["safe", "unsafe"])
         .single("harm_type", ["benign", "prompt_injection", "data_exfiltration"])
         .constrain(
-            C.implies(("safety", "safe"), ("harm_type", "benign")),
-            C.implies(("harm_type", "prompt_injection"), ("safety", "unsafe")),
-            C.implies(("harm_type", "data_exfiltration"), ("safety", "unsafe")),
-            C.excludes(("safety", "unsafe"), ("harm_type", "benign")),
+            constraints.implies(("safety", "safe"), ("harm_type", "benign")),
+            constraints.implies(
+                ("harm_type", "prompt_injection"),
+                ("safety", "unsafe"),
+            ),
+            constraints.implies(
+                ("harm_type", "data_exfiltration"),
+                ("safety", "unsafe"),
+            ),
+            constraints.excludes(("safety", "unsafe"), ("harm_type", "benign")),
         )
     )
 
 
-def _joint_schema(joint: Any) -> Any:
+def _joint_schema(
+    backend: BaseInformationExtractionBackend,
+    *,
+    model: str,
+    device: str,
+) -> Any:
     return (
-        joint.create_schema()
+        backend.create_joint_schema(model=model, device=device)
         .entities(["person", "organization", "location"])
         .relation("works_for", "person", "organization", unique_head=True)
         .relation("located_in", "organization", "location", unique_head=True)
@@ -308,9 +334,14 @@ def _joint_schema(joint: Any) -> Any:
     )
 
 
-def _attribute_schema(model: Any, attribute_group: type[Any]) -> Any:
+def _attribute_schema(
+    backend: BaseInformationExtractionBackend,
+    *,
+    model: str,
+    device: str,
+) -> Any:
     return (
-        model.create_schema()
+        backend.create_schema(model=model, device=device)
         .entities(
             {
                 "symptom": "Symptoms or clinical findings",
@@ -320,12 +351,12 @@ def _attribute_schema(model: Any, attribute_group: type[Any]) -> Any:
         )
         .entity_attributes(
             {
-                "negation_status": attribute_group(
+                "negation_status": backend.create_attribute_group(
                     ["present", "negated"],
                     applies_to=["symptom"],
                     qualify_labels=True,
                 ),
-                "dosage_form": attribute_group(
+                "dosage_form": backend.create_attribute_group(
                     ["tablet", "capsule", "liquid", "injection", "unspecified"],
                     applies_to=["medication"],
                     qualify_labels=True,
@@ -336,15 +367,12 @@ def _attribute_schema(model: Any, attribute_group: type[Any]) -> Any:
 
 
 def run_model(alias: str, device: str, fixture: dict[str, Any]) -> ModelEval:
-    from gliner2 import AttributeGroup, AutoExtractor
-    from gliner2.classification import ClassificationConfig, Classifier
-    from gliner2.joint_ie import JointIE, JointIEConfig
-
+    clear_gliner25_model_cache()
+    backend = get_information_extraction_backend("gliner25")
     model_id = MODEL_IDS[alias]
     print(f"\nLoading {alias}: {model_id}", flush=True)
     started = time.perf_counter()
-    model = AutoExtractor.from_pretrained(model_id, map_location=device)
-    model.eval()
+    backend.load(model=alias, device=device)
     metrics = ModelEval(
         alias=alias,
         model_id=model_id,
@@ -354,18 +382,24 @@ def run_model(alias: str, device: str, fixture: dict[str, Any]) -> ModelEval:
     for case in fixture["entity_cases"]:
         print(f"  entity: {case['id']}", flush=True)
         if case.get("long"):
-            result = model.extract_entities_long(
+            result = extract_entities_long(
                 case["text"],
                 case["labels"],
+                backend=backend.name,
+                model=alias,
+                device=device,
                 chunk_size=int(case["chunk_size"]),
                 chunk_overlap=int(case["chunk_overlap"]),
                 include_spans=True,
                 include_confidence=True,
             )
         else:
-            result = model.extract_entities(
+            result = extract_entities(
                 case["text"],
                 case["labels"],
+                backend=backend.name,
+                model=alias,
+                device=device,
                 include_spans=True,
                 include_confidence=True,
             )
@@ -384,13 +418,25 @@ def run_model(alias: str, device: str, fixture: dict[str, Any]) -> ModelEval:
             )
         )
 
-    classifier = Classifier(model, device=device).eval()
-    schemas = {"routing": _routing_schema(), "guardrail": _guardrail_schema()}
-    classification_config = ClassificationConfig(decoder="auto", on_infeasible="relax")
+    schemas = {
+        "routing": _routing_schema(backend),
+        "guardrail": _guardrail_schema(backend),
+    }
+    classification_config = backend.create_classification_config(
+        decoder="auto",
+        on_infeasible="relax",
+    )
     for case in fixture["classification_cases"]:
         print(f"  classification: {case['id']}", flush=True)
         schema = schemas[str(case["schema"])]
-        result = classifier.classify(case["text"], schema, config=classification_config)
+        result = classify_schema(
+            case["text"],
+            schema,
+            backend=backend.name,
+            model=alias,
+            device=device,
+            config=classification_config,
+        )
         classification_expected = {
             str(key): str(value) for key, value in case["expected"].items()
         }
@@ -412,12 +458,18 @@ def run_model(alias: str, device: str, fixture: dict[str, Any]) -> ModelEval:
             )
         )
 
-    joint = JointIE(model, device=device).eval()
-    joint_schema = _joint_schema(joint)
-    joint_config = JointIEConfig(optimizer="beam", beam_size=32)
+    joint_schema = _joint_schema(backend, model=alias, device=device)
+    joint_config = backend.create_joint_config(optimizer="beam", beam_size=32)
     for case in fixture["relation_cases"]:
         print(f"  relation: {case['id']}", flush=True)
-        result = joint.extract(case["text"], joint_schema, config=joint_config)
+        result = extract_graph(
+            case["text"],
+            joint_schema,
+            backend=backend.name,
+            model=alias,
+            device=device,
+            config=joint_config,
+        )
         relation_expected = expected_relation_set(case)
         relation_predicted = predicted_relation_set(result)
         metrics.relation.add(relation_expected, relation_predicted)
@@ -435,12 +487,19 @@ def run_model(alias: str, device: str, fixture: dict[str, Any]) -> ModelEval:
             )
         )
 
-    attribute_schema = _attribute_schema(model, AttributeGroup)
+    attribute_schema = _attribute_schema(
+        backend,
+        model=alias,
+        device=device,
+    )
     for case in fixture["attribute_cases"]:
         print(f"  attributes: {case['id']}", flush=True)
-        result = model.extract(
+        result = extract_schema(
             case["text"],
             attribute_schema,
+            backend=backend.name,
+            model=alias,
+            device=device,
             include_spans=True,
             include_confidence=True,
         )
@@ -461,7 +520,7 @@ def run_model(alias: str, device: str, fixture: dict[str, Any]) -> ModelEval:
             )
         )
 
-    del joint, classifier, model
+    clear_gliner25_model_cache()
     gc.collect()
     return metrics
 
@@ -482,7 +541,7 @@ def build_report(
     lines = [
         "# GLiNER2.5 Applied Use-Case Eval",
         "",
-        "Targeted source-grounded evaluation of the repository's GLiNER2.5 examples. "
+        "Targeted source-grounded evaluation through the aibackends `gliner25` backend. "
         "This is not a reproduction of Fastino's 16-dataset research benchmark.",
         "",
         "## Environment",

@@ -68,8 +68,9 @@ python3 examples/tasks/moderate_content.py --device gpu
 
 ## GLiNER2.5 use cases
 
-The scripts in `examples/gliner25/` use the native GLiNER2 boundary APIs. Run
-them as modules from the repository root:
+The scripts in `examples/gliner25/` use the first-class aibackends `gliner25`
+backend and information-extraction task functions. Run them as modules from the
+repository root:
 
 ```bash
 python3 -m examples.gliner25.long_context --model small --device cpu

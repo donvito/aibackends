@@ -187,17 +187,20 @@ Every task also exposes an async variant with the `_async` suffix.
 
 ### Span-free information extraction with GLiNER2.5
 
-Install `aibackends[gliner2]` to use the native GLiNER2 boundary APIs. These
-small encoder models do not use the configured generative runtime:
+Install `aibackends[gliner2]` to use the first-class `gliner25` information
+extraction backend. These small encoder models do not use the configured
+generative runtime:
 
 ```python
-from gliner2 import AutoExtractor
+from aibackends.tasks import extract_entities
 
-model = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")
 text = "Apple CEO Tim Cook announced the iPhone 15 in Cupertino."
-result = model.extract_entities(
+result = extract_entities(
     text,
     ["company", "person", "product", "location"],
+    backend="gliner25",
+    model="base",
+    device="cpu",
     include_spans=True,
     include_confidence=True,
 )
@@ -210,9 +213,12 @@ for entities in result["entities"].values():
 Use the explicit long-document API when input may exceed the encoded window:
 
 ```python
-result = model.extract_entities_long(
+from aibackends.tasks import extract_entities_long
+
+result = extract_entities_long(
     contract_text,
     ["party", "email", "obligation", "termination_clause"],
+    model="base",
     chunk_size=384,
     chunk_overlap=64,
     include_spans=True,
@@ -225,10 +231,11 @@ Checkpoint selection:
 - `fastino/gliner2.5-base-v1`: 194M default English multi-task model
 - `fastino/gliner2.5-multi-v1`: 287M multilingual multi-task model
 
-Use `Classifier` when labels across tasks must obey implications or exclusions,
-`JointIE` when relation endpoints and graph constraints must be valid together,
-and `AttributeGroup` for labels attached to individual spans. Runnable examples
-live in `examples/gliner25/`; the full browser tutorial is
+Use `backend.create_classification_schema()` when labels across tasks must obey
+implications or exclusions, `backend.create_joint_schema()` when relation
+endpoints and graph constraints must be valid together, and
+`backend.create_attribute_group()` for labels attached to individual spans.
+Runnable examples live in `examples/gliner25/`; the full browser tutorial is
 `examples/notebooks/gliner25_information_extraction_colab.ipynb`.
 The measured model comparison is committed in
 `evals/reports/2026-08-25_gliner25-applied-eval-cpu.md`, with latency and

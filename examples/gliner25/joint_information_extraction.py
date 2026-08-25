@@ -12,14 +12,13 @@ from __future__ import annotations
 import argparse
 import time
 
-from gliner2.joint_ie import JointIE, JointIEConfig
+from aibackends.tasks import extract_graph
 
 from .common import (
     add_model_arguments,
     assert_source_spans,
-    normalize_device,
+    load_backend,
     print_result,
-    resolve_model_id,
 )
 
 TEXT = (
@@ -41,26 +40,26 @@ def main() -> None:
     if args.beam_size < 1:
         raise SystemExit("--beam-size must be at least 1")
 
-    model_id = resolve_model_id(args.model)
-    device = normalize_device(args.device)
     started = time.perf_counter()
-    joint = JointIE.from_pretrained(
-        model_id,
-        device=device,
-        map_location=device,
-    ).eval()
+    backend, model_id, device = load_backend(args.model, args.device)
 
     schema = (
-        joint.create_schema()
+        backend.create_joint_schema(model=args.model, device=device)
         .entities(["person", "organization", "location"])
         .relation("works_for", "person", "organization", unique_head=True)
         .relation("located_in", "organization", "location", unique_head=True)
         .no_self_loops()
     )
-    result = joint.extract(
+    result = extract_graph(
         TEXT,
         schema,
-        config=JointIEConfig(optimizer="beam", beam_size=args.beam_size),
+        backend=backend.name,
+        model=args.model,
+        device=device,
+        config=backend.create_joint_config(
+            optimizer="beam",
+            beam_size=args.beam_size,
+        ),
     )
     span_count = assert_source_spans(TEXT, result)
 

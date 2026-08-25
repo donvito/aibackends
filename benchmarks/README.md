@@ -105,7 +105,7 @@ Requires `aibackends[guardrails]`.
 Compares the three GLiNER2.5 boundary checkpoints on CPU: local model
 construction, warm entity extraction, long-document extraction, constrained
 classification, Joint IE, combined-schema extraction, and native entity batch
-throughput.
+throughput. Every scenario runs through the aibackends `gliner25` backend.
 
 ```bash
 python3 benchmarks/benchmark_gliner25_cpu.py \

@@ -13,7 +13,9 @@ import argparse
 import time
 from pathlib import Path
 
-from .common import add_model_arguments, assert_source_spans, load_extractor, print_result
+from aibackends.tasks import extract_entities_long
+
+from .common import add_model_arguments, assert_source_spans, load_backend, print_result
 
 CONTRACT_PATH = Path(__file__).parents[1] / "data" / "contract.txt"
 ENTITY_TYPES = {
@@ -54,13 +56,16 @@ def main() -> None:
 
     text = CONTRACT_PATH.read_text(encoding="utf-8")
     started = time.perf_counter()
-    extractor, model_id, device = load_extractor(args.model, args.device)
+    backend, model_id, device = load_backend(args.model, args.device)
     load_seconds = time.perf_counter() - started
 
     started = time.perf_counter()
-    result = extractor.extract_entities_long(
+    result = extract_entities_long(
         text,
         ENTITY_TYPES,
+        backend=backend.name,
+        model=args.model,
+        device=device,
         chunk_size=args.chunk_size,
         chunk_overlap=args.chunk_overlap,
         include_spans=True,

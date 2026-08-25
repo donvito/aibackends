@@ -40,7 +40,7 @@ flowchart LR
     Steps["Steps + assembler<br/>`steps/*`<br/>`core/assembler.py`"]
     Runtimes["Runtime implementations<br/>`core/runtimes/*`"]
     Schemas["Typed schemas<br/>`schemas/*`"]
-    Backends["Capability backends<br/>`backends/pii/*`"]
+    Backends["Capability backends<br/>`backends/*`"]
   end
 
   API --> Tasks
@@ -78,7 +78,7 @@ flowchart LR
 | Runtimes            | `src/aibackends/core/runtimes/`, `src/aibackends/runtimes.py`                            | Provides concrete LLM and embedding executors behind the `BaseRuntime` contract.                             |
 | Models              | `src/aibackends/models/`, `src/aibackends/core/model_registry.py`                        | Exposes supported model refs and resolves them to runtime-specific model profiles.                           |
 | Schemas             | `src/aibackends/schemas/`                                                                | Holds Pydantic types for structured task and workflow outputs.                                               |
-| Capability backends | `src/aibackends/backends/pii/`                                                           | Hosts non-runtime pluggable implementations for focused features such as PII detection.                      |
+| Capability backends | `src/aibackends/backends/`                                                               | Hosts non-runtime pluggable implementations for PII, moderation, and information extraction.                 |
 | Model preparation   | `src/aibackends/core/model_manager.py`, `src/aibackends/model_support/`                  | Handles pull and ensure-model flows used by the CLI and runtime helpers.                                     |
 
 
@@ -160,7 +160,7 @@ The main extension seams match the package layout:
 | Task               | `src/aibackends/tasks/*.py`         | Implement `BaseTask`, add any schema under `src/aibackends/schemas/`, and export `TASK_SPEC`.                                        |
 | Workflow           | `src/aibackends/workflows/*.py`     | Subclass `Pipeline`, compose `BaseStep` objects, and export `WORKFLOW_SPEC`.                                                         |
 | Workflow step      | `src/aibackends/steps/*`            | Add a reusable `BaseStep` when logic belongs in orchestration instead of in one task.                                                |
-| Capability backend | `src/aibackends/backends/pii/*`     | Use a focused backend spec rather than the general runtime contract for feature-specific integrations.                               |
+| Capability backend | `src/aibackends/backends/*`         | Use a focused backend registry rather than the general runtime contract for feature-specific integrations.                           |
 
 
 ## What Is Outside The Core

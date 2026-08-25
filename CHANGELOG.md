@@ -28,6 +28,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   prompt and response latency, and native batch throughput, plus a committed
   report in `benchmarks/reports/`.
 - Moderation example `examples/tasks/moderate_content.py`.
+- First-class `gliner25` information-extraction backend for GLiNER2.5
+  small/base/multi checkpoints, with per-model/device caching and schema
+  builders for constrained classification, Joint IE, records, and attributes.
+- Information-extraction task functions for entities, long documents, native
+  batches, combined schemas, constrained classification, and typed graphs.
+- GLiNER2.5 runnable examples, Colab notebook, applied accuracy eval, CPU
+  benchmark, and committed small/base/multi result reports.
+- New `gliner2` extra (`pip install aibackends[gliner2]`) for the GLiNER2.5
+  backend.
 
 ### Changed
 - The CLI `--backend` flag no longer defaults to `gliner`; when it is omitted,

@@ -106,13 +106,15 @@ interface.
 **Extract source-grounded information with GLiNER2.5**
 
 ```python
-from gliner2 import AutoExtractor
+from aibackends import extract_entities
 
-model = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")
 text = "Apple CEO Tim Cook announced the iPhone 15 in Cupertino."
-result = model.extract_entities(
+result = extract_entities(
     text,
     ["company", "person", "product", "location"],
+    backend="gliner25",
+    model="base",
+    device="cpu",
     include_spans=True,
     include_confidence=True,
 )
@@ -123,9 +125,11 @@ for entities in result["entities"].values():
 ```
 
 Use `small` for fast English CPU inference, `base` for stronger English
-multi-task extraction, and `multi` for multilingual documents. The runnable
-examples in `examples/gliner25/` also cover long documents, constrained
-classification, typed Joint IE graphs, span attributes, and combined schemas.
+multi-task extraction, and `multi` for multilingual documents. The first-class
+`gliner25` backend owns model loading, caching, and native decoder access. The
+runnable examples in `examples/gliner25/` also cover long documents,
+constrained classification, typed Joint IE graphs, span attributes, and
+combined schemas.
 See the committed
 [applied accuracy eval](evals/reports/2026-08-25_gliner25-applied-eval-cpu.md)
 and [CPU benchmark](benchmarks/reports/2026-08-25_gliner25-cpu.md) for measured
@@ -264,7 +268,8 @@ LFM2.5's native Pythonic tool-call format.
 - Local runtimes: `llamacpp`, `transformers`
 - Tasks: `summarize`, `extract`, `classify`, `embed`, `extract_invoice`,
   `redact_pii`, `moderate_prompt`, `moderate_response`, `analyse_sales_call`,
-  `analyse_video_ad`
+  `analyse_video_ad`, `extract_entities`, `extract_entities_long`,
+  `batch_extract_entities`, `extract_schema`, `classify_schema`, `extract_graph`
 - Workflows: `InvoiceProcessor`, `PIIRedactor`, `SalesCallAnalyser`,
   `VideoAdIntelligence`
 - Outputs: `InvoiceOutput`, `SalesCallReport`, `VideoAdReport`,

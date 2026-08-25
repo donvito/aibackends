@@ -12,9 +12,9 @@ from __future__ import annotations
 import argparse
 import time
 
-from gliner2 import AttributeGroup
+from aibackends.tasks import extract_schema
 
-from .common import add_model_arguments, assert_source_spans, load_extractor, print_result
+from .common import add_model_arguments, assert_source_spans, load_backend, print_result
 
 TEXT = (
     "Patient reports a severe headache but denies chest pain. "
@@ -31,10 +31,10 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     started = time.perf_counter()
-    extractor, model_id, device = load_extractor(args.model, args.device)
+    backend, model_id, device = load_backend(args.model, args.device)
 
     schema = (
-        extractor.create_schema()
+        backend.create_schema(model=args.model, device=device)
         .entities(
             {
                 "symptom": "Symptoms or clinical findings mentioned by the patient",
@@ -44,12 +44,12 @@ def main() -> None:
         )
         .entity_attributes(
             {
-                "negation_status": AttributeGroup(
+                "negation_status": backend.create_attribute_group(
                     ["present", "negated"],
                     applies_to=["symptom"],
                     qualify_labels=True,
                 ),
-                "dosage_form": AttributeGroup(
+                "dosage_form": backend.create_attribute_group(
                     ["tablet", "capsule", "liquid", "injection", "unspecified"],
                     applies_to=["medication"],
                     qualify_labels=True,
@@ -57,9 +57,12 @@ def main() -> None:
             }
         )
     )
-    result = extractor.extract(
+    result = extract_schema(
         TEXT,
         schema,
+        backend=backend.name,
+        model=args.model,
+        device=device,
         include_spans=True,
         include_confidence=True,
     )
