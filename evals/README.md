@@ -32,3 +32,24 @@ but is secondary; use `benchmarks/` for performance numbers.
 Requires `aibackends[llamacpp]` or `aibackends[transformers]`. Evals run
 model inference, so run them one at a time and avoid running them while a
 benchmark is in flight.
+
+## `eval_gliner25.py`
+
+Zero-shot accuracy for the GLiNER2.5 extraction backend (`small` / `base` /
+`multi`), with no fine-tuning and no in-context examples:
+
+- **ag_news** (4-way topic) and **rotten_tomatoes** (binary sentiment) via
+  `classify_text`, scored with accuracy and macro-F1.
+- **CrossNER politics** (via the `mneb/cross-ner` span-format mirror) via
+  `extract_entities` using the dataset's own label descriptions, scored with
+  micro precision / recall / F1 on exact (start, end, label) matches.
+
+```bash
+python evals/eval_gliner25.py --models small base multi --samples 150
+```
+
+Test subsets are drawn with a fixed shuffle seed so runs are reproducible.
+Zero-shot classification scores depend on how class names are verbalized;
+the mappings live at the top of the script.
+
+Requires `aibackends[extraction]` and `datasets`.
