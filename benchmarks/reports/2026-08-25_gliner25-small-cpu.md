@@ -4,7 +4,7 @@ Backend `gliner25`, model `gliner25-small`, device forced to `cpu`, 10 timed sam
 
 ## Environment
 
-- Date: 2026-08-25 08:54:44 UTC
+- Date: 2026-08-25 09:05:03 UTC
 - Platform: Linux-6.12.94+-x86_64-with-glibc2.39
 - Processor: x86_64
 - GPU: none detected
@@ -21,23 +21,31 @@ Backend `gliner25`, model `gliner25-small`, device forced to `cpu`, 10 timed sam
 
 | Scenario | Samples | Mean (ms) | Min (ms) | Max (ms) |
 |---|---|---|---|---|
-| First entity extraction (load + inference) | 1 | 4,859.1 | 4,859.1 | 4,859.1 |
-| `backend.load(device="cpu")` | 1 | 2,020.1 | 2,020.1 | 2,020.1 |
-| Warm entity extraction | 10 | 21.0 | 20.7 | 22.2 |
-| Warm constrained classification | 10 | 20.4 | 20.3 | 20.6 |
-| Warm joint IE | 10 | 65.4 | 65.1 | 65.6 |
-| Warm long-document extraction | 10 | 203.2 | 199.6 | 206.8 |
+| First entity extraction (load + inference) | 1 | 5,335.4 | 5,335.4 | 5,335.4 |
+| `backend.load(device="cpu")` | 1 | 2,095.0 | 2,095.0 | 2,095.0 |
+| Warm entity extraction | 10 | 20.5 | 20.3 | 20.9 |
+| Warm constrained classification | 10 | 20.2 | 19.9 | 20.6 |
+| Warm joint IE | 10 | 64.9 | 64.7 | 65.2 |
+| Warm long-document extraction | 10 | 208.5 | 203.1 | 213.6 |
+| Native NER batch (size 8) | 10 | 47.6 | 46.5 | 51.3 |
 
-Warm entity extraction is **231.9x** faster than the first call that includes model loading.
+Warm entity extraction is **260.4x** faster than the first call that includes model loading.
+
+## Native batch throughput
+
+| Scenario | Batch size | Mean batch (ms) | Mean/item (ms) | Items/s |
+|---|---|---|---|---|
+| Entity extraction | 8 | 47.6 | 6.0 | 168.0 |
 
 ## Consistency
 
 | Scenario | Stdev (ms) | CV | p50 (ms) | p95 (ms) | Drift |
 |---|---|---|---|---|---|
-| Warm entity extraction | 0.5 | 2.2% | 20.8 | 22.2 | +2.7% |
-| Warm constrained classification | 0.1 | 0.4% | 20.4 | 20.6 | -0.6% |
-| Warm joint IE | 0.2 | 0.2% | 65.5 | 65.6 | +0.1% |
-| Warm long-document extraction | 2.7 | 1.3% | 203.1 | 206.8 | -1.1% |
+| Warm entity extraction | 0.2 | 1.0% | 20.4 | 20.9 | -2.4% |
+| Warm constrained classification | 0.2 | 0.9% | 20.2 | 20.6 | -1.9% |
+| Warm joint IE | 0.2 | 0.2% | 64.9 | 65.2 | -0.3% |
+| Warm long-document extraction | 3.5 | 1.7% | 209.1 | 213.6 | -2.8% |
+| Native NER batch (size 8) | 1.4 | 2.8% | 47.3 | 51.3 | -4.0% |
 
 CV is the coefficient of variation (stdev / mean). Drift compares the mean of the last quarter of calls against the first quarter; positive drift means calls slowed down over the run.
 
@@ -45,7 +53,7 @@ Per-segment mean (ms) across the run, Warm entity extraction:
 
 | S1 | S2 | S3 | S4 | S5 | S6 | S7 | S8 | S9 | S10 |
 |---|---|---|---|---|---|---|---|---|---|
-| 21 | 21 | 21 | 21 | 21 | 21 | 21 | 21 | 22 | 21 |
+| 21 | 21 | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 |
 
 Per-segment mean (ms) across the run, Warm constrained classification:
 
@@ -60,4 +68,6 @@ Per-segment mean (ms) across the run, Warm constrained classification:
 - First-call timings include Python model construction from the local
   Hugging Face cache; a first-ever network download is not measured.
 - Constrained classification and joint IE reuse the loaded extractor.
+- Batch rows report total batch latency. The throughput table derives
+  per-item latency and items/second from each mean batch latency.
 - These timings measure performance, not extraction accuracy.
