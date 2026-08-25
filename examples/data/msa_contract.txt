@@ -1,0 +1,59 @@
+MASTER SERVICES AGREEMENT
+
+This Master Services Agreement (“Agreement”) is entered into as of 1 May 2026
+by and between Northwind Analytics LLC (“Provider”), with offices at
+88 Harbor Walk, Suite 400, Sample City 000000, email contracts@northwind.test,
+phone +1 555 010 0100, and Contoso Retail Inc. (“Customer”), with offices at
+12 Market Square, Example Town 111111, email legal@contoso.test,
+phone +1 555 010 0199.
+
+1. Services. Provider shall deliver schema-driven information extraction,
+classification, and knowledge-graph construction services, including long-document
+review of contracts, transcripts, and clinical notes, as described in each
+Statement of Work.
+
+2. Fees. Customer shall pay a monthly platform fee of USD 18,500, due on the
+first business day of each month by bank transfer to account TEST-ACC-778899.
+Late amounts accrue 1.5 percent interest per month.
+
+3. Term. This Agreement begins on 1 June 2026 and continues for twenty-four
+(24) months, renewing automatically for successive twelve-month terms unless
+either party gives written notice of non-renewal at least thirty (30) days
+before the then-current term ends.
+
+4. Confidentiality. Each party shall protect the other party’s non-public
+business, technical, and personal data, including names, email addresses, phone
+numbers, and account identifiers, and shall not disclose that information except
+to personnel with a need to know or as required by law.
+
+5. Data protection. Provider shall detect and redact personal data in Customer
+documents before those documents are used for model evaluation. Redaction must
+preserve global character offsets so Customer can verify each span against the
+source text.
+
+6. Indemnification. Provider shall indemnify, defend, and hold harmless Customer
+and its officers, directors, employees, and agents from and against any third-party
+claim arising out of Provider’s gross negligence or willful misconduct in performing
+the services, except to the extent the claim arises from Customer’s materials or
+instructions. This indemnification obligation is a single extractable clause and
+is not limited to a twelve-word fragment.
+
+7. Limitation of liability. Except for confidentiality breaches, indemnification
+obligations, and infringement claims, neither party’s aggregate liability under
+this Agreement shall exceed the fees paid by Customer in the twelve months
+preceding the claim.
+
+8. Termination. Either party may terminate this Agreement for convenience by
+giving thirty (30) days written notice, or immediately for a material breach that
+remains uncured for fifteen (15) days after written notice of the breach.
+
+9. Governing law. This Agreement is governed by the laws of the State of
+Washington, without regard to conflict-of-law rules. The parties may extract the
+governing-law sentence as a single span of any length.
+
+10. Notices. Notices shall be sent to the emails listed above and are effective
+on receipt. Primary contacts are Jordan Hale for Provider and Riley Chen for
+Customer.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the date
+first written above.

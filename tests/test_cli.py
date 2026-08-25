@@ -103,3 +103,45 @@ def test_task_command_supports_gliguard_response_options(
         "threshold": 0.6,
         "category_threshold": 0.3,
     }
+
+
+def test_task_command_supports_gliner25_checkpoint(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from aibackends.schemas.extraction import EntityExtraction
+
+    captured: dict[str, Any] = {}
+    extraction_module = importlib.import_module("aibackends.tasks.extraction")
+
+    def _extract_entities(text: str, **kwargs: Any) -> EntityExtraction:
+        captured["text"] = text
+        captured.update(kwargs)
+        return EntityExtraction(
+            text=text,
+            entities=[],
+            backend_used="gliner25",
+            model_id="fastino/gliner2.5-small-v1",
+        )
+
+    monkeypatch.setattr(extraction_module, "extract_entities", _extract_entities)
+    result = runner.invoke(
+        app,
+        [
+            "task",
+            "extract-entities",
+            "--input",
+            "Ada lives in London.",
+            "--labels",
+            "person,location",
+            "--device",
+            "cpu",
+            "--model",
+            "gliner25-small",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert captured["text"] == "Ada lives in London."
+    assert captured["labels"] == ["person", "location"]
+    assert captured["device"] == "cpu"
+    assert captured["model"] == "gliner25-small"

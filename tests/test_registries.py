@@ -4,6 +4,7 @@ from types import MethodType
 
 import pytest
 
+from aibackends.backends.extraction import get_extraction_backend
 from aibackends.backends.moderation import get_moderation_backend
 from aibackends.backends.pii import get_pii_backend
 from aibackends.core.config import get_runtime
@@ -16,6 +17,7 @@ from aibackends.runtimes import LLAMACPP, TRANSFORMERS, available_runtimes, get_
 from aibackends.tasks import (
     BaseTask,
     ClassifyTask,
+    ExtractEntitiesTask,
     ExtractInvoiceTask,
     ModeratePromptTask,
     ModerateResponseTask,
@@ -77,6 +79,12 @@ def test_transformer_model_profile_does_not_override_explicit_template():
     assert runtime.config.chat_template == "{{ user_template }}"
 
 
+def test_gliner25_extraction_backend_is_discoverable() -> None:
+    backend = get_extraction_backend("gliner2.5")
+
+    assert backend.name == "gliner25"
+
+
 def test_pii_backend_is_discovered_from_backend_spec():
     backend = get_pii_backend("openai_privacy")
 
@@ -121,6 +129,7 @@ def test_available_tasks_returns_canonical_names_mapped_to_task_classes():
     assert tasks["extract-invoice"] is ExtractInvoiceTask
     assert tasks["moderate-prompt"] is ModeratePromptTask
     assert tasks["moderate-response"] is ModerateResponseTask
+    assert tasks["extract-entities"] is ExtractEntitiesTask
     assert "extract_invoice" not in tasks
 
 

@@ -21,6 +21,7 @@ pip install aibackends[audio]
 pip install aibackends[video]
 pip install aibackends[pii]
 pip install aibackends[guardrails]
+pip install aibackends[gliner25]
 ```
 
 Downloaded local models for `llamacpp` and `aibackends pull` use the standard
@@ -180,8 +181,9 @@ redacted = redact_pii(
 )
 ```
 
-`redact_pii` uses a PII backend, not the configured runtime. Use `backend="gliner"`
-or `backend="openai-privacy"` for the local `privacy-filter` model.
+`redact_pii` uses a PII backend, not the configured runtime. Use `backend="gliner"`,
+`backend="gliner25"` for GLiNER 2.5 long-context spans, or
+`backend="openai-privacy"` for the local `privacy-filter` model.
 
 Every task also exposes an async variant with the `_async` suffix.
 
@@ -243,6 +245,76 @@ response_results = moderate_responses(
 
 The first call downloads and caches the model. Repeated calls on the same
 device reuse it; CPU and CUDA instances are cached separately.
+
+### Extract with GLiNER 2.5
+
+GLiNER 2.5 is a dedicated extraction backend. It does not use the configured
+generative runtime. Default checkpoint is `gliner25-small`
+(`fastino/gliner2.5-small-v1`); pass `model="gliner25-base"` or
+`model="gliner25-multi"` for the larger English and multilingual models.
+
+```python
+from aibackends.tasks import (
+    classify_schema,
+    extract_entities,
+    extract_entities_batch,
+    extract_graph,
+    extract_records,
+)
+
+entities = extract_entities(
+    "Ada Lovelace wrote to Charles Babbage in London.",
+    labels=["person", "location"],
+    device="cpu",
+    long=True,  # overlapping word chunks with global offsets
+)
+
+batch = extract_entities_batch(
+    [
+        "Ada Lovelace wrote to Charles Babbage in London.",
+        "Charles Babbage joined Fastino Labs last month.",
+    ],
+    labels=["person", "organization", "location"],
+    batch_size=8,
+)
+
+route = classify_schema(
+    "Delete the temporary cache files under /tmp.",
+    tasks={
+        "intent": {"labels": ["chat", "retrieve", "delete"]},
+        "destination": {"labels": ["small_chat", "rag_tool", "file_tool"]},
+    },
+    constraints=[
+        {
+            "type": "implies",
+            "if": ["intent", "delete"],
+            "then": ["destination", "file_tool"],
+        }
+    ],
+)
+
+graph = extract_graph(
+    "Ada Lovelace works at Fastino Labs in London.",
+    entities=["person", "organization", "location"],
+    relations=[
+        {
+            "name": "works_for",
+            "head": "person",
+            "tail": "organization",
+            "unique_head": True,
+        },
+        {"name": "located_in", "head": "organization", "tail": "location"},
+    ],
+)
+
+records = extract_records(
+    "Northwind invoices Contoso USD 18,500 per month.",
+    schema={"agreement": ["provider::str", "customer::str", "monthly_fee::str"]},
+)
+```
+
+Install with `pip install aibackends[gliner25]`. Preload with
+`get_extraction_backend("gliner25").load(device="cpu", model="gliner25-small")`.
 
 Tasks are also available as configured `BaseTask` objects through the factory:
 

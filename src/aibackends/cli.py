@@ -72,6 +72,8 @@ def run_task(
         task_config["runtime"] = parse_runtime_text(runtime)
     if task.accepts_model:
         task_config["model"] = parse_model_text(model)
+    if task.accepts_checkpoint and model is not None:
+        kwargs["model"] = model
 
     task_instance = create_task(task, **task_config)
     result = task_instance.run(input, **kwargs)

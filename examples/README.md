@@ -27,7 +27,18 @@ python3 -m pip install -e ".[transformers]"
 
 # GliGuard prompt/response moderation
 python3 -m pip install -e ".[guardrails]"
+
+# GLiNER 2.5 extraction (entities, graphs, constrained classification)
+python3 -m pip install -e ".[gliner25]"
 ```
+
+## Try it in Colab
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/gliguard_moderation_colab.ipynb)
+GliGuard prompt and response moderation
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/gliner25_extraction_colab.ipynb)
+GLiNER 2.5 span-free extraction
 
 Task examples use `create_task(TaskClass, ...)` with supported runtime/model
 refs such as `LLAMACPP` and `GEMMA4_E2B`, so defaults are configured before
@@ -63,6 +74,15 @@ python3 examples/tasks/moderate_content.py --device cpu
 python3 examples/tasks/moderate_content.py --device gpu
 ```
 
+`gliner25_use_cases.py` walks the six Fastino GLiNER 2.5 blog use cases
+(agent routing, guardrails, knowledge graphs, PII, contract review, clinical
+span attributes) on CPU or GPU:
+
+```bash
+python3 examples/tasks/gliner25_use_cases.py --device cpu --model gliner25-small
+python3 examples/tasks/gliner25_use_cases.py --device gpu --model gliner25-base
+```
+
 `workflows/image_ocr_gemma.py` and `workflows/image_ocr_qwen.py` are vision
 OCR examples that extract structured receipt JSON from the sample receipt
 images in `examples/data/images/` using the `llamacpp` runtime.
@@ -85,6 +105,7 @@ python3 examples/tasks/embed_text_transformers.py
 python3 examples/tasks/summarize_text.py
 python3 examples/tasks/classify_text.py
 python3 examples/tasks/moderate_content.py --device cpu
+python3 examples/tasks/gliner25_use_cases.py --device cpu
 python3 examples/tasks/redact_text.py
 python3 examples/tasks/redact_text_batch.py
 python3 examples/tasks/extract_custom_schema.py

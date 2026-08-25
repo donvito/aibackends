@@ -66,6 +66,7 @@ under `src/aibackends/tasks/`):
 - `classify`
 - `embed`
 - `redact-pii`
+- `extract-entities`
 - `moderate-prompt`
 - `moderate-response`
 - `extract-invoice`
@@ -106,10 +107,18 @@ aibackends task redact-pii \
   --input "Call me at 555-1234, john@example.com" \
   --backend gliner
 
-# redact-pii with the local privacy-filter backend
+# redact-pii with GLiNER 2.5 (long-context spans, global offsets)
 aibackends task redact-pii \
   --input "Call me at 555-1234, john@example.com" \
-  --backend openai-privacy
+  --backend gliner25 \
+  --labels email,phone_number,person
+
+# extract-entities (no LLM; uses the GLiNER 2.5 extraction backend)
+aibackends task extract-entities \
+  --input "Ada Lovelace lives in London." \
+  --labels person,location \
+  --device cpu \
+  --model gliner25-small
 
 # prompt moderation (safety, toxicity, and jailbreak detection)
 aibackends task moderate-prompt \
@@ -131,12 +140,17 @@ aibackends task extract \
 
 Notes:
 
-- `redact-pii` does not use the `--runtime` / `--model` flags. It dispatches to
-  a PII backend such as `gliner` or `openai-privacy` (`privacy-filter`).
+- `redact-pii` does not use the `--runtime` flag. It dispatches to a PII
+  backend such as `gliner`, `gliner25`, or `openai-privacy` (`privacy-filter`).
+  `--model` selects the GLiNER 2.5 checkpoint when the task is
+  `extract-entities`.
+- `extract-entities` uses the `gliner25` extraction backend instead of the
+  general runtime. Nested schemas (`classify-schema`, `extract-graph`,
+  `extract-records`) are Python-only.
 - `moderate-prompt` and `moderate-response` use the `gliguard` backend instead
   of the general runtime. `--device gpu` is an alias for CUDA.
-- `classify` requires `--labels`. `redact-pii` accepts `--labels` only when used
-with the `gliner` backend (custom entity types).
+- `classify` requires `--labels`. `redact-pii` accepts `--labels` when the
+  backend supports custom entity types (`gliner`, `gliner25`).
 - `extract` requires `--schema` pointing to a Pydantic model class via dotted
 path (`package.module.SchemaName`).
 

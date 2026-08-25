@@ -32,3 +32,20 @@ but is secondary; use `benchmarks/` for performance numbers.
 Requires `aibackends[llamacpp]` or `aibackends[transformers]`. Evals run
 model inference, so run them one at a time and avoid running them while a
 benchmark is in flight.
+
+## `eval_gliner25.py`
+
+Scores GLiNER 2.5 on labeled synthetic cases for the six Fastino blog use
+cases: constrained agent routing and guardrails, joint knowledge-graph
+triples, PII redaction, contract fields, and clinical entities/attributes.
+
+```bash
+python evals/eval_gliner25.py --device cpu --model gliner25-small
+python evals/eval_gliner25.py --device cpu --model gliner25-base
+```
+
+Requires `aibackends[gliner25]`. Reports land in `evals/reports/` as
+`YYYY-MM-DD_<model>-<device>.md` (for example `2026-08-25_gliner25-small-cpu.md`).
+A case **passes** when every gold label is found (recall 1.0) and constraints
+are feasible; extra predicted labels lower precision but do not fail the case.
+Entity matches allow substring overlap after normalization.

@@ -24,6 +24,7 @@ BENCHMARKS: dict[str, str] = {
     "tasks": "benchmark_tasks.py",
     "pii": "benchmark_pii_backends.py",
     "guardrails": "benchmark_gliguard_cpu.py",
+    "gliner25": "benchmark_gliner25_cpu.py",
 }
 
 
