@@ -1,0 +1,10 @@
+TEAM UPDATE — 24 April 2026
+
+Maya Chen leads Atlas Analytics in Austin. She committed to delivering the
+Q2 churn model by 15 May and currently works on Project Helios.
+
+Omar Haddad joined Atlas Analytics last month. He works on Project Helios
+with Maya and committed to documenting the feature store this week.
+
+Nora Patel runs Northwind Labs in Boston. Northwind Labs owns Project
+Lumen. Nora committed to sharing the Lumen evaluation notes with Maya.

@@ -5,6 +5,27 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-08-25
+
+### Added
+- GLiNER2.5 extraction backend (`small` / `base` / `multi` Hub checkpoints)
+  with schema-driven NER, constrained classification, joint entity-relation
+  graphs, span attributes, and native long-document chunking.
+- Use-case tasks from the GLiNER2.5 announcement: `route_agent`,
+  `screen_agent_action`, `extract_memory_graph`, `review_contract`,
+  `extract_clinical`, plus generic `extract_entities`, `extract_relations`,
+  `extract_graph`, `classify_constrained`, and `extract_span_attributes`.
+- `gliner25` PII backend so `redact_pii(..., backend="gliner25")` can use
+  the same span-free extractor, including automatic long-document chunking.
+- New `extraction` extra (`pip install aibackends[extraction]`) pulling in
+  `gliner2[local]` and `protobuf` (same stack as `guardrails`).
+- CLI tasks `extract-entities`, `route-agent`, `screen-agent-action`,
+  `extract-memory-graph`, `review-contract`, and `extract-clinical`. On these
+  tasks `--model` is a GLiNER2.5 alias or Hub id.
+- CPU benchmark `benchmarks/benchmark_gliner25_cpu.py` and Colab notebook
+  `examples/notebooks/gliner25_extraction_colab.ipynb`.
+- Example `examples/tasks/extract_gliner25.py`.
+
 ## [0.5.0] - 2026-08-25
 
 ### Added

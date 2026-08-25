@@ -7,10 +7,12 @@ import pytest
 from typer.testing import CliRunner
 
 from aibackends.cli import app
+from aibackends.schemas.extraction import EntityExtraction, ExtractedEntity
 from aibackends.schemas.moderation import ResponseModeration
 
 runner = CliRunner()
 moderation_module = importlib.import_module("aibackends.tasks.moderation")
+extraction_module = importlib.import_module("aibackends.tasks.extraction")
 
 
 def test_task_command_accepts_runtime_and_model_strings():
@@ -103,3 +105,61 @@ def test_task_command_supports_gliguard_response_options(
         "threshold": 0.6,
         "category_threshold": 0.3,
     }
+
+
+def test_task_command_supports_gliner25_extract_entities(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, Any] = {}
+
+    class _Backend:
+        def extract_entities(self, text: str, labels: list[str], **kwargs: Any) -> EntityExtraction:
+            captured["text"] = text
+            captured["labels"] = list(labels)
+            captured.update(kwargs)
+            return EntityExtraction(
+                text=text,
+                entities=[
+                    ExtractedEntity(
+                        entity_type="person",
+                        text="Alice",
+                        start=0,
+                        end=5,
+                        confidence=0.9,
+                    )
+                ],
+                backend_used="gliner25",
+                model_id="fastino/gliner2.5-small-v1",
+            )
+
+    monkeypatch.setattr(
+        extraction_module,
+        "get_extraction_backend",
+        lambda name: _Backend(),
+    )
+    result = runner.invoke(
+        app,
+        [
+            "task",
+            "extract-entities",
+            "--input",
+            "Alice joined Acme.",
+            "--labels",
+            "person,organization",
+            "--backend",
+            "gliner25",
+            "--device",
+            "cpu",
+            "--model",
+            "small",
+            "--threshold",
+            "0.4",
+        ],
+    )
+
+    assert result.exit_code == 0, result.stdout
+    assert '"entity_type": "person"' in result.stdout
+    assert captured["labels"] == ["person", "organization"]
+    assert captured["device"] == "cpu"
+    assert captured["model"] == "small"
+    assert captured["threshold"] == 0.4

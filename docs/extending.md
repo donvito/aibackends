@@ -82,6 +82,13 @@ Moderation backends implement `BaseModerationBackend` under
 `register_moderation_backend(...)`. They expose single and native-batch prompt
 and response methods because moderation schemas differ by side.
 
+Extraction backends implement `BaseExtractionBackend` under
+`src/aibackends/backends/extraction` and register with
+`register_extraction_backend(...)`. The built-in `gliner25` backend covers
+schema-driven NER, constrained classification, joint graphs, and span
+attributes, and the same checkpoint is also exposed as a PII backend named
+`gliner25`.
+
 ## Add A Task
 
 Create one task module under `src/aibackends/tasks`, implement `BaseTask`, and

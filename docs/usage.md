@@ -21,6 +21,7 @@ pip install aibackends[audio]
 pip install aibackends[video]
 pip install aibackends[pii]
 pip install aibackends[guardrails]
+pip install aibackends[extraction]
 ```
 
 Downloaded local models for `llamacpp` and `aibackends pull` use the standard
@@ -243,6 +244,43 @@ response_results = moderate_responses(
 
 The first call downloads and caches the model. Repeated calls on the same
 device reuse it; CPU and CUDA instances are cached separately.
+
+### Extract with GLiNER2.5
+
+GLiNER2.5 is a dedicated extraction backend. It does not use the configured
+generative runtime. Install `aibackends[extraction]` (or `[guardrails]`; both
+pull in `gliner2[local]`).
+
+```python
+from aibackends.tasks import (
+    extract_clinical,
+    extract_entities,
+    extract_memory_graph,
+    review_contract,
+    route_agent,
+    screen_agent_action,
+)
+
+entities = extract_entities(
+    "Apple CEO Tim Cook announced iPhone 15 in Cupertino.",
+    ["company", "person", "product", "location"],
+    model="small",  # or "base" / "multi"
+    device="cpu",
+)
+
+decision = route_agent(
+    "Write a Python function that parses CSV files.",
+    model="small",
+)
+print(decision.intent, decision.destination, decision.feasible)
+
+graph = extract_memory_graph("Maya Chen leads Atlas Analytics in Austin.")
+review = review_contract("contract.txt", long_document=True)
+clinical = extract_clinical("Patient denies fever. Start ibuprofen tablets.")
+```
+
+`redact_pii(..., backend="gliner25")` uses the same extractor for PII spans
+and switches to overlapping chunks on long documents.
 
 Tasks are also available as configured `BaseTask` objects through the factory:
 

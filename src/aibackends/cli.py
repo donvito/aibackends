@@ -44,7 +44,13 @@ def run_task(
     ),
     schema: str | None = typer.Option(None, help="Dotted import path for generic extract schema."),
     runtime: str | None = typer.Option(None, help="Runtime override."),
-    model: str | None = typer.Option(None, help="Model override."),
+    model: str | None = typer.Option(
+        None,
+        help=(
+            "Model override. For LLM tasks this is a catalog alias or Hub id; "
+            "for GLiNER2.5 tasks use small, base, multi, or a Hub id."
+        ),
+    ),
 ) -> None:
     task = get_task(name)
     kwargs: dict[str, Any] = {}
@@ -63,6 +69,8 @@ def run_task(
         kwargs["threshold"] = threshold
     if task.accepts_category_threshold and category_threshold is not None:
         kwargs["category_threshold"] = category_threshold
+    if task.accepts_model_id and model is not None:
+        kwargs["model"] = model
     if task.requires_schema:
         if not schema:
             raise typer.BadParameter(f"--schema is required for {task.name}")

@@ -22,7 +22,7 @@ enforce this:
 
 ```bash
 python benchmarks/run_all.py --runtime transformers --warm-calls 10
-python benchmarks/run_all.py --skip pii guardrails --warm-calls 100
+python benchmarks/run_all.py --skip pii guardrails extraction --warm-calls 100
 ```
 
 ## Scripts
@@ -99,6 +99,23 @@ items/second. The model must already be downloaded if you want the first-call
 number to exclude network transfer.
 
 Requires `aibackends[guardrails]`.
+
+### `benchmark_gliner25_cpu.py`
+
+Forces GLiNER2.5 onto CPU and measures the first entity-extraction call
+including model loading, explicit `backend.load()`, and warm latency for the
+six Fastino use cases (routing, guardrails, memory graphs, PII, contract
+review, clinical extraction) plus long-document NER.
+
+```bash
+python benchmarks/benchmark_gliner25_cpu.py \
+    --model small --warm-calls 5
+```
+
+`--model` accepts `small`, `base`, `multi`, or a Hub id. The model must already
+be downloaded if you want the first-call number to exclude network transfer.
+
+Requires `aibackends[extraction]`.
 
 ## Consistency And Degradation
 

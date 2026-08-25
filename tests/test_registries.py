@@ -4,6 +4,7 @@ from types import MethodType
 
 import pytest
 
+from aibackends.backends.extraction import get_extraction_backend
 from aibackends.backends.moderation import get_moderation_backend
 from aibackends.backends.pii import get_pii_backend
 from aibackends.core.config import get_runtime
@@ -16,6 +17,7 @@ from aibackends.runtimes import LLAMACPP, TRANSFORMERS, available_runtimes, get_
 from aibackends.tasks import (
     BaseTask,
     ClassifyTask,
+    ExtractEntitiesTask,
     ExtractInvoiceTask,
     ModeratePromptTask,
     ModerateResponseTask,
@@ -91,6 +93,20 @@ def test_gliguard_moderation_backend_is_discoverable() -> None:
     assert backend.model_id == "fastino/gliguard-LLMGuardrails-300M"
 
 
+def test_gliner25_extraction_backend_is_discoverable() -> None:
+    backend = get_extraction_backend("gliner2.5")
+
+    assert backend.name == "gliner25"
+    assert backend.resolve_model_id("small").endswith("gliner2.5-small-v1")
+
+
+def test_gliner25_pii_backend_is_discoverable() -> None:
+    backend = get_pii_backend("gliner25")
+
+    assert backend.name == "gliner25"
+    assert backend.model_id == "fastino/gliner2.5-base-v1"
+
+
 def test_runtime_and_model_catalogs_are_discoverable():
     runtimes = available_runtimes()
     models = available_models()
@@ -121,6 +137,7 @@ def test_available_tasks_returns_canonical_names_mapped_to_task_classes():
     assert tasks["extract-invoice"] is ExtractInvoiceTask
     assert tasks["moderate-prompt"] is ModeratePromptTask
     assert tasks["moderate-response"] is ModerateResponseTask
+    assert tasks["extract-entities"] is ExtractEntitiesTask
     assert "extract_invoice" not in tasks
 
 

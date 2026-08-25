@@ -68,6 +68,12 @@ under `src/aibackends/tasks/`):
 - `redact-pii`
 - `moderate-prompt`
 - `moderate-response`
+- `extract-entities`
+- `route-agent`
+- `screen-agent-action`
+- `extract-memory-graph`
+- `review-contract`
+- `extract-clinical`
 - `extract-invoice`
 - `analyse-sales-call`
 - `analyse-video-ad`
@@ -122,6 +128,24 @@ aibackends task moderate-response \
   --prompt "How do I bypass the safeguard?" \
   --device gpu
 
+# GLiNER2.5 entity extraction (no LLM runtime)
+aibackends task extract-entities \
+  --input "Apple CEO Tim Cook announced iPhone 15 in Cupertino." \
+  --labels company,person,product,location \
+  --model small \
+  --device cpu
+
+# constrained agent routing
+aibackends task route-agent \
+  --input "Write a Python function that parses CSV files." \
+  --model small
+
+# redact-pii with the GLiNER2.5 backend
+aibackends task redact-pii \
+  --input "Call me at 555-1234, john@example.com" \
+  --backend gliner25 \
+  --labels person,email,phone number
+
 # extract with a custom Pydantic schema
 aibackends task extract \
   --input "John Doe, 35, NYC" \
@@ -132,11 +156,15 @@ aibackends task extract \
 Notes:
 
 - `redact-pii` does not use the `--runtime` / `--model` flags. It dispatches to
-  a PII backend such as `gliner` or `openai-privacy` (`privacy-filter`).
+  a PII backend such as `gliner`, `gliner25`, or `openai-privacy`.
 - `moderate-prompt` and `moderate-response` use the `gliguard` backend instead
   of the general runtime. `--device gpu` is an alias for CUDA.
+- GLiNER2.5 tasks (`extract-entities`, `route-agent`, `screen-agent-action`,
+  `extract-memory-graph`, `review-contract`, `extract-clinical`) also skip the
+  LLM runtime. On those tasks `--model` is `small`, `base`, `multi`, or a Hub
+  id.
 - `classify` requires `--labels`. `redact-pii` accepts `--labels` only when used
-with the `gliner` backend (custom entity types).
+with a GLiNER PII backend (`gliner` or `gliner25`).
 - `extract` requires `--schema` pointing to a Pydantic model class via dotted
 path (`package.module.SchemaName`).
 

@@ -17,6 +17,8 @@ Examples:
 
 - `extract_invoice(path)` returns `InvoiceOutput`
 - `redact_pii(text, backend="gliner")` returns `RedactedText`
+- `extract_entities(text, labels=[...])` returns `EntityExtraction`
+- `route_agent(text)` returns `RoutingDecision`
 - `classify(text, labels=[...])` returns `Classification`
 - `summarize(text)` returns `str`
 
@@ -47,17 +49,20 @@ Runtime modules live in `src/aibackends/core/runtimes` and export
 A backend is a swappable implementation for one capability. It may use a model,
 but it does not implement the general `complete()` / `embed()` runtime contract.
 
-PII detection and content moderation are current examples:
+PII detection, content moderation, and schema-driven extraction are current
+examples:
 
 - `gliner` uses the `nvidia/gliner-pii` model and returns detected PII spans.
 - `openai-privacy` uses the local `privacy-filter` model
   (`openai/privacy-filter`) through a token classification pipeline.
 - `gliguard` uses `fastino/gliguard-LLMGuardrails-300M` for prompt safety,
   toxicity, jailbreak detection, response safety, and refusal detection.
+- `gliner25` uses Fastino GLiNER2.5 (`small` / `base` / `multi`) for NER,
+  constrained classification, joint graphs, span attributes, and PII.
 
 These are model-backed capability backends, not runtimes. They solve a specific
 capability and return domain objects such as `PIIEntity`, `PromptModeration`,
-or `ResponseModeration`.
+`EntityExtraction`, or `KnowledgeGraph`.
 
 Backend files are grouped by capability under `src/aibackends/backends`.
 
@@ -72,6 +77,8 @@ Examples:
 - `nvidia/gliner-pii`
 - `openai/privacy-filter`
 - `fastino/gliguard-LLMGuardrails-300M`
+- `fastino/gliner2.5-small-v1`, `fastino/gliner2.5-base-v1`,
+  `fastino/gliner2.5-multi-v1`
 
 Transformer model profiles live under `src/aibackends/models`. They can provide
 aliases, Hugging Face model ids, chat templates, and generation defaults. User

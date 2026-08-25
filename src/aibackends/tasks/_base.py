@@ -14,7 +14,7 @@ class BaseTask(ABC):
     def __init__(self, **defaults: Any) -> None:
         if "runtime" in defaults:
             defaults["runtime"] = ensure_runtime_spec(defaults["runtime"])
-        if "model" in defaults:
+        if "model" in defaults and not isinstance(defaults["model"], str):
             defaults["model"] = ensure_model_ref(defaults["model"])
         self.defaults = {key: value for key, value in defaults.items() if value is not None}
 
@@ -35,6 +35,6 @@ class BaseTask(ABC):
         options.update({key: value for key, value in overrides.items() if value is not None})
         if "runtime" in options:
             options["runtime"] = ensure_runtime_spec(options["runtime"])
-        if "model" in options:
+        if "model" in options and not isinstance(options["model"], str):
             options["model"] = ensure_model_ref(options["model"])
         return options

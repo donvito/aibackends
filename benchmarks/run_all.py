@@ -7,7 +7,7 @@ running concurrently.
 
 Usage:
     python benchmarks/run_all.py --runtime transformers --warm-calls 10
-    python benchmarks/run_all.py --skip pii guardrails --warm-calls 100
+    python benchmarks/run_all.py --skip pii guardrails extraction --warm-calls 100
 """
 
 from __future__ import annotations
@@ -24,6 +24,7 @@ BENCHMARKS: dict[str, str] = {
     "tasks": "benchmark_tasks.py",
     "pii": "benchmark_pii_backends.py",
     "guardrails": "benchmark_gliguard_cpu.py",
+    "extraction": "benchmark_gliner25_cpu.py",
 }
 
 
@@ -32,6 +33,8 @@ def _build_command(name: str, script: str, args: argparse.Namespace) -> list[str
     command += ["--warm-calls", str(args.warm_calls)]
     if name in {"runtime-reuse", "tasks"}:
         command += ["--runtime", args.runtime]
+    if name == "extraction":
+        command += ["--model", args.extractor_model]
     if args.output_dir is not None:
         command += ["--output-dir", str(args.output_dir)]
     return command
@@ -52,6 +55,11 @@ def main() -> None:
         default=[],
         choices=sorted(BENCHMARKS),
         help="Benchmarks to skip.",
+    )
+    parser.add_argument(
+        "--extractor-model",
+        default="small",
+        help="GLiNER2.5 alias forwarded to the extraction benchmark.",
     )
     parser.add_argument("--output-dir", type=Path, default=None)
     args = parser.parse_args()

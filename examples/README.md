@@ -27,6 +27,9 @@ python3 -m pip install -e ".[transformers]"
 
 # GliGuard prompt/response moderation
 python3 -m pip install -e ".[guardrails]"
+
+# GLiNER2.5 extraction (same gliner2 stack as guardrails)
+python3 -m pip install -e ".[extraction]"
 ```
 
 Task examples use `create_task(TaskClass, ...)` with supported runtime/model
@@ -63,6 +66,15 @@ python3 examples/tasks/moderate_content.py --device cpu
 python3 examples/tasks/moderate_content.py --device gpu
 ```
 
+`extract_gliner25.py` runs the six GLiNER2.5 use cases from the Fastino
+announcement: agent routing, constrained guardrails, memory graphs, PII
+redaction, contract review, and clinical span attributes.
+
+```bash
+python3 examples/tasks/extract_gliner25.py --device cpu --model small
+python3 examples/tasks/extract_gliner25.py --device gpu --model base
+```
+
 `workflows/image_ocr_gemma.py` and `workflows/image_ocr_qwen.py` are vision
 OCR examples that extract structured receipt JSON from the sample receipt
 images in `examples/data/images/` using the `llamacpp` runtime.
@@ -85,6 +97,7 @@ python3 examples/tasks/embed_text_transformers.py
 python3 examples/tasks/summarize_text.py
 python3 examples/tasks/classify_text.py
 python3 examples/tasks/moderate_content.py --device cpu
+python3 examples/tasks/extract_gliner25.py --device cpu --model small
 python3 examples/tasks/redact_text.py
 python3 examples/tasks/redact_text_batch.py
 python3 examples/tasks/extract_custom_schema.py

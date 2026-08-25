@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aibackends"
-version = "0.5.0"
+version = "0.6.0"
 description = "Run AI tasks and workflows locally."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -132,6 +132,10 @@ guardrails = [
   "gliner2[local]>=2.0.0",
   "protobuf>=7.36.0",
 ]
+extraction = [
+  "gliner2[local]>=2.0.0",
+  "protobuf>=7.36.0",
+]
 
 [project.scripts]
 aibackends = "aibackends.cli:app"
@@ -189,6 +193,7 @@ module = [
   "fitz",
   "gliner",
   "gliner2",
+  "gliner2.*",
   "huggingface_hub",
   "llama_cpp",
   "llama_cpp.*",

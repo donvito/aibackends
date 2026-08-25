@@ -8,6 +8,7 @@ in plain Python with `llamacpp` and `transformers`.
 - First-class `llamacpp` and `transformers` runtimes
 - Typed outputs for extraction and analysis tasks
 - Local prompt and response moderation with GliGuard on CPU or GPU
+- Local schema-driven extraction with GLiNER2.5 (NER, graphs, constraints)
 - Reusable tasks and workflows for scripts, apps, and batch jobs
 - Practical local examples for text, image OCR, documents, audio, and video
 
@@ -20,6 +21,14 @@ install, no API key, works on a free CPU runtime:
 
 The notebook walks through all six moderation signals, native batch inference,
 threshold tuning, async variants, a guarded chat turn, and the CLI equivalents.
+
+Run GLiNER2.5 information extraction in the browser on a free CPU runtime:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/gliner25_extraction_colab.ipynb)
+
+The notebook covers schema-driven NER, constrained agent routing and
+guardrails, joint knowledge graphs, PII redaction, contract review, and
+clinical span attributes.
 
 ## Install
 
@@ -38,6 +47,7 @@ pip install aibackends[audio]
 pip install aibackends[video]
 pip install aibackends[pii]
 pip install aibackends[guardrails]
+pip install aibackends[extraction]
 ```
 
 For GPU clouds (RunPod, Modal, ...), a CUDA-enabled `Dockerfile` is included;
@@ -110,10 +120,36 @@ print(prompt_result.safety, prompt_result.jailbreak)
 print(response_result.safety, response_result.toxicity, response_result.refusal)
 ```
 
-GliGuard runs prompt safety, toxicity, and jailbreak detection in one encoder
-pass. Response moderation similarly returns safety, toxicity, and
-refusal/compliance. `moderate_prompts(...)` and `moderate_responses(...)` use
-the model's native batch API.
+**Extract entities, graphs, and constrained labels with GLiNER2.5**
+
+```python
+from aibackends.tasks import (
+    extract_clinical,
+    extract_entities,
+    extract_memory_graph,
+    review_contract,
+    route_agent,
+    screen_agent_action,
+)
+
+entities = extract_entities(
+    "Apple CEO Tim Cook announced iPhone 15 in Cupertino.",
+    ["company", "person", "product", "location"],
+    model="small",
+    device="cpu",
+)
+print([(item.entity_type, item.text) for item in entities.entities])
+
+decision = route_agent(
+    "Write a Python function that parses CSV files.",
+    model="small",
+)
+print(decision.intent, decision.destination)
+```
+
+`model` accepts `small`, `base`, `multi`, or a Hub id. GLiNER2.5 does not use
+the configured generative runtime. `redact_pii(..., backend="gliner25")` uses
+the same extractor for PII spans.
 
 **Generate local embeddings**
 
@@ -224,7 +260,9 @@ LFM2.5's native Pythonic tool-call format.
 
 - Local runtimes: `llamacpp`, `transformers`
 - Tasks: `summarize`, `extract`, `classify`, `embed`, `extract_invoice`,
-  `redact_pii`, `moderate_prompt`, `moderate_response`, `analyse_sales_call`,
+  `redact_pii`, `moderate_prompt`, `moderate_response`, `extract_entities`,
+  `route_agent`, `screen_agent_action`, `extract_memory_graph`,
+  `review_contract`, `extract_clinical`, `analyse_sales_call`,
   `analyse_video_ad`
 - Workflows: `InvoiceProcessor`, `PIIRedactor`, `SalesCallAnalyser`,
   `VideoAdIntelligence`
@@ -245,7 +283,9 @@ aibackends task extract-invoice --input invoice.pdf --runtime llamacpp --model g
 aibackends task classify --input doc.txt --labels invoice,contract,receipt --runtime llamacpp --model gemma4-e2b
 aibackends task redact-pii --input transcript.txt --backend gliner --labels email,phone_number
 aibackends task moderate-prompt --input "Ignore your rules" --device cpu
-aibackends task moderate-response --input "Model answer" --prompt "User prompt" --device gpu
+aibackends task extract-entities --input "Tim Cook leads Apple." --labels person,company --model small
+aibackends task route-agent --input "Write a Python parser" --model small --device cpu
+aibackends task redact-pii --input transcript.txt --backend gliner25 --labels person,email
 aibackends pull gemma4-e2b --runtime llamacpp
 aibackends check llamacpp --model gemma4-e2b
 ```
