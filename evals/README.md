@@ -32,3 +32,23 @@ but is secondary; use `benchmarks/` for performance numbers.
 Requires `aibackends[llamacpp]` or `aibackends[transformers]`. Evals run
 model inference, so run them one at a time and avoid running them while a
 benchmark is in flight.
+
+## `eval_gliner25.py`
+
+Runs a compact labeled evaluation across the GLiNER2.5 small, base, and
+multilingual checkpoints:
+
+- exact entity span precision, recall, and F1
+- typed relation-triple precision, recall, and F1
+- constrained-classification exact-match accuracy and feasibility
+- span-attribute accuracy
+- Joint IE graph validity and source-offset integrity
+
+```bash
+python3 evals/eval_gliner25.py --models small base multi --device cpu
+```
+
+The fixture lives in `evals/data/gliner25_cases.json`, and the dated report
+contains each expected and predicted result. This is a targeted applied eval
+for the repository examples, not a reproduction of Fastino's 16-dataset
+research benchmark. Requires `aibackends[gliner2]`.

@@ -79,6 +79,10 @@ dev = [
     { name = "ruff" },
     { name = "types-pyyaml" },
 ]
+gliner2 = [
+    { name = "gliner2", extra = ["local"] },
+    { name = "protobuf" },
+]
 guardrails = [
     { name = "gliner2", extra = ["local"] },
     { name = "protobuf" },
@@ -151,6 +155,7 @@ requires-dist = [
     { name = "gliner", marker = "extra == 'pii'" },
     { name = "gliner", marker = "extra == 'pipelines'" },
     { name = "gliner2", extras = ["local"], marker = "extra == 'all'", specifier = ">=2.0.0" },
+    { name = "gliner2", extras = ["local"], marker = "extra == 'gliner2'", specifier = ">=2.0.0" },
     { name = "gliner2", extras = ["local"], marker = "extra == 'guardrails'", specifier = ">=2.0.0" },
     { name = "huggingface-hub", marker = "extra == 'all'" },
     { name = "huggingface-hub", marker = "extra == 'llamacpp'" },
@@ -178,6 +183,7 @@ requires-dist = [
     { name = "pillow", marker = "extra == 'video'" },
     { name = "pre-commit", marker = "extra == 'dev'" },
     { name = "protobuf", marker = "extra == 'all'", specifier = ">=7.36.0" },
+    { name = "protobuf", marker = "extra == 'gliner2'", specifier = ">=7.36.0" },
     { name = "protobuf", marker = "extra == 'guardrails'", specifier = ">=7.36.0" },
     { name = "pydantic" },
     { name = "pymupdf", marker = "extra == 'all'" },
@@ -206,7 +212,7 @@ requires-dist = [
     { name = "uvicorn", marker = "extra == 'all'" },
     { name = "uvicorn", marker = "extra == 'api'" },
 ]
-provides-extras = ["llamacpp", "llamacpp-cuda", "llamacpp-metal", "transformers", "pdf", "audio", "video", "pii", "api", "local", "pipelines", "dev", "all", "guardrails"]
+provides-extras = ["llamacpp", "llamacpp-cuda", "llamacpp-metal", "transformers", "pdf", "audio", "video", "pii", "api", "local", "pipelines", "dev", "all", "guardrails", "gliner2"]
 
 [[package]]
 name = "annotated-doc"
@@ -504,37 +510,37 @@ wheels = [
 
 [package.optional-dependencies]
 cublas = [
-    { name = "nvidia-cublas", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "nvidia-cublas" },
 ]
 cudart = [
-    { name = "nvidia-cuda-runtime", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "nvidia-cuda-runtime" },
 ]
 cufft = [
-    { name = "nvidia-cufft", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "nvidia-cufft" },
 ]
 cufile = [
-    { name = "nvidia-cufile", marker = "sys_platform == 'linux'" },
+    { name = "nvidia-cufile" },
 ]
 cupti = [
-    { name = "nvidia-cuda-cupti", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "nvidia-cuda-cupti" },
 ]
 curand = [
-    { name = "nvidia-curand", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "nvidia-curand" },
 ]
 cusolver = [
-    { name = "nvidia-cusolver", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "nvidia-cusolver" },
 ]
 cusparse = [
-    { name = "nvidia-cusparse", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "nvidia-cusparse" },
 ]
 nvjitlink = [
-    { name = "nvidia-nvjitlink", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "nvidia-nvjitlink" },
 ]
 nvrtc = [
-    { name = "nvidia-cuda-nvrtc", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "nvidia-cuda-nvrtc" },
 ]
 nvtx = [
-    { name = "nvidia-nvtx", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "nvidia-nvtx" },
 ]
 
 [[package]]

@@ -100,6 +100,28 @@ number to exclude network transfer.
 
 Requires `aibackends[guardrails]`.
 
+### `benchmark_gliner25_cpu.py`
+
+Compares the three GLiNER2.5 boundary checkpoints on CPU: local model
+construction, warm entity extraction, long-document extraction, constrained
+classification, Joint IE, combined-schema extraction, and native entity batch
+throughput.
+
+```bash
+python3 benchmarks/benchmark_gliner25_cpu.py \
+    --models small base multi --warm-calls 10 --batch-size 8
+```
+
+Models run sequentially so only one checkpoint is resident at a time. Run the
+applied accuracy eval separately before using latency alone to choose a model:
+
+```bash
+python3 evals/eval_gliner25.py --models small base multi --device cpu
+```
+
+Requires `aibackends[gliner2]`. Pre-download the checkpoints if model load
+timings should exclude network transfer.
+
 ## Consistency And Degradation
 
 Sample counts are configurable with `--warm-calls` (default 10). With 10 or
