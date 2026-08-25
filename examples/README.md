@@ -27,6 +27,9 @@ python3 -m pip install -e ".[transformers]"
 
 # GliGuard prompt/response moderation
 python3 -m pip install -e ".[guardrails]"
+
+# GLiNER 2.5 information extraction
+python3 -m pip install -e ".[information-extraction]"
 ```
 
 Task examples use `create_task(TaskClass, ...)` with supported runtime/model
@@ -63,6 +66,19 @@ python3 examples/tasks/moderate_content.py --device cpu
 python3 examples/tasks/moderate_content.py --device gpu
 ```
 
+`gliner25_information_extraction.py` covers the boundary architecture's main
+use cases: long-document contract review with global offsets, schema-shaped
+invoice records, span-level sentiment, constrained agent routing, typed
+knowledge graphs, and multilingual entities. The default 74M model is practical
+on CPU; choose the 194M English model or 287M multilingual model explicitly:
+
+```bash
+python3 examples/tasks/gliner25_information_extraction.py --model small
+python3 examples/tasks/gliner25_information_extraction.py --model base
+python3 examples/tasks/gliner25_information_extraction.py \
+    --model multi --use-case multilingual
+```
+
 `workflows/image_ocr_gemma.py` and `workflows/image_ocr_qwen.py` are vision
 OCR examples that extract structured receipt JSON from the sample receipt
 images in `examples/data/images/` using the `llamacpp` runtime.
@@ -85,6 +101,7 @@ python3 examples/tasks/embed_text_transformers.py
 python3 examples/tasks/summarize_text.py
 python3 examples/tasks/classify_text.py
 python3 examples/tasks/moderate_content.py --device cpu
+python3 examples/tasks/gliner25_information_extraction.py --model small
 python3 examples/tasks/redact_text.py
 python3 examples/tasks/redact_text_batch.py
 python3 examples/tasks/extract_custom_schema.py

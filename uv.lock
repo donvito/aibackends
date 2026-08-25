@@ -83,6 +83,9 @@ guardrails = [
     { name = "gliner2", extra = ["local"] },
     { name = "protobuf" },
 ]
+information-extraction = [
+    { name = "gliner2", extra = ["local"] },
+]
 llamacpp = [
     { name = "huggingface-hub" },
     { name = "llama-cpp-python" },
@@ -152,6 +155,7 @@ requires-dist = [
     { name = "gliner", marker = "extra == 'pipelines'" },
     { name = "gliner2", extras = ["local"], marker = "extra == 'all'", specifier = ">=2.0.0" },
     { name = "gliner2", extras = ["local"], marker = "extra == 'guardrails'", specifier = ">=2.0.0" },
+    { name = "gliner2", extras = ["local"], marker = "extra == 'information-extraction'", specifier = ">=2.0.0" },
     { name = "huggingface-hub", marker = "extra == 'all'" },
     { name = "huggingface-hub", marker = "extra == 'llamacpp'" },
     { name = "huggingface-hub", marker = "extra == 'llamacpp-cuda'" },
@@ -206,7 +210,7 @@ requires-dist = [
     { name = "uvicorn", marker = "extra == 'all'" },
     { name = "uvicorn", marker = "extra == 'api'" },
 ]
-provides-extras = ["llamacpp", "llamacpp-cuda", "llamacpp-metal", "transformers", "pdf", "audio", "video", "pii", "api", "local", "pipelines", "dev", "all", "guardrails"]
+provides-extras = ["llamacpp", "llamacpp-cuda", "llamacpp-metal", "transformers", "pdf", "audio", "video", "pii", "api", "local", "pipelines", "dev", "all", "guardrails", "information-extraction"]
 
 [[package]]
 name = "annotated-doc"

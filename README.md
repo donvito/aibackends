@@ -13,13 +13,19 @@ in plain Python with `llamacpp` and `transformers`.
 
 ## Try it in Colab
 
+Run GLiNER 2.5's long-document extraction, structured records, span attributes,
+constrained routing, joint knowledge graphs, and multilingual extraction:
+
+[![Open GLiNER 2.5 In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/gliner25_information_extraction_colab.ipynb)
+
 Run local prompt and response moderation with GliGuard in the browser — no
 install, no API key, works on a free CPU runtime:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/gliguard_moderation_colab.ipynb)
+[![Open GliGuard In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/gliguard_moderation_colab.ipynb)
 
-The notebook walks through all six moderation signals, native batch inference,
-threshold tuning, async variants, a guarded chat turn, and the CLI equivalents.
+The GliGuard notebook walks through all six moderation signals, native batch
+inference, threshold tuning, async variants, a guarded chat turn, and the CLI
+equivalents.
 
 ## Install
 
@@ -38,6 +44,7 @@ pip install aibackends[audio]
 pip install aibackends[video]
 pip install aibackends[pii]
 pip install aibackends[guardrails]
+pip install aibackends[information-extraction]
 ```
 
 For GPU clouds (RunPod, Modal, ...), a CUDA-enabled `Dockerfile` is included;

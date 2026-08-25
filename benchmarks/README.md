@@ -100,6 +100,34 @@ number to exclude network transfer.
 
 Requires `aibackends[guardrails]`.
 
+### `benchmark_gliner25_cpu.py`
+
+Compares all three public GLiNER 2.5 boundary checkpoints on CPU: 74M `small`,
+194M `base`, and 287M `multi`. It measures model construction and seven warm
+scenarios covering entities, structured JSON, span attributes, constrained
+routing, joint information extraction, native batching, and long documents.
+
+```bash
+python benchmarks/benchmark_gliner25_cpu.py --warm-calls 3
+python benchmarks/benchmark_gliner25_cpu.py \
+    --models small base --warm-calls 10
+```
+
+The report also records lightweight behavior checks such as global offset
+integrity and graph constraint feasibility. These fixed examples are smoke
+checks, not a reproduction of Fastino's 16-dataset macro-F1 benchmark.
+
+Pre-download the selected models if model-construction timings should exclude
+network transfer:
+
+```bash
+hf download fastino/gliner2.5-small-v1
+hf download fastino/gliner2.5-base-v1
+hf download fastino/gliner2.5-multi-v1
+```
+
+Requires `aibackends[information-extraction]`.
+
 ## Consistency And Degradation
 
 Sample counts are configurable with `--warm-calls` (default 10). With 10 or

@@ -132,6 +132,9 @@ guardrails = [
   "gliner2[local]>=2.0.0",
   "protobuf>=7.36.0",
 ]
+information-extraction = [
+  "gliner2[local]>=2.0.0",
+]
 
 [project.scripts]
 aibackends = "aibackends.cli:app"
