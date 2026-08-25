@@ -1,10 +1,10 @@
 # GLiNER2.5 Applied Use-Case Eval
 
-Targeted source-grounded evaluation of the repository's GLiNER2.5 examples. This is not a reproduction of Fastino's 16-dataset research benchmark.
+Targeted source-grounded evaluation through the aibackends `gliner25` backend. This is not a reproduction of Fastino's 16-dataset research benchmark.
 
 ## Environment
 
-- Date: 2026-08-25 09:15:01 UTC
+- Date: 2026-08-25 09:38:41 UTC
 - Platform: Linux-6.12.94+-x86_64-with-glibc2.39
 - Processor: x86_64
 - GPU: none detected
@@ -21,9 +21,9 @@ Targeted source-grounded evaluation of the repository's GLiNER2.5 examples. This
 
 | Model | Load (s) | Entity P/R/F1 | Relation P/R/F1 | Class accuracy | Attribute accuracy | Feasible | Graph valid | Offset integrity |
 |---|---:|---|---|---:|---:|---:|---:|---:|
-| `small` | 4.34 | 71.4% / 76.9% / 74.1% | 100.0% / 100.0% / 100.0% | 100.0% | 50.0% | 100.0% | 100.0% | 100.0% |
-| `base` | 14.69 | 71.4% / 76.9% / 74.1% | 100.0% / 100.0% / 100.0% | 100.0% | 75.0% | 100.0% | 100.0% | 100.0% |
-| `multi` | 19.91 | 76.9% / 76.9% / 76.9% | 100.0% / 100.0% / 100.0% | 60.0% | 50.0% | 100.0% | 100.0% | 100.0% |
+| `small` | 6.43 | 71.4% / 76.9% / 74.1% | 100.0% / 100.0% / 100.0% | 100.0% | 50.0% | 100.0% | 100.0% | 100.0% |
+| `base` | 7.84 | 71.4% / 76.9% / 74.1% | 100.0% / 100.0% / 100.0% | 100.0% | 75.0% | 100.0% | 100.0% | 100.0% |
+| `multi` | 12.39 | 76.9% / 76.9% / 76.9% | 100.0% / 100.0% / 100.0% | 60.0% | 50.0% | 100.0% | 100.0% | 100.0% |
 
 ## `small` cases
 
