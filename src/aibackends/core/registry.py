@@ -114,6 +114,8 @@ class TaskSpec:
     accepts_device: bool = False
     accepts_threshold: bool = False
     accepts_category_threshold: bool = False
+    accepts_entities: bool = False
+    accepts_relations: bool = False
     requires_labels: bool = False
     requires_schema: bool = False
 
