@@ -82,6 +82,11 @@ Moderation backends implement `BaseModerationBackend` under
 `register_moderation_backend(...)`. They expose single and native-batch prompt
 and response methods because moderation schemas differ by side.
 
+Extraction backends implement `BaseExtractionBackend` under
+`src/aibackends/backends/extraction` and register with
+`register_extraction_backend(...)`. GLiNER 2.5 lives there and also exports a
+`PII_BACKEND_SPEC` so the same cached extractor can redact PII.
+
 ## Add A Task
 
 Create one task module under `src/aibackends/tasks`, implement `BaseTask`, and

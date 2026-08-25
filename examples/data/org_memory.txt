@@ -1,0 +1,9 @@
+Meeting notes, 12 May 2026.
+
+Ada Lovelace is leading the Pioneer extraction project at Fastino Labs.
+The team sits in London. Charles Babbage joined Fastino Labs last month
+and reports to Ada Lovelace. Fastino Labs is located in London.
+
+Commitments from the call:
+- Ada Lovelace owns the GLiNER 2.5 rollout.
+- Charles Babbage will draft the knowledge-graph schema by Friday.

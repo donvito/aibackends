@@ -5,6 +5,29 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-08-25
+
+### Added
+- GLiNER 2.5 extraction backend (`fastino/gliner2.5-{small,base,multi}-v1`)
+  with typed tasks for entity extraction (including long documents and span
+  attributes), JSON record extraction, constrained classification, and joint
+  entity-relation graphs.
+- PII backend `gliner25` that reuses the same cached extractor so
+  `redact_pii(..., backend="gliner25")` gets global character offsets without
+  a second model load.
+- Public tasks `extract_entities`, `extract_entities_long`, `extract_records`,
+  `classify_schema`, and `extract_graph`, plus `_async` variants, exported from
+  the top-level `aibackends` package.
+- New `gliner25` extra (`pip install aibackends[gliner25]`) pulling in
+  `gliner2[local]` and `protobuf`.
+- Example `examples/tasks/gliner25_use_cases.py` and Colab notebook
+  `examples/notebooks/gliner25_extraction_colab.ipynb` covering the six
+  Fastino blog use cases (routing, guardrails, knowledge graphs, PII,
+  contract review, clinical attributes).
+- CPU benchmark `benchmarks/benchmark_gliner25_cpu.py` and accuracy eval
+  `evals/eval_gliner25.py`, with committed reports in `benchmarks/reports/`
+  and `evals/reports/`.
+
 ## [0.5.0] - 2026-08-25
 
 ### Added

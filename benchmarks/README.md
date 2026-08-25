@@ -22,7 +22,7 @@ enforce this:
 
 ```bash
 python benchmarks/run_all.py --runtime transformers --warm-calls 10
-python benchmarks/run_all.py --skip pii guardrails --warm-calls 100
+python benchmarks/run_all.py --skip pii guardrails gliner25 --warm-calls 100
 ```
 
 ## Scripts
@@ -99,6 +99,19 @@ items/second. The model must already be downloaded if you want the first-call
 number to exclude network transfer.
 
 Requires `aibackends[guardrails]`.
+
+### `benchmark_gliner25_cpu.py`
+
+Forces GLiNER 2.5 onto CPU and measures the first entity-extraction call
+including model loading, explicit `backend.load()`, warm NER, constrained
+classification, joint IE, and long-document extraction.
+
+```bash
+python benchmarks/benchmark_gliner25_cpu.py \
+    --warm-calls 10 --model gliner25-small
+```
+
+Requires `aibackends[gliner25]`.
 
 ## Consistency And Degradation
 

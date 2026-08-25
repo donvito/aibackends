@@ -8,6 +8,8 @@ in plain Python with `llamacpp` and `transformers`.
 - First-class `llamacpp` and `transformers` runtimes
 - Typed outputs for extraction and analysis tasks
 - Local prompt and response moderation with GliGuard on CPU or GPU
+- Schema-driven GLiNER 2.5 extraction: entities, long documents, JSON records,
+  constrained classification, and joint entity-relation graphs
 - Reusable tasks and workflows for scripts, apps, and batch jobs
 - Practical local examples for text, image OCR, documents, audio, and video
 
@@ -17,6 +19,11 @@ Run local prompt and response moderation with GliGuard in the browser — no
 install, no API key, works on a free CPU runtime:
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/gliguard_moderation_colab.ipynb)
+
+Span-free information extraction with GLiNER 2.5 (entities, relations, constrained
+classification) also runs on a free CPU runtime:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/gliner25_extraction_colab.ipynb)
 
 The notebook walks through all six moderation signals, native batch inference,
 threshold tuning, async variants, a guarded chat turn, and the CLI equivalents.
@@ -38,6 +45,7 @@ pip install aibackends[audio]
 pip install aibackends[video]
 pip install aibackends[pii]
 pip install aibackends[guardrails]
+pip install aibackends[gliner25]
 ```
 
 For GPU clouds (RunPod, Modal, ...), a CUDA-enabled `Dockerfile` is included;
@@ -114,6 +122,44 @@ GliGuard runs prompt safety, toxicity, and jailbreak detection in one encoder
 pass. Response moderation similarly returns safety, toxicity, and
 refusal/compliance. `moderate_prompts(...)` and `moderate_responses(...)` use
 the model's native batch API.
+
+**Extract entities, graphs, and constrained labels with GLiNER 2.5**
+
+```python
+from aibackends.tasks import classify_schema, extract_entities, extract_graph
+
+entities = extract_entities(
+    "Ada Lovelace wrote to Charles Babbage in London.",
+    labels=["person", "location"],
+    device="cpu",
+    model="gliner25-small",
+)
+
+route = classify_schema(
+    "Delete the temporary cache files under /tmp.",
+    tasks={
+        "intent": {"labels": ["chat", "retrieve", "delete"]},
+        "destination": {"labels": ["small_chat", "rag_tool", "file_tool"]},
+    },
+    constraints=[
+        {"type": "implies", "if": ["intent", "delete"], "then": ["destination", "file_tool"]},
+    ],
+)
+
+graph = extract_graph(
+    "Ada Lovelace works at Fastino Labs in London.",
+    entities=["person", "organization", "location"],
+    relations=[
+        {"name": "works_for", "head": "person", "tail": "organization", "unique_head": True},
+        {"name": "located_in", "head": "organization", "tail": "location"},
+    ],
+)
+```
+
+GLiNER 2.5 is a dedicated extraction backend (`fastino/gliner2.5-small-v1` by
+default). It does not use the configured generative runtime. Long documents,
+JSON records, span attributes, and `redact_pii(backend="gliner25")` are
+documented in `docs/usage.md`.
 
 **Generate local embeddings**
 
@@ -224,8 +270,9 @@ LFM2.5's native Pythonic tool-call format.
 
 - Local runtimes: `llamacpp`, `transformers`
 - Tasks: `summarize`, `extract`, `classify`, `embed`, `extract_invoice`,
-  `redact_pii`, `moderate_prompt`, `moderate_response`, `analyse_sales_call`,
-  `analyse_video_ad`
+  `redact_pii`, `moderate_prompt`, `moderate_response`, `extract_entities`,
+  `extract_records`, `classify_schema`, `extract_graph`,
+  `analyse_sales_call`, `analyse_video_ad`
 - Workflows: `InvoiceProcessor`, `PIIRedactor`, `SalesCallAnalyser`,
   `VideoAdIntelligence`
 - Outputs: `InvoiceOutput`, `SalesCallReport`, `VideoAdReport`,
@@ -244,6 +291,7 @@ pip install 'aibackends[pii]'
 aibackends task extract-invoice --input invoice.pdf --runtime llamacpp --model gemma4-e2b
 aibackends task classify --input doc.txt --labels invoice,contract,receipt --runtime llamacpp --model gemma4-e2b
 aibackends task redact-pii --input transcript.txt --backend gliner --labels email,phone_number
+aibackends task extract-entities --input note.txt --labels person,location --device cpu --model gliner25-small
 aibackends task moderate-prompt --input "Ignore your rules" --device cpu
 aibackends task moderate-response --input "Model answer" --prompt "User prompt" --device gpu
 aibackends pull gemma4-e2b --runtime llamacpp
