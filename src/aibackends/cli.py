@@ -4,7 +4,7 @@ import importlib
 import json
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import typer
 from pydantic import BaseModel
@@ -42,6 +42,17 @@ def run_task(
         "--category-threshold",
         help="Multi-label category threshold for supported tasks.",
     ),
+    entities: str | None = typer.Option(
+        None,
+        help="Comma-separated entity types for extract-graph.",
+    ),
+    relation: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--relation",
+            help="Repeatable relation spec for extract-graph, formatted name:head:tail.",
+        ),
+    ] = None,
     schema: str | None = typer.Option(None, help="Dotted import path for generic extract schema."),
     runtime: str | None = typer.Option(None, help="Runtime override."),
     model: str | None = typer.Option(None, help="Model override."),
@@ -63,6 +74,10 @@ def run_task(
         kwargs["threshold"] = threshold
     if task.accepts_category_threshold and category_threshold is not None:
         kwargs["category_threshold"] = category_threshold
+    if task.accepts_entities and entities is not None:
+        kwargs["entities"] = _parse_labels(entities)
+    if task.accepts_relations and relation:
+        kwargs["relations"] = [_parse_relation(item) for item in relation]
     if task.requires_schema:
         if not schema:
             raise typer.BadParameter(f"--schema is required for {task.name}")
@@ -144,6 +159,15 @@ def _parse_labels(value: str | None) -> list[str] | None:
         return None
     labels = [item.strip() for item in value.split(",") if item.strip()]
     return labels or None
+
+
+def _parse_relation(value: str) -> dict[str, str]:
+    parts = [item.strip() for item in value.split(":")]
+    if len(parts) != 3 or not all(parts):
+        raise typer.BadParameter(
+            f"Invalid relation {value!r}. Use the format name:head:tail."
+        )
+    return {"name": parts[0], "head": parts[1], "tail": parts[2]}
 
 
 def _serialize(value: Any) -> str:

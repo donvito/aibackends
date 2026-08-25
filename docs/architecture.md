@@ -14,7 +14,8 @@ For terminology such as task vs runtime vs backend, see
 - workflows orchestrate reusable steps
 - runtimes execute general LLM and embedding calls
 - model profiles map supported model refs to runtime-specific model ids
-- capability backends handle focused non-runtime features such as PII detection
+- capability backends handle focused non-runtime features such as PII
+  detection, moderation, and information extraction
 
 The code architecture centers on those contracts rather than on any one
 application layer. The main package exposes plain Python APIs built on those
@@ -40,7 +41,7 @@ flowchart LR
     Steps["Steps + assembler<br/>`steps/*`<br/>`core/assembler.py`"]
     Runtimes["Runtime implementations<br/>`core/runtimes/*`"]
     Schemas["Typed schemas<br/>`schemas/*`"]
-    Backends["Capability backends<br/>`backends/pii/*`"]
+    Backends["Capability backends<br/>`backends/pii/*`<br/>`backends/moderation/*`<br/>`backends/extraction/*`"]
   end
 
   API --> Tasks
@@ -78,7 +79,7 @@ flowchart LR
 | Runtimes            | `src/aibackends/core/runtimes/`, `src/aibackends/runtimes.py`                            | Provides concrete LLM and embedding executors behind the `BaseRuntime` contract.                             |
 | Models              | `src/aibackends/models/`, `src/aibackends/core/model_registry.py`                        | Exposes supported model refs and resolves them to runtime-specific model profiles.                           |
 | Schemas             | `src/aibackends/schemas/`                                                                | Holds Pydantic types for structured task and workflow outputs.                                               |
-| Capability backends | `src/aibackends/backends/pii/`                                                           | Hosts non-runtime pluggable implementations for focused features such as PII detection.                      |
+| Capability backends | `src/aibackends/backends/pii/`, `src/aibackends/backends/moderation/`, `src/aibackends/backends/extraction/` | Hosts non-runtime pluggable implementations: PII detection, GliGuard moderation, and GLiNER2.5 extraction.   |
 | Model preparation   | `src/aibackends/core/model_manager.py`, `src/aibackends/model_support/`                  | Handles pull and ensure-model flows used by the CLI and runtime helpers.                                     |
 
 
@@ -99,6 +100,29 @@ flowchart LR
 5. The runtime executes `complete(...)` or `embed(...)`.
 6. The task helper parses the runtime response, validates structured output when
   needed, emits task logs, and returns the final Python value.
+
+### Capability Backend Calls
+
+Some tasks run specialized non-generative models instead of an LLM runtime.
+These tasks never touch `get_runtime(...)`; they resolve a backend from a
+per-domain registry and call its task-shaped API directly.
+
+1. Application code calls a backend-based task such as `redact_text(...)`,
+  `moderate_prompt(...)`, or `extract_entities(...)`.
+2. The task module resolves an implementation through its domain registry —
+  `get_pii_backend(...)`, `get_moderation_backend(...)`, or
+  `get_extraction_backend(...)`.
+3. The backend loads its model once per `(model id, device)` into an
+  in-process cache guarded by an inference lock, so concurrent callers and
+  repeat calls pay the load cost once.
+4. The backend runs inference through the model's native API (for example
+  GLiNER2.5 schemas for entities, classification constraints, or joint
+  entity-relation graphs) and returns a typed schema from
+  `src/aibackends/schemas/`.
+
+Because this path is independent of the runtime layer, backend tasks keep
+working — and stay on their own device — no matter which generative runtime
+and model the process is configured to serve.
 
 ### Workflow Calls
 
@@ -160,7 +184,7 @@ The main extension seams match the package layout:
 | Task               | `src/aibackends/tasks/*.py`         | Implement `BaseTask`, add any schema under `src/aibackends/schemas/`, and export `TASK_SPEC`.                                        |
 | Workflow           | `src/aibackends/workflows/*.py`     | Subclass `Pipeline`, compose `BaseStep` objects, and export `WORKFLOW_SPEC`.                                                         |
 | Workflow step      | `src/aibackends/steps/*`            | Add a reusable `BaseStep` when logic belongs in orchestration instead of in one task.                                                |
-| Capability backend | `src/aibackends/backends/pii/*`     | Use a focused backend spec rather than the general runtime contract for feature-specific integrations.                               |
+| Capability backend | `src/aibackends/backends/<domain>/*` | Use a focused backend contract (`PII_BACKEND_SPEC`, `BaseModerationBackend`, `BaseExtractionBackend`) rather than the general runtime contract. |
 
 
 ## What Is Outside The Core

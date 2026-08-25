@@ -132,6 +132,10 @@ guardrails = [
   "gliner2[local]>=2.0.0",
   "protobuf>=7.36.0",
 ]
+extraction = [
+  "gliner2[local]>=2.0.0",
+  "protobuf>=7.36.0",
+]
 
 [project.scripts]
 aibackends = "aibackends.cli:app"
@@ -189,11 +193,17 @@ module = [
   "fitz",
   "gliner",
   "gliner2",
+  "gliner2.*",
   "huggingface_hub",
   "llama_cpp",
   "llama_cpp.*",
+  "numpy",
+  "numpy.*",
   "peft",
   "torch",
   "transformers",
 ]
 ignore_missing_imports = true
+# gliner2 and numpy ship inline types; skip following them so mypy does not
+# descend into stubs that require a newer Python target than this repo checks.
+follow_imports = "skip"

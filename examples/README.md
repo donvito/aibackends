@@ -27,6 +27,9 @@ python3 -m pip install -e ".[transformers]"
 
 # GliGuard prompt/response moderation
 python3 -m pip install -e ".[guardrails]"
+
+# GLiNER2.5 extraction, classification, and knowledge graphs
+python3 -m pip install -e ".[extraction]"
 ```
 
 Task examples use `create_task(TaskClass, ...)` with supported runtime/model
@@ -62,6 +65,10 @@ inference. Select CPU or GPU explicitly:
 python3 examples/tasks/moderate_content.py --device cpu
 python3 examples/tasks/moderate_content.py --device gpu
 ```
+
+`gliner25/` contains GLiNER2.5 information-extraction demos (entities with
+span attributes, constrained classification, joint entity-relation graphs,
+and long-document extraction). See `examples/gliner25/README.md`.
 
 `workflows/image_ocr_gemma.py` and `workflows/image_ocr_qwen.py` are vision
 OCR examples that extract structured receipt JSON from the sample receipt
