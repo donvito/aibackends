@@ -100,6 +100,20 @@ number to exclude network transfer.
 
 Requires `aibackends[guardrails]`.
 
+### `benchmark_gliner25.py`
+
+Compares the GLiNER2.5 `small` / `base` / `multi` checkpoints on one device:
+cold load, warm single-call latency per capability (entity extraction, span
+attributes, constrained classification, joint entity-relation graphs), native
+batch throughput, and long-document latency versus document length.
+
+```bash
+python benchmarks/benchmark_gliner25.py \
+    --models small base multi --warm-calls 10 --batch-size 8 --device cpu
+```
+
+Requires `aibackends[extraction]`.
+
 ## Consistency And Degradation
 
 Sample counts are configurable with `--warm-calls` (default 10). With 10 or
