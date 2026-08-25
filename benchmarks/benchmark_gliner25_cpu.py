@@ -267,9 +267,9 @@ def main() -> None:
         print(f"Benchmark failed: {exc}", file=sys.stderr)
         raise SystemExit(1) from exc
 
-    slug = args.model.replace("/", "-").replace(".", "")
+    slug = args.model.replace("/", "-")
     report_path = write_report(
-        name=f"gliner25-{slug}-cpu",
+        name=f"{slug}-cpu",
         lines=lines,
         output_dir=args.output_dir,
     )

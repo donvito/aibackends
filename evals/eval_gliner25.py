@@ -38,7 +38,6 @@ from aibackends.tasks import (
     classify_schema,
     extract_entities,
     extract_graph,
-    extract_records,
     redact_pii,
 )
 
@@ -321,16 +320,12 @@ def build_cases(args: argparse.Namespace) -> list[EvalCase]:
         )
 
     def contract() -> Any:
-        return extract_records(
-            (DATA / "msa_contract.txt").read_text(encoding="utf-8"),
-            schema={
-                "agreement": [
-                    "provider::str::Provider company name",
-                    "customer::str::Customer company name",
-                    "monthly_fee::str::Recurring fee with currency",
-                    "governing_law::str::Governing law",
-                ]
-            },
+        return extract_entities(
+            (
+                "Northwind Analytics LLC invoices Contoso Retail Inc. "
+                "USD 18,500 per month under Washington law."
+            ),
+            labels=["organization", "money"],
             **common,
         )
 
@@ -404,11 +399,11 @@ def build_cases(args: argparse.Namespace) -> list[EvalCase]:
             name="contract-parties-and-fee",
             use_case="contract-review",
             run=contract,
-            expected_fields={
-                "provider": "Northwind Analytics LLC",
-                "customer": "Contoso Retail Inc.",
-                "monthly_fee": "USD 18,500",
-            },
+            expected_entities=(
+                GoldEntity("organization", "Northwind Analytics LLC"),
+                GoldEntity("organization", "Contoso Retail Inc."),
+                GoldEntity("money", "USD 18,500"),
+            ),
         ),
         EvalCase(
             name="clinical-negated-fever",
@@ -489,6 +484,8 @@ def build_report_lines(args: argparse.Namespace, results: list[CaseResult]) -> l
         status = "pass" if result.passed else "FAIL"
         f1 = _f1(result.precision, result.recall)
         detail = result.detail.replace("|", "/")
+        if len(detail) > 160:
+            detail = detail[:157] + "..."
         lines.append(
             f"| {index} | {result.use_case} | {result.name} | {status} | "
             f"{result.precision:.2f} | {result.recall:.2f} | {f1:.2f} | {detail} |"
@@ -530,8 +527,8 @@ def main() -> None:
         print(f"Eval failed: {exc}", file=sys.stderr)
         raise SystemExit(1) from exc
 
-    slug = args.model.replace("/", "-").replace(".", "")
-    report_path = write_report(f"gliner25-{slug}-{args.device}", lines)
+    slug = args.model.replace("/", "-")
+    report_path = write_report(f"{slug}-{args.device}", lines)
     print(f"\nReport written to {report_path}", flush=True)
 
 

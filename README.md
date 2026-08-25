@@ -308,7 +308,7 @@ Full command reference: `docs/cli.md`.
 - `docs/api-reference/index.md` for the public API
 - `examples/README.md` for runnable examples, including local image OCR
 - `benchmarks/README.md` for latency benchmarks, `evals/README.md` for
-  accuracy evals (e.g. tool-call accuracy)
+  accuracy evals (tool-call accuracy and GLiNER 2.5 use cases)
 
 ## Development
 

@@ -45,6 +45,7 @@ python evals/eval_gliner25.py --device cpu --model gliner25-base
 ```
 
 Requires `aibackends[gliner25]`. Reports land in `evals/reports/` as
-`YYYY-MM-DD_gliner25-<model>-<device>.md`. Entity and field matches allow
-substring overlap after normalization; classification requires the expected
-task labels and `feasible=True` when constraints are declared.
+`YYYY-MM-DD_<model>-<device>.md` (for example `2026-08-25_gliner25-small-cpu.md`).
+A case **passes** when every gold label is found (recall 1.0) and constraints
+are feasible; extra predicted labels lower precision but do not fail the case.
+Entity matches allow substring overlap after normalization.
