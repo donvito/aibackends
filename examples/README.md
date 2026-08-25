@@ -27,6 +27,9 @@ python3 -m pip install -e ".[transformers]"
 
 # GliGuard prompt/response moderation
 python3 -m pip install -e ".[guardrails]"
+
+# GLiNER2.5 information extraction
+python3 -m pip install -e ".[gliner2]"
 ```
 
 Task examples use `create_task(TaskClass, ...)` with supported runtime/model
@@ -62,6 +65,33 @@ inference. Select CPU or GPU explicitly:
 python3 examples/tasks/moderate_content.py --device cpu
 python3 examples/tasks/moderate_content.py --device gpu
 ```
+
+## GLiNER2.5 use cases
+
+The scripts in `examples/gliner25/` use the first-class aibackends `gliner25`
+backend and information-extraction task functions. Run them as modules from the
+repository root:
+
+```bash
+python3 -m examples.gliner25.long_context --model small --device cpu
+python3 -m examples.gliner25.constrained_routing --model base --device cpu
+python3 -m examples.gliner25.joint_information_extraction --model multi --device cpu
+python3 -m examples.gliner25.span_attributes --model small --device cpu
+python3 -m examples.gliner25.combined_schema --model base --device cpu
+```
+
+Model guidance:
+
+- `small` (74M, English): fastest CPU/edge checkpoint
+- `base` (194M, English): default English multi-task checkpoint
+- `multi` (287M, multilingual): multilingual extraction and classification
+
+Every extraction example requests character spans and verifies that they slice
+back to the original source. The matching Colab tutorial is
+`examples/notebooks/gliner25_information_extraction_colab.ipynb`.
+Measured small/base/multi results are committed in
+`evals/reports/2026-08-25_gliner25-applied-eval-cpu.md` and
+`benchmarks/reports/2026-08-25_gliner25-cpu.md`.
 
 `workflows/image_ocr_gemma.py` and `workflows/image_ocr_qwen.py` are vision
 OCR examples that extract structured receipt JSON from the sample receipt

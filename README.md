@@ -13,8 +13,18 @@ in plain Python with `llamacpp` and `transformers`.
 
 ## Try it in Colab
 
-Run local prompt and response moderation with GliGuard in the browser — no
-install, no API key, works on a free CPU runtime:
+Run local models in the browser with no API key. Both notebooks work on a free
+CPU runtime:
+
+**GLiNER2.5 span-free information extraction**
+
+[![Open GLiNER2.5 In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/gliner25_information_extraction_colab.ipynb)
+
+Long-document extraction, constrained routing, Joint IE, span attributes,
+combined schemas, and native batch inference across the small/base/multi model
+family.
+
+**GliGuard prompt and response moderation**
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/gliguard_moderation_colab.ipynb)
 
@@ -38,6 +48,7 @@ pip install aibackends[audio]
 pip install aibackends[video]
 pip install aibackends[pii]
 pip install aibackends[guardrails]
+pip install aibackends[gliner2]
 ```
 
 For GPU clouds (RunPod, Modal, ...), a CUDA-enabled `Dockerfile` is included;
@@ -91,6 +102,38 @@ redacted = redactor.run("john@example.com called from +1 555 0100")
 `RedactPIITask` uses a dedicated backend such as `gliner` or `openai-privacy`
 (the local `privacy-filter` model) rather than the general LLM runtime
 interface.
+
+**Extract source-grounded information with GLiNER2.5**
+
+```python
+from aibackends import extract_entities
+
+text = "Apple CEO Tim Cook announced the iPhone 15 in Cupertino."
+result = extract_entities(
+    text,
+    ["company", "person", "product", "location"],
+    backend="gliner25",
+    model="base",
+    device="cpu",
+    include_spans=True,
+    include_confidence=True,
+)
+
+for entities in result["entities"].values():
+    for entity in entities:
+        assert text[entity["start"] : entity["end"]] == entity["text"]
+```
+
+Use `small` for fast English CPU inference, `base` for stronger English
+multi-task extraction, and `multi` for multilingual documents. The first-class
+`gliner25` backend owns model loading, caching, and native decoder access. The
+runnable examples in `examples/gliner25/` also cover long documents,
+constrained classification, typed Joint IE graphs, span attributes, and
+combined schemas.
+See the committed
+[applied accuracy eval](evals/reports/2026-08-25_gliner25-applied-eval-cpu.md)
+and [CPU benchmark](benchmarks/reports/2026-08-25_gliner25-cpu.md) for measured
+small/base/multi results.
 
 **Moderate prompts and responses locally with GliGuard**
 
@@ -225,7 +268,8 @@ LFM2.5's native Pythonic tool-call format.
 - Local runtimes: `llamacpp`, `transformers`
 - Tasks: `summarize`, `extract`, `classify`, `embed`, `extract_invoice`,
   `redact_pii`, `moderate_prompt`, `moderate_response`, `analyse_sales_call`,
-  `analyse_video_ad`
+  `analyse_video_ad`, `extract_entities`, `extract_entities_long`,
+  `batch_extract_entities`, `extract_schema`, `classify_schema`, `extract_graph`
 - Workflows: `InvoiceProcessor`, `PIIRedactor`, `SalesCallAnalyser`,
   `VideoAdIntelligence`
 - Outputs: `InvoiceOutput`, `SalesCallReport`, `VideoAdReport`,
