@@ -43,6 +43,10 @@ from aibackends.tasks import (
     moderate_responses_async,
     redact_pii,
     redact_pii_async,
+    route_prompt,
+    route_prompt_async,
+    route_prompts,
+    route_prompts_async,
     summarize,
     summarize_async,
 )
@@ -92,6 +96,10 @@ __all__ = [
     "redact_pii_async",
     "register_runtime",
     "reset_config",
+    "route_prompt",
+    "route_prompt_async",
+    "route_prompts",
+    "route_prompts_async",
     "summarize",
     "summarize_async",
 ]

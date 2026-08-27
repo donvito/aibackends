@@ -5,6 +5,52 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- LFM2.5 prompt routing backend powered by
+  `LiquidAI/LFM2.5-Encoder-350M-Prompt-Router`, a 350M bidirectional encoder
+  that scores a prompt against free-text routing lanes in one forward pass.
+  It runs as its own local capability backend through `transformers`
+  (`trust_remote_code=True`), not through the configured generative runtime,
+  with CPU/CUDA/MPS device selection and per-process, per-device model reuse.
+- Routing task `route_prompt`, batch form `route_prompts`, and `_async`
+  variants of both, exported from `aibackends.tasks` and the top-level
+  `aibackends` package, plus `RoutePromptTask` for the `create_task(...)` API.
+- `RoutingResult` and `RouteScore` schemas in `aibackends.schemas.routing`
+  with ranked scores, a `best_route` convenience field, and threshold
+  filtering (below-threshold lanes are dropped; `best_route` is `None` when
+  nothing clears the bar).
+- Pluggable routing backend registry (`register_routing_backend`,
+  `get_routing_backend`, `list_routing_backends`) under
+  `aibackends.backends.routing`.
+- New `routing` extra (`pip install aibackends[routing]`) pulling in `torch`
+  and `transformers`.
+- CLI task `route-prompt`; routing lanes ride the existing `--labels` flag
+  and `--threshold` / `--device` apply.
+- `qwen3.8-27b` llamacpp model profile (`unsloth/Qwen3.8-27B-GGUF`, `Q4_K_M`)
+  and `QWEN38_27B` ref as a local dispatch target for routing demos.
+- Runnable examples under `examples/routing/`, one file per scenario: basic
+  routing, device-assistant orchestration, code-language routing,
+  support-intent classification, on-the-fly custom categories, capability
+  dispatch to GliGuard/GLiNER, and complexity-based model-tier routing
+  across local and cloud models — plus a Colab notebook at
+  `examples/notebooks/lfm25_prompt_routing_colab.ipynb`.
+
+### Fixed
+- The llama.cpp runtime now strips transformers-only `{% generation %}`
+  markers from GGUF-embedded chat templates before llama-cpp-python compiles
+  them. Recent LiquidAI LFM2.5 GGUF refreshes ship such templates, which
+  previously crashed `Llama(...)` construction with a Jinja
+  `TemplateSyntaxError`.
+- The llama.cpp runtime honours `extra_options={"chat_format": ...}` for all
+  models, not only Gemma, as an escape hatch for incompatible embedded
+  templates.
+- The routing backend falls back to the fast tokenizer when the router
+  repo's `tokenizer_config.json` names a transformers v5 tokenizer class
+  that transformers 4.x does not recognize, so it works on both major
+  versions (the 4.x ceiling is currently imposed by `gliner`/`gliner2`).
+
 ## [0.6.0] - 2026-08-25
 
 ### Added

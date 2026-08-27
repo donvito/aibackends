@@ -136,6 +136,10 @@ extraction = [
   "gliner2[local]>=2.0.0",
   "protobuf>=7.36.0",
 ]
+routing = [
+  "torch",
+  "transformers",
+]
 
 [project.scripts]
 aibackends = "aibackends.cli:app"

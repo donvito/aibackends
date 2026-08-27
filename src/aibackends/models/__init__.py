@@ -22,6 +22,7 @@ OPENAI_PRIVACY = ModelRef(name="openai-privacy")
 PHI4_MINI = ModelRef(name="phi4-mini")
 QWEN3_VL_4B = ModelRef(name="qwen3-vl-4b")
 QWEN3_VL_8B = ModelRef(name="qwen3-vl-8b")
+QWEN38_27B = ModelRef(name="qwen3.8-27b")
 
 __all__ = [
     "available_models",
@@ -42,4 +43,5 @@ __all__ = [
     "PHI4_MINI",
     "QWEN3_VL_4B",
     "QWEN3_VL_8B",
+    "QWEN38_27B",
 ]

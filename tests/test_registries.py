@@ -6,6 +6,7 @@ import pytest
 
 from aibackends.backends.moderation import get_moderation_backend
 from aibackends.backends.pii import get_pii_backend
+from aibackends.backends.routing import get_routing_backend
 from aibackends.core.config import get_runtime
 from aibackends.core.model_registry import register_model_profile
 from aibackends.core.registry import ModelRef, TransformerModelProfile
@@ -19,6 +20,7 @@ from aibackends.tasks import (
     ExtractInvoiceTask,
     ModeratePromptTask,
     ModerateResponseTask,
+    RoutePromptTask,
     SummarizeTask,
     available_tasks,
     create_task,
@@ -91,6 +93,13 @@ def test_gliguard_moderation_backend_is_discoverable() -> None:
     assert backend.model_id == "fastino/gliguard-LLMGuardrails-300M"
 
 
+def test_lfm2_prompt_router_backend_is_discoverable() -> None:
+    backend = get_routing_backend("prompt-router")
+
+    assert backend.name == "lfm2-prompt-router"
+    assert backend.model_id == "LiquidAI/LFM2.5-Encoder-350M-Prompt-Router"
+
+
 def test_runtime_and_model_catalogs_are_discoverable():
     runtimes = available_runtimes()
     models = available_models()
@@ -121,6 +130,7 @@ def test_available_tasks_returns_canonical_names_mapped_to_task_classes():
     assert tasks["extract-invoice"] is ExtractInvoiceTask
     assert tasks["moderate-prompt"] is ModeratePromptTask
     assert tasks["moderate-response"] is ModerateResponseTask
+    assert tasks["route-prompt"] is RoutePromptTask
     assert "extract_invoice" not in tasks
 
 
