@@ -22,6 +22,7 @@ pip install aibackends[video]
 pip install aibackends[pii]
 pip install aibackends[guardrails]
 pip install aibackends[extraction]
+pip install aibackends[routing]
 ```
 
 Downloaded local models for `llamacpp` and `aibackends pull` use the standard
@@ -331,6 +332,55 @@ variant. The model is loaded once per process and device and reused across
 calls. CPU latency numbers are in `benchmarks/reports/` and zero-shot accuracy
 numbers in `evals/reports/`.
 
+### Route prompts with the LFM2.5 encoder
+
+`route_prompt` is a dedicated routing backend powered by
+[`LiquidAI/LFM2.5-Encoder-350M-Prompt-Router`](https://huggingface.co/LiquidAI/LFM2.5-Encoder-350M-Prompt-Router),
+a 350M bidirectional encoder fine-tuned for zero-shot prompt routing. Like
+moderation and extraction, it does not use the configured generative runtime.
+The model loads through `transformers` with `trust_remote_code=True` (the
+routing head lives in the model repo's custom code) and is CPU-first, with
+CUDA and Apple MPS supported.
+
+Routing lanes are free text supplied at call time. The encoder scores the
+whole prompt against every lane in a single forward pass and returns a
+softmax-ranked result:
+
+```python
+from aibackends.tasks import route_prompt, route_prompts
+
+result = route_prompt(
+    "Can you help me debug a failing Python unit test?",
+    ["coding", "sales", "creative writing", "general knowledge"],
+    device="cpu",  # "cpu" | "gpu" | "cuda" | "cuda:<index>" | "mps"
+)
+print(result.best_route)  # "coding"
+
+batch = route_prompts(
+    ["Refund my card", "Translate this to French"],
+    ["billing", "translation", "other"],
+)
+```
+
+`RoutingResult` contains:
+
+- `best_route`: the highest-scoring lane, or `None` when a threshold filtered
+  every lane out
+- `scores`: every surviving lane with its score, sorted descending
+- `backend_used` and `model_id` for provenance
+
+Scores are a softmax over the supplied lanes, so they always sum to 1 across
+the full lane set. Pass `threshold=0.4` (any 0-1 value) to drop
+low-confidence lanes — when nothing clears the bar, `best_route` is `None`,
+which works as an "unsure, escalate" signal. Both functions have `_async`
+variants, and the model is loaded once per process and device. The first call
+downloads ~1.4 GB of weights.
+
+Runnable demos live in `examples/routing/` (device-assistant orchestration,
+code-language routing, capability dispatch, and complexity-based model-tier
+routing), and a custom router can be registered with
+`register_routing_backend` from `aibackends.backends.routing`.
+
 Tasks are also available as configured `BaseTask` objects through the factory:
 
 ```python
@@ -383,6 +433,7 @@ Batch `on_error` supports `"raise"`, `"skip"`, and `"collect"`.
 aibackends task extract-invoice --input invoice.pdf
 aibackends task redact-pii --input transcript.txt --backend gliner --labels email,phone_number,user_name
 aibackends task classify --input doc.txt --labels invoice,contract,receipt
+aibackends task route-prompt --input "Debug my unit test" --labels coding,sales,other
 aibackends pull gemma4-e2b --runtime llamacpp
 aibackends check transformers
 ```

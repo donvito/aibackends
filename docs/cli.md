@@ -73,6 +73,7 @@ under `src/aibackends/tasks/`):
 - `extract-entities`
 - `classify-text`
 - `extract-graph`
+- `route-prompt`
 - `extract-invoice`
 - `analyse-sales-call`
 - `analyse-video-ad`
@@ -145,6 +146,12 @@ aibackends task extract-graph \
   --relation works_for:person:organization \
   --relation located_in:organization:location
 
+# zero-shot prompt routing with free-text lanes (LFM2.5 encoder)
+aibackends task route-prompt \
+  --input "Can you help me debug a failing Python unit test?" \
+  --labels "coding,sales,creative writing,general knowledge" \
+  --device cpu
+
 # extract with a custom Pydantic schema
 aibackends task extract \
   --input "John Doe, 35, NYC" \
@@ -164,6 +171,10 @@ Notes:
   an alias for CUDA.
 - `extract-graph` takes `--entities` as a comma-separated list and `--relation`
   once per relation, formatted `name:head:tail`.
+- `route-prompt` uses the `lfm2-prompt-router` backend
+  (LiquidAI LFM2.5-Encoder-350M-Prompt-Router) instead of the general runtime.
+  `--labels` carries the routing lanes and is required; `--threshold` drops
+  lanes below the bar, and `--device gpu` is an alias for CUDA.
 - `classify` requires `--labels`. `redact-pii` accepts `--labels` only when used
 with the `gliner` backend (custom entity types).
 - `extract` requires `--schema` pointing to a Pydantic model class via dotted
@@ -210,7 +221,7 @@ another tool.
 - Structured tasks (`extract-invoice`, `analyse-sales-call`,
   `analyse-video-ad`, `classify`, `extract`, `redact-pii`,
   `moderate-prompt`, `moderate-response`, `extract-entities`, `classify-text`,
-  `extract-graph`) emit indented JSON you can pipe into
+  `extract-graph`, `route-prompt`) emit indented JSON you can pipe into
   `jq`:
   ```bash
   aibackends task extract-invoice --input invoice.pdf | jq '.total'
@@ -231,6 +242,8 @@ names you'll likely pipe with `jq`:
 - `classify-text` → `TextClassification`: `tasks`, `feasible`, `constrained`
 - `extract-graph` → `KnowledgeGraph`: `entities`, `relations[].type`,
   `relations[].head_text`, `relations[].tail_text`, `feasible`
+- `route-prompt` → `RoutingResult`: `best_route`, `scores[].route`,
+  `scores[].score`, `backend_used`, `model_id`
 - `extract-invoice` → `InvoiceOutput`: `vendor`, `invoice_number`, `total`,
 `line_items`, ...
 - `classify` → `Classification`: `label`, `confidence`

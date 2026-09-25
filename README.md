@@ -10,6 +10,8 @@ in plain Python with `llamacpp` and `transformers`.
 - Local prompt and response moderation with GliGuard on CPU or GPU
 - Zero-shot entity, classification, and knowledge-graph extraction with
   GLiNER2.5 — no LLM in the loop
+- Zero-shot prompt routing with the LiquidAI LFM2.5 encoder — free-text lanes,
+  one CPU-friendly forward pass, no classifier training
 - Reusable tasks and workflows for scripts, apps, and batch jobs
 - Practical local examples for text, image OCR, documents, audio, and video
 
@@ -27,6 +29,11 @@ Or run zero-shot extraction with GLiNER2.5 — entities, constrained
 classification, and knowledge graphs on the same free CPU runtime:
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/gliner25_extraction_colab.ipynb)
+
+Or route prompts zero-shot with the LFM2.5 encoder — device-assistant lanes,
+custom categories on the fly, and complexity-based model tiers:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/donvito/aibackends/blob/main/examples/notebooks/lfm25_prompt_routing_colab.ipynb)
 
 ## Install
 
@@ -46,6 +53,7 @@ pip install aibackends[video]
 pip install aibackends[pii]
 pip install aibackends[guardrails]
 pip install aibackends[extraction]
+pip install aibackends[routing]
 ```
 
 For GPU clouds (RunPod, Modal, ...), a CUDA-enabled `Dockerfile` is included;
@@ -165,6 +173,31 @@ multi-label, and `implies` / `excludes` / `iff` constraints, and
 batch API, and every task has an `_async` variant. CPU latency and zero-shot
 accuracy numbers are committed in `benchmarks/reports/` and `evals/reports/`.
 
+**Route prompts zero-shot with the LFM2.5 encoder**
+
+```python
+from aibackends.tasks import route_prompt
+
+result = route_prompt(
+    "Can you help me debug a failing Python unit test?",
+    ["coding", "sales", "creative writing", "general knowledge"],
+    device="cpu",
+)
+
+print(result.best_route)                       # "coding"
+for score in result.scores:
+    print(f"{score.route}: {score.score:.1%}")
+```
+
+The router is [LiquidAI LFM2.5-Encoder-350M-Prompt-Router](https://huggingface.co/LiquidAI/LFM2.5-Encoder-350M-Prompt-Router),
+a 350M bidirectional encoder that scores the whole prompt against every lane
+in a single forward pass. Lanes are free text supplied at call time — no
+taxonomy, no training — so adding a new route is just appending a string.
+`route_prompts(...)` handles batches, both have `_async` variants, and
+`threshold=` drops low-confidence lanes (an "unsure, escalate" switch). See
+`examples/routing/` for device-assistant orchestration, capability dispatch,
+and complexity-based model-tier routing demos.
+
 **Generate local embeddings**
 
 ```python
@@ -275,12 +308,13 @@ LFM2.5's native Pythonic tool-call format.
 - Local runtimes: `llamacpp`, `transformers`
 - Tasks: `summarize`, `extract`, `classify`, `embed`, `extract_invoice`,
   `redact_pii`, `moderate_prompt`, `moderate_response`, `extract_entities`,
-  `classify_text`, `extract_graph`, `analyse_sales_call`, `analyse_video_ad`
+  `classify_text`, `extract_graph`, `route_prompt`, `analyse_sales_call`,
+  `analyse_video_ad`
 - Workflows: `InvoiceProcessor`, `PIIRedactor`, `SalesCallAnalyser`,
   `VideoAdIntelligence`
 - Outputs: `InvoiceOutput`, `SalesCallReport`, `VideoAdReport`,
   `RedactedText`, `Classification`, `PromptModeration`, `ResponseModeration`,
-  `EntityExtraction`, `TextClassification`, `KnowledgeGraph`
+  `EntityExtraction`, `TextClassification`, `KnowledgeGraph`, `RoutingResult`
 
 Tool and agent integrations can be added later without changing the core task
 and workflow layer.
@@ -292,6 +326,7 @@ and workflow layer.
 pip install 'aibackends[llamacpp]'
 pip install 'aibackends[pii]'
 pip install 'aibackends[extraction]'
+pip install 'aibackends[routing]'
 
 aibackends task extract-invoice --input invoice.pdf --runtime llamacpp --model gemma4-e2b
 aibackends task classify --input doc.txt --labels invoice,contract,receipt --runtime llamacpp --model gemma4-e2b
@@ -303,6 +338,8 @@ aibackends task classify-text --input "Refund my card" --labels billing,bug,feat
 aibackends task extract-graph --input "Alice works for Acme in Paris." \
     --entities person,organization,location \
     --relation works_for:person:organization --relation located_in:organization:location
+aibackends task route-prompt --input "Debug my failing unit test" \
+    --labels "coding,sales,creative writing,general knowledge"
 aibackends pull gemma4-e2b --runtime llamacpp
 aibackends check llamacpp --model gemma4-e2b
 ```
@@ -317,6 +354,7 @@ Full command reference: `docs/cli.md`.
 - `docs/api-reference/index.md` for the public API
 - `examples/README.md` for runnable examples, including local image OCR
 - `examples/gliner25/README.md` for the GLiNER2.5 extraction demos
+- `examples/routing/README.md` for the LFM2.5 prompt routing demos
 - `benchmarks/README.md` for latency benchmarks, `evals/README.md` for
   accuracy evals (e.g. tool-call accuracy)
 

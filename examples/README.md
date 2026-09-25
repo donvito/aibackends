@@ -30,6 +30,9 @@ python3 -m pip install -e ".[guardrails]"
 
 # GLiNER2.5 extraction, classification, and knowledge graphs
 python3 -m pip install -e ".[extraction]"
+
+# LFM2.5 zero-shot prompt routing
+python3 -m pip install -e ".[routing]"
 ```
 
 Task examples use `create_task(TaskClass, ...)` with supported runtime/model
@@ -70,6 +73,22 @@ python3 examples/tasks/moderate_content.py --device gpu
 span attributes, constrained classification, joint entity-relation graphs,
 and long-document extraction). See `examples/gliner25/README.md`.
 
+`routing/` contains zero-shot prompt routing demos built on the LiquidAI
+LFM2.5-Encoder-350M-Prompt-Router, one file per scenario (basic routing,
+device-assistant orchestration, code-language routing, support-intent
+classification, on-the-fly custom categories, capability dispatch, and
+complexity-based model-tier routing). See `examples/routing/README.md`:
+
+```bash
+python3 examples/routing/route_prompt.py
+python3 examples/routing/route_device_assistant.py
+python3 examples/routing/route_code_language.py
+python3 examples/routing/route_support_intent.py
+python3 examples/routing/route_custom_category.py
+python3 examples/routing/route_and_dispatch.py
+python3 examples/routing/route_by_complexity.py
+```
+
 `workflows/image_ocr_gemma.py` and `workflows/image_ocr_qwen.py` are vision
 OCR examples that extract structured receipt JSON from the sample receipt
 images in `examples/data/images/` using the `llamacpp` runtime.
@@ -92,6 +111,13 @@ python3 examples/tasks/embed_text_transformers.py
 python3 examples/tasks/summarize_text.py
 python3 examples/tasks/classify_text.py
 python3 examples/tasks/moderate_content.py --device cpu
+python3 examples/routing/route_prompt.py
+python3 examples/routing/route_device_assistant.py
+python3 examples/routing/route_code_language.py
+python3 examples/routing/route_support_intent.py
+python3 examples/routing/route_custom_category.py
+python3 examples/routing/route_and_dispatch.py
+python3 examples/routing/route_by_complexity.py
 python3 examples/tasks/redact_text.py
 python3 examples/tasks/redact_text_batch.py
 python3 examples/tasks/extract_custom_schema.py
