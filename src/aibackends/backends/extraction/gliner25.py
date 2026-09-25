@@ -28,6 +28,9 @@ MODEL_VARIANTS: dict[str, str] = {
     "small": "fastino/gliner2.5-small-v1",
     "base": "fastino/gliner2.5-base-v1",
     "multi": "fastino/gliner2.5-multi-v1",
+    "decide": "fastino/GLiNER2.5-Decide",
+    "decide-1b": "fastino/GLiNER2.5-Decide-1B",
+    "multi-decide": "fastino/GLiNER2.5-multi-Decide",
 }
 DEFAULT_MODEL_VARIANT = "base"
 DEFAULT_THRESHOLD = 0.5
@@ -38,6 +41,8 @@ DEFAULT_BEAM_SIZE = 32
 
 _ENTITY_SPAN_KEYS = {"text", "start", "end", "confidence"}
 _CONSTRAINT_KINDS = ("implies", "excludes", "iff")
+_TASK_OPTION_ALIASES = {"prompt": "instruction", "cls_threshold": "threshold"}
+_TASK_OPTIONS = {"min_labels", "max_labels", "threshold", "default", "instruction"}
 
 _MODEL_CACHE: dict[tuple[str, str], Any] = {}
 _CLASSIFIER_CACHE: dict[tuple[str, str], Any] = {}
@@ -63,7 +68,7 @@ def normalize_device(device: str | None) -> str:
 
 
 def resolve_model_id(model: str | None) -> str:
-    """Map a variant name (small/base/multi) or Hugging Face repo id to a model id."""
+    """Map a variant name (e.g. base or decide) or Hugging Face repo id to a model id."""
     if model is None:
         return MODEL_VARIANTS[DEFAULT_MODEL_VARIANT]
     normalized = model.strip()
@@ -302,22 +307,33 @@ def _build_classification_schema(
     for name, spec in tasks.items():
         if isinstance(spec, Mapping):
             options = dict(spec)
-            labels = options.pop("labels", None)
-            if not labels:
-                raise ValueError(f"Classification task {name!r} must define 'labels'.")
+            labels = _normalize_task_labels(name, options.pop("labels", None))
             multi_label = bool(options.pop("multi_label", False))
-            allowed = {"min_labels", "max_labels", "threshold", "default", "instruction"}
-            unknown = set(options) - allowed
+            ordinal = bool(options.pop("ordinal", False))
+            for alias, target in _TASK_OPTION_ALIASES.items():
+                if alias in options:
+                    if target in options:
+                        raise ValueError(
+                            f"Classification task {name!r} sets both {alias!r} and {target!r}."
+                        )
+                    options[target] = options.pop(alias)
+            unknown = set(options) - _TASK_OPTIONS
             if unknown:
                 raise ValueError(
                     f"Unknown options for classification task {name!r}: {sorted(unknown)}"
                 )
+            if multi_label and ordinal:
+                raise ValueError(
+                    f"Classification task {name!r} cannot be both multi_label and ordinal."
+                )
             if multi_label:
-                schema.multi(name, [str(label) for label in labels], **options)
+                schema.multi(name, labels, **options)
+            elif ordinal:
+                schema.ordinal(name, labels, **options)
             else:
-                schema.single(name, [str(label) for label in labels], **options)
+                schema.single(name, labels, **options)
         else:
-            schema.single(name, [str(label) for label in spec])
+            schema.single(name, _normalize_task_labels(name, spec))
 
     for rule in constraints or ():
         kind = rule.get("kind")
@@ -330,6 +346,14 @@ def _build_classification_schema(
         builder = getattr(constraint_dsl, kind)
         schema.constrain(builder(when, then))
     return schema
+
+
+def _normalize_task_labels(name: str, labels: Any) -> list[str] | dict[str, str]:
+    if isinstance(labels, str) or not labels:
+        raise ValueError(f"Classification task {name!r} must define 'labels'.")
+    if isinstance(labels, Mapping):
+        return {str(label): str(description) for label, description in labels.items()}
+    return [str(label) for label in labels]
 
 
 def _constraint_ref(value: Any, field: str) -> tuple[str, str]:

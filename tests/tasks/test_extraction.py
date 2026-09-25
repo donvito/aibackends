@@ -23,6 +23,7 @@ gliner25_module = importlib.import_module("aibackends.backends.extraction.gliner
 
 SMALL_ID = "fastino/gliner2.5-small-v1"
 BASE_ID = "fastino/gliner2.5-base-v1"
+DECIDE_ID = "fastino/GLiNER2.5-Decide"
 
 
 class _FakeSchema:
@@ -78,6 +79,10 @@ class _FakeClassificationSchema:
 
     def multi(self, name: str, labels: Any, **kwargs: Any) -> _FakeClassificationSchema:
         self.tasks.append(("multi", name, labels, kwargs))
+        return self
+
+    def ordinal(self, name: str, labels: Any, **kwargs: Any) -> _FakeClassificationSchema:
+        self.tasks.append(("ordinal", name, labels, kwargs))
         return self
 
     def constrain(self, *expressions: Any) -> _FakeClassificationSchema:
@@ -200,6 +205,11 @@ def test_resolve_model_id_maps_variants_and_passes_repo_ids() -> None:
     assert gliner25_module.resolve_model_id(None) == BASE_ID
     assert gliner25_module.resolve_model_id("small") == SMALL_ID
     assert gliner25_module.resolve_model_id("multi") == "fastino/gliner2.5-multi-v1"
+    assert gliner25_module.resolve_model_id("decide") == DECIDE_ID
+    assert gliner25_module.resolve_model_id("decide-1b") == "fastino/GLiNER2.5-Decide-1B"
+    assert (
+        gliner25_module.resolve_model_id("multi-decide") == "fastino/GLiNER2.5-multi-Decide"
+    )
     assert gliner25_module.resolve_model_id("acme/custom-model") == "acme/custom-model"
     with pytest.raises(ValueError, match="Unknown GLiNER2.5 model"):
         gliner25_module.resolve_model_id("tiny")
@@ -472,3 +482,116 @@ def test_task_class_coerces_model_strings() -> None:
 def test_extract_entities_rejects_unknown_backend() -> None:
     with pytest.raises(TaskExecutionError, match="Unsupported extraction backend"):
         extract_entities("hello", labels=["person"], backend="unknown")
+
+
+def test_classify_text_decide_supports_prompts_descriptions_and_ordinal(
+    _fake_gliner2_modules: None,
+) -> None:
+    fake = _install_fake_classifier(
+        _FakeClassifier(
+            batch_results=[
+                SimpleNamespace(
+                    tasks={
+                        "handoff": SimpleNamespace(
+                            labels=("yes",),
+                            probabilities={"yes": 0.91, "no": 0.09},
+                            confidence=0.91,
+                            exclusive=True,
+                        ),
+                    },
+                    feasible=True,
+                )
+            ]
+        ),
+        model_id=DECIDE_ID,
+    )
+
+    result = classify_text(
+        "Stop the bot and get me a person.",
+        tasks={
+            "handoff": {
+                "labels": ["yes", "no"],
+                "prompt": "Should this conversation be handed off to a human agent?",
+            },
+            "intent": {
+                "labels": {
+                    "card_pin_change": "The customer wants a new PIN",
+                    "card_lost": "The physical card is missing",
+                },
+            },
+            "aspects": {
+                "labels": ["battery", "screen"],
+                "multi_label": True,
+                "cls_threshold": 0.4,
+            },
+            "rating": {"labels": [str(i) for i in range(6)], "ordinal": True},
+        },
+        model="decide",
+    )
+
+    schema = fake.calls[0]["schema"]
+    assert schema.tasks == [
+        (
+            "single",
+            "handoff",
+            ["yes", "no"],
+            {"instruction": "Should this conversation be handed off to a human agent?"},
+        ),
+        (
+            "single",
+            "intent",
+            {
+                "card_pin_change": "The customer wants a new PIN",
+                "card_lost": "The physical card is missing",
+            },
+            {},
+        ),
+        ("multi", "aspects", ["battery", "screen"], {"threshold": 0.4}),
+        ("ordinal", "rating", ["0", "1", "2", "3", "4", "5"], {}),
+    ]
+    assert result.model_id == DECIDE_ID
+    assert result.value("handoff") == "yes"
+
+
+def test_classify_text_labels_mapping_keeps_descriptions(
+    _fake_gliner2_modules: None,
+) -> None:
+    fake = _install_fake_classifier(
+        _FakeClassifier(
+            batch_results=[
+                SimpleNamespace(
+                    tasks={
+                        "label": SimpleNamespace(
+                            labels=("spam",),
+                            probabilities={"spam": 0.9},
+                            confidence=0.9,
+                            exclusive=True,
+                        ),
+                    },
+                )
+            ]
+        )
+    )
+
+    classify_text("Click here now", labels={"spam": "Unsolicited bulk message", "ham": "Normal"})
+
+    assert fake.calls[0]["schema"].tasks[0][2] == {
+        "spam": "Unsolicited bulk message",
+        "ham": "Normal",
+    }
+
+
+def test_classify_text_rejects_conflicting_task_options(
+    _fake_gliner2_modules: None,
+) -> None:
+    _install_fake_classifier(_FakeClassifier())
+    with pytest.raises(ValueError, match="sets both 'prompt' and 'instruction'"):
+        classify_text(
+            "text",
+            tasks={"t": {"labels": ["a", "b"], "prompt": "q", "instruction": "q"}},
+        )
+    with pytest.raises(ValueError, match="both multi_label and ordinal"):
+        classify_text(
+            "text",
+            tasks={"t": {"labels": ["a", "b"], "multi_label": True, "ordinal": True}},
+        )

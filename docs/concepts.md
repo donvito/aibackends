@@ -57,7 +57,8 @@ examples:
   toxicity, jailbreak detection, response safety, and refusal detection.
 - `gliner2.5` uses the `fastino/gliner2.5-{small,base,multi}-v1` models for
   entity extraction with span attributes, constrained classification, and
-  joint entity-relation graphs.
+  joint entity-relation graphs, plus the `fastino/GLiNER2.5-Decide` family
+  (`decide`, `decide-1b`, `multi-decide`) for operational classification.
 
 These are model-backed capability backends, not runtimes. They solve a specific
 capability and return domain objects such as `PIIEntity`, `PromptModeration`,

@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- GLiNER2.5-Decide classification checkpoints as `gliner2.5` model variants:
+  `decide` (`fastino/GLiNER2.5-Decide`), `decide-1b`
+  (`fastino/GLiNER2.5-Decide-1B`), and `multi-decide`
+  (`fastino/GLiNER2.5-multi-Decide`).
+- `classify_text` task options `prompt` (alias for `instruction`),
+  `cls_threshold` (alias for `threshold`), and `ordinal`, plus
+  `{label: description}` label mappings, which are now passed through to the
+  model instead of being reduced to label names.
+- `examples/gliner25/decide_classification.py` message-router example.
+
 ## [0.6.0] - 2026-08-25
 
 ### Added
