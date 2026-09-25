@@ -67,11 +67,14 @@ def main() -> None:
         },
         **options,
     )
-    print("review sentiment:", result.value("sentiment"))
-    print("review aspects:  ", result.values("aspects"))
+    print("input:", review)
+    print("  sentiment:", result.value("sentiment"))
+    print("  aspects:  ", result.values("aspects"))
+    print()
 
+    pin_text = "Please reset the card PIN. The new one never arrived and the old one is locked."
     pin = classify_text(
-        "Please reset the card PIN. The new one never arrived and the old one is locked.",
+        pin_text,
         tasks={
             "intent": {
                 "labels": {
@@ -83,14 +86,20 @@ def main() -> None:
         },
         **options,
     )
-    print("labels with descriptions:", pin.value("intent"))
+    print("input:", pin_text)
+    print("  intent (labels with descriptions):", pin.value("intent"))
+    print()
 
+    book_review = (
+        "Gave up after 40 pages. Flat characters and a plot you can see coming from the cover."
+    )
     rating = classify_text(
-        "Gave up after 40 pages. Flat characters and a plot you can see coming from the cover.",
+        book_review,
         tasks={"rating": {"labels": [str(i) for i in range(11)], "ordinal": True}},
         **options,
     )
-    print("ordinal rating (0-10):", rating.value("rating"))
+    print("input:", book_review)
+    print("  ordinal rating (0-10):", rating.value("rating"))
     print()
 
     policies = classify_texts(INBOX, tasks={"policy": POLICY}, **options)
