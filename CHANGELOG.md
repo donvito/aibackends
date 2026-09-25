@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-09-25
+
 ### Fixed
 - The `gliner2.5` and GliGuard backends now send gliner2's model-load banner
   ("Model Configuration") to stderr instead of stdout, so CLI tasks such as
