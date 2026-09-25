@@ -214,6 +214,26 @@ def test_resolve_model_id_maps_variants_and_passes_repo_ids() -> None:
         gliner25_module.resolve_model_id("tiny")
 
 
+def test_load_gliner25_model_keeps_load_banner_off_stdout(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    class _AutoExtractor:
+        @classmethod
+        def from_pretrained(cls, model_id: str, *, map_location: str) -> _FakeExtractor:
+            print("Model Configuration")
+            return _FakeExtractor()
+
+    fake_package = ModuleType("gliner2")
+    fake_package.AutoExtractor = _AutoExtractor  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "gliner2", fake_package)
+
+    gliner25_module.load_gliner25_model("decide", "cpu")
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "Model Configuration" in captured.err
+
+
 def test_extract_entities_parses_spans_and_attributes() -> None:
     fake = _install_fake_extractor(
         _FakeExtractor(
