@@ -11,7 +11,8 @@ pip install 'aibackends[extraction]'
 ```
 
 Model variants: `small` (74M, fastest on CPU), `base` (194M, default English),
-`multi` (287M, multilingual). Every script accepts `--model` and `--device`.
+`multi` (287M, multilingual), plus the GLiNER2.5-Decide classifiers `decide`
+(340M English) and `multi-decide`. Every script accepts `--model` and `--device`.
 Models are downloaded from Hugging Face on first use and cached per process.
 
 ## Scripts
@@ -24,6 +25,7 @@ python3 examples/gliner25/constrained_classification.py   # agent routing with c
 python3 examples/gliner25/span_attributes.py              # clinical extraction, qualified spans
 python3 examples/gliner25/long_document.py                # full-contract chunked extraction
 python3 examples/gliner25/multilingual_ner.py             # zero-shot multilingual NER
+python3 examples/gliner25/decide_classification.py        # GLiNER2.5-Decide routing
 ```
 
 `long_document.py` reads `examples/data/sample_contract.txt`. The CLI mirrors

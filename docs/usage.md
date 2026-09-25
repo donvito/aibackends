@@ -255,7 +255,9 @@ configured generative runtime, so labels are zero-shot and there is no prompt.
 
 Three variants are selectable by name — `small` (74M, fastest on CPU), `base`
 (194M, default), and `multi` (287M, multilingual) — or pass any Hugging Face
-repo id.
+repo id. For classification-heavy work, the GLiNER2.5-Decide checkpoints are
+also selectable: `decide` (340M English, `fastino/GLiNER2.5-Decide`) and
+`multi-decide` (`fastino/GLiNER2.5-multi-Decide`).
 
 ```python
 from aibackends.tasks import classify_text, extract_entities, extract_graph
@@ -283,6 +285,19 @@ Classification supports multiple tasks in one pass, multi-label output, and
 logical constraints:
 
 ```python
+decision = classify_text(
+    "This is the third time I have explained the same missing refund.",
+    tasks={
+        "handoff": {
+            "labels": ["yes", "no"],
+            "prompt": "Should this conversation be handed off to a human agent?",
+        },
+        "urgency": ["low", "normal", "high", "critical"],
+    },
+    model="decide",
+)
+print(decision.value("handoff"), decision.value("urgency"))
+
 routing = classify_text(
     "My card was charged twice for the same order.",
     tasks={
@@ -300,7 +315,11 @@ print(routing.feasible, routing.constrained)
 
 Passing `labels=[...]` instead of `tasks=...` is shorthand for a single task
 named `label`. Each task accepts `multi_label`, `min_labels`, `max_labels`,
-`threshold`, `default`, and `instruction`. Constraint kinds are `implies`,
+`threshold`, `default`, `instruction`, and `ordinal`. `prompt` is an alias for
+`instruction` (a question the label answers, e.g. "Should this be handed off to
+a human?") and `cls_threshold` is an alias for `threshold`. `labels` may be a
+`{label: description}` mapping to disambiguate label names, and
+`ordinal=True` treats the labels as an ordered scale such as `"0"`–`"10"`. Constraint kinds are `implies`,
 `excludes`, and `iff`, and `when` / `then` are `[task, label]` pairs; when a
 constraint set cannot be satisfied, `feasible` is `False`. `value(task)`
 returns the single selected label and `values(task)` the full list.

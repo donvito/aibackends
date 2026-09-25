@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -146,8 +146,8 @@ def _resolve_classification_tasks(
     if tasks is not None:
         return tasks
     if labels is not None:
-        label_list = list(labels.keys()) if isinstance(labels, dict) else list(labels)
-        return {"label": {"labels": label_list}}
+        label_spec = dict(labels) if isinstance(labels, Mapping) else list(labels)
+        return {"label": {"labels": label_spec}}
     raise ValueError("classify_text requires either 'tasks' or 'labels'.")
 
 

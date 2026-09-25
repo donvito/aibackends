@@ -167,7 +167,8 @@ Notes:
   of the general runtime. `--device gpu` is an alias for CUDA.
 - `extract-entities`, `classify-text`, and `extract-graph` use the `gliner2.5`
   backend instead of the general runtime. `--model` selects a variant
-  (`small`, `base`, `multi`) or a Hugging Face repo id, and `--device gpu` is
+  (`small`, `base`, `multi`, `decide`, `multi-decide`) or a
+  Hugging Face repo id, and `--device gpu` is
   an alias for CUDA.
 - `extract-graph` takes `--entities` as a comma-separated list and `--relation`
   once per relation, formatted `name:head:tail`.

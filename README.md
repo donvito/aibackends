@@ -169,6 +169,9 @@ zero-shot, so there is no fine-tuning and no prompt. Entity spans carry
 character offsets and confidences, classification supports multi-task,
 multi-label, and `implies` / `excludes` / `iff` constraints, and
 `long_document=True` chunks contracts and reports automatically.
+For intent, routing, sentiment, priority, policy, and multi-label tags, pass
+`model="decide"` to use [GLiNER2.5-Decide](https://huggingface.co/fastino/GLiNER2.5-Decide)
+(also `multi-decide`); see `examples/gliner25/decide_classification.py`.
 `extract_entities_batch(...)` and `classify_texts(...)` use the model's native
 batch API, and every task has an `_async` variant. CPU latency and zero-shot
 accuracy numbers are committed in `benchmarks/reports/` and `evals/reports/`.
