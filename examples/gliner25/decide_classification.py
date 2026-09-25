@@ -52,8 +52,8 @@ def main() -> None:
     options = {"model": args.model, "device": args.device}
 
     review = (
-        "Battery dies before lunch, but the keyboard and the screen are the best "
-        "I have used on a laptop."
+        "The keyboard and the screen are the best I have used on a laptop, "
+        "and the battery easily lasts a full workday."
     )
     result = classify_text(
         review,
