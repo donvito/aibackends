@@ -26,7 +26,7 @@ wheels = [
 
 [[package]]
 name = "aibackends"
-version = "0.5.0"
+version = "0.6.0"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
@@ -78,6 +78,10 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "ruff" },
     { name = "types-pyyaml" },
+]
+extraction = [
+    { name = "gliner2", extra = ["local"] },
+    { name = "protobuf" },
 ]
 guardrails = [
     { name = "gliner2", extra = ["local"] },
@@ -151,6 +155,7 @@ requires-dist = [
     { name = "gliner", marker = "extra == 'pii'" },
     { name = "gliner", marker = "extra == 'pipelines'" },
     { name = "gliner2", extras = ["local"], marker = "extra == 'all'", specifier = ">=2.0.0" },
+    { name = "gliner2", extras = ["local"], marker = "extra == 'extraction'", specifier = ">=2.0.0" },
     { name = "gliner2", extras = ["local"], marker = "extra == 'guardrails'", specifier = ">=2.0.0" },
     { name = "huggingface-hub", marker = "extra == 'all'" },
     { name = "huggingface-hub", marker = "extra == 'llamacpp'" },
@@ -178,6 +183,7 @@ requires-dist = [
     { name = "pillow", marker = "extra == 'video'" },
     { name = "pre-commit", marker = "extra == 'dev'" },
     { name = "protobuf", marker = "extra == 'all'", specifier = ">=7.36.0" },
+    { name = "protobuf", marker = "extra == 'extraction'", specifier = ">=7.36.0" },
     { name = "protobuf", marker = "extra == 'guardrails'", specifier = ">=7.36.0" },
     { name = "pydantic" },
     { name = "pymupdf", marker = "extra == 'all'" },
@@ -206,7 +212,7 @@ requires-dist = [
     { name = "uvicorn", marker = "extra == 'all'" },
     { name = "uvicorn", marker = "extra == 'api'" },
 ]
-provides-extras = ["llamacpp", "llamacpp-cuda", "llamacpp-metal", "transformers", "pdf", "audio", "video", "pii", "api", "local", "pipelines", "dev", "all", "guardrails"]
+provides-extras = ["llamacpp", "llamacpp-cuda", "llamacpp-metal", "transformers", "pdf", "audio", "video", "pii", "api", "local", "pipelines", "dev", "all", "guardrails", "extraction"]
 
 [[package]]
 name = "annotated-doc"
