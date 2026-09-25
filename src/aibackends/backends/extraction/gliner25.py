@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import sys
 import threading
 from collections.abc import Mapping, Sequence
+from contextlib import redirect_stdout
 from typing import Any
 
 from aibackends.backends.extraction._base import (
@@ -99,7 +101,8 @@ def load_gliner25_model(model: str | None = None, device: str = "cpu") -> Any:
         except ImportError as exc:
             raise RuntimeImportError(_INSTALL_HINT) from exc
 
-        loaded = AutoExtractor.from_pretrained(model_id, map_location=device_name)
+        with redirect_stdout(sys.stderr):
+            loaded = AutoExtractor.from_pretrained(model_id, map_location=device_name)
         evaluate = getattr(loaded, "eval", None)
         if callable(evaluate):
             evaluate()

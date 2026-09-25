@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import sys
 import threading
 from collections.abc import Sequence
+from contextlib import redirect_stdout
 from typing import Any, cast
 
 from aibackends.backends.moderation._base import BaseModerationBackend
@@ -92,10 +94,11 @@ def load_gliguard_model(device: str = "cpu") -> Any:
                 "Install 'aibackends[guardrails]' to use the GliGuard backend."
             ) from exc
 
-        model = AutoExtractor.from_pretrained(
-            GLIGUARD_MODEL_ID,
-            map_location=device_name,
-        )
+        with redirect_stdout(sys.stderr):
+            model = AutoExtractor.from_pretrained(
+                GLIGUARD_MODEL_ID,
+                map_location=device_name,
+            )
         evaluate = getattr(model, "eval", None)
         if callable(evaluate):
             evaluate()

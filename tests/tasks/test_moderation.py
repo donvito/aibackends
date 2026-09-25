@@ -202,6 +202,26 @@ def test_load_gliguard_model_normalizes_gpu_and_caches(
     assert loaded == [(gliguard_module.GLIGUARD_MODEL_ID, "cuda")]
 
 
+def test_load_gliguard_model_keeps_load_banner_off_stdout(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    class _AutoExtractor:
+        @classmethod
+        def from_pretrained(cls, model_id: str, *, map_location: str) -> _FakeGliGuardModel:
+            print("Model Configuration")
+            return _FakeGliGuardModel()
+
+    fake_module = ModuleType("gliner2")
+    fake_module.AutoExtractor = _AutoExtractor  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "gliner2", fake_module)
+
+    gliguard_module.load_gliguard_model("cpu")
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "Model Configuration" in captured.err
+
+
 def test_gliguard_validates_options_before_loading() -> None:
     backend = get_moderation_backend("gli-guard")
 

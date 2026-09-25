@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The `gliner2.5` and GliGuard backends now send gliner2's model-load banner
+  ("Model Configuration") to stderr instead of stdout, so CLI tasks such as
+  `classify-text`, `extract-entities`, `extract-graph`, `moderate-prompt`,
+  and `moderate-response` emit pure JSON that can be piped into `jq`.
+
 ## [0.8.0] - 2026-09-25
 
 ### Added
