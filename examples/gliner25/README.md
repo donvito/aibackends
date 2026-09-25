@@ -12,7 +12,7 @@ pip install 'aibackends[extraction]'
 
 Model variants: `small` (74M, fastest on CPU), `base` (194M, default English),
 `multi` (287M, multilingual), plus the GLiNER2.5-Decide classifiers `decide`
-(340M English), `decide-1b`, and `multi-decide`. Every script accepts `--model` and `--device`.
+(340M English) and `multi-decide`. Every script accepts `--model` and `--device`.
 Models are downloaded from Hugging Face on first use and cached per process.
 
 ## Scripts

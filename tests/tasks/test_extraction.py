@@ -206,7 +206,6 @@ def test_resolve_model_id_maps_variants_and_passes_repo_ids() -> None:
     assert gliner25_module.resolve_model_id("small") == SMALL_ID
     assert gliner25_module.resolve_model_id("multi") == "fastino/gliner2.5-multi-v1"
     assert gliner25_module.resolve_model_id("decide") == DECIDE_ID
-    assert gliner25_module.resolve_model_id("decide-1b") == "fastino/GLiNER2.5-Decide-1B"
     assert (
         gliner25_module.resolve_model_id("multi-decide") == "fastino/GLiNER2.5-multi-Decide"
     )

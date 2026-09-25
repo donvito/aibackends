@@ -29,7 +29,6 @@ MODEL_VARIANTS: dict[str, str] = {
     "base": "fastino/gliner2.5-base-v1",
     "multi": "fastino/gliner2.5-multi-v1",
     "decide": "fastino/GLiNER2.5-Decide",
-    "decide-1b": "fastino/GLiNER2.5-Decide-1B",
     "multi-decide": "fastino/GLiNER2.5-multi-Decide",
 }
 DEFAULT_MODEL_VARIANT = "base"

@@ -41,7 +41,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--model",
         default="decide",
-        help="decide, decide-1b, multi-decide, or a HF repo id.",
+        help="decide, multi-decide, or a HF repo id.",
     )
     parser.add_argument("--device", default="cpu", help="cpu, gpu, cuda, cuda:<index>, or mps.")
     return parser.parse_args()

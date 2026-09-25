@@ -9,8 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - GLiNER2.5-Decide classification checkpoints as `gliner2.5` model variants:
-  `decide` (`fastino/GLiNER2.5-Decide`), `decide-1b`
-  (`fastino/GLiNER2.5-Decide-1B`), and `multi-decide`
+  `decide` (`fastino/GLiNER2.5-Decide`) and `multi-decide`
   (`fastino/GLiNER2.5-multi-Decide`).
 - `classify_text` task options `prompt` (alias for `instruction`),
   `cls_threshold` (alias for `threshold`), and `ordinal`, plus

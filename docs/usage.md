@@ -255,9 +255,8 @@ configured generative runtime, so labels are zero-shot and there is no prompt.
 Three variants are selectable by name — `small` (74M, fastest on CPU), `base`
 (194M, default), and `multi` (287M, multilingual) — or pass any Hugging Face
 repo id. For classification-heavy work, the GLiNER2.5-Decide checkpoints are
-also selectable: `decide` (340M English, `fastino/GLiNER2.5-Decide`),
-`decide-1b` (`fastino/GLiNER2.5-Decide-1B`), and `multi-decide`
-(`fastino/GLiNER2.5-multi-Decide`).
+also selectable: `decide` (340M English, `fastino/GLiNER2.5-Decide`) and
+`multi-decide` (`fastino/GLiNER2.5-multi-Decide`).
 
 ```python
 from aibackends.tasks import classify_text, extract_entities, extract_graph
