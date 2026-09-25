@@ -7,6 +7,7 @@ from aibackends.schemas.embeddings import (
 from aibackends.schemas.invoice import InvoiceOutput
 from aibackends.schemas.moderation import PromptModeration, ResponseModeration
 from aibackends.schemas.pii import Classification, PIIEntity, RedactedText
+from aibackends.schemas.routing import RouteScore, RoutingResult
 from aibackends.schemas.sales_call import SalesCallReport
 from aibackends.schemas.video_ad import VideoAdReport
 
@@ -20,6 +21,8 @@ __all__ = [
     "PromptModeration",
     "RedactedText",
     "ResponseModeration",
+    "RouteScore",
+    "RoutingResult",
     "SalesCallReport",
     "SimilarityPair",
     "VideoAdReport",

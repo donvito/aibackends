@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import mimetypes
+import re
 from pathlib import Path, PurePosixPath
 from typing import Any
 from urllib.parse import urlparse
@@ -30,6 +31,36 @@ IMAGE_SUFFIXES = {
     ".tiff",
     ".webp",
 }
+
+# transformers wraps assistant spans in `{% generation %}` tags to build
+# training masks (e.g. recent LiquidAI LFM2.5 GGUF templates). They are
+# inference no-ops, but plain Jinja - which llama-cpp-python compiles GGUF
+# templates with, eagerly at construction - rejects the unknown tag.
+_GENERATION_TAG_PATTERN = re.compile(r"\{%[-+]?\s*(?:end)?generation\s*[-+]?%\}")
+_JINJA_FORMATTER_PATCHED = False
+
+
+def sanitize_chat_template(template: str) -> str:
+    """Strip transformers-only `{% generation %}` markers from a template."""
+    return _GENERATION_TAG_PATTERN.sub("", template)
+
+
+def _ensure_jinja_formatter_patch() -> None:
+    global _JINJA_FORMATTER_PATCHED
+    if _JINJA_FORMATTER_PATCHED:
+        return
+    from llama_cpp import llama_chat_format
+
+    original_init = llama_chat_format.Jinja2ChatFormatter.__init__
+
+    def patched_init(self: Any, *args: Any, **kwargs: Any) -> None:
+        template = kwargs.get("template")
+        if isinstance(template, str):
+            kwargs["template"] = sanitize_chat_template(template)
+        original_init(self, *args, **kwargs)
+
+    llama_chat_format.Jinja2ChatFormatter.__init__ = patched_init
+    _JINJA_FORMATTER_PATCHED = True
 
 
 def has_image_inputs(messages: list[Message]) -> bool:
@@ -205,6 +236,7 @@ class LlamaCppRuntime(BaseRuntime):
                 "Install 'aibackends[llamacpp]' to use the llama.cpp runtime."
             ) from exc
 
+        _ensure_jinja_formatter_patch()
         location = self.model_manager.ensure_model(self.config)
         if not location.local_path:
             raise RuntimeRequestError("llama.cpp requires a local GGUF file.")
@@ -229,6 +261,7 @@ class LlamaCppRuntime(BaseRuntime):
                 "Install 'aibackends[llamacpp]' to use the llama.cpp runtime."
             ) from exc
 
+        _ensure_jinja_formatter_patch()
         if not location.local_path:
             raise RuntimeRequestError("llama.cpp requires a local GGUF file.")
         mmproj_path = self._resolve_mmproj_path(location)
@@ -251,6 +284,11 @@ class LlamaCppRuntime(BaseRuntime):
         }
         if "gemma" in self.model_name.lower():
             options["chat_format"] = self.config.extra_options.get("chat_format", "gemma")
+        elif "chat_format" in self.config.extra_options:
+            # Escape hatch for GGUFs whose embedded Jinja template uses
+            # transformers-only tags (e.g. `{% generation %}`) that
+            # llama-cpp-python cannot parse.
+            options["chat_format"] = self.config.extra_options["chat_format"]
         for option in ("flash_attn", "n_batch", "n_ubatch"):
             if option in self.config.extra_options:
                 options[option] = self.config.extra_options[option]

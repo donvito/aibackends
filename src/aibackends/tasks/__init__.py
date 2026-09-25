@@ -52,6 +52,13 @@ from aibackends.tasks.registry import (
     list_tasks,
     register_task,
 )
+from aibackends.tasks.route import (
+    RoutePromptTask,
+    route_prompt,
+    route_prompt_async,
+    route_prompts,
+    route_prompts_async,
+)
 from aibackends.tasks.summarize import SummarizeTask, summarize, summarize_async
 
 __all__ = [
@@ -105,6 +112,11 @@ __all__ = [
     "redact_pii",
     "redact_pii_async",
     "register_task",
+    "RoutePromptTask",
+    "route_prompt",
+    "route_prompt_async",
+    "route_prompts",
+    "route_prompts_async",
     "SummarizeTask",
     "summarize",
     "summarize_async",
